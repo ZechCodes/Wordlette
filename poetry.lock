@@ -48,7 +48,7 @@ description = "Simple app framework that helps you build looesly coupled applica
 name = "bevy"
 optional = false
 python-versions = ">=3.7,<4.0"
-version = "0.2.1"
+version = "0.2.2"
 
 [[package]]
 category = "dev"
@@ -323,8 +323,8 @@ attrs = [
     {file = "attrs-19.3.0.tar.gz", hash = "sha256:f7b7ce16570fe9965acd6d30101a28f62fb4a7f9e926b3bbc9b61f8b04247e72"},
 ]
 bevy = [
-    {file = "Bevy-0.2.1-py3-none-any.whl", hash = "sha256:4d02dde40a597113a0c4324fca9c01340cf9ceaf4b50eb4e502c0b44271cdda0"},
-    {file = "Bevy-0.2.1.tar.gz", hash = "sha256:3d97981b7b294e66a780626f0750d243843ca2ecc2cad44f66c9a3c650d56e5b"},
+    {file = "Bevy-0.2.2-py3-none-any.whl", hash = "sha256:d830c571a0f3ce34db864cb27d950df798e9694f9e1aa68112137305cc269978"},
+    {file = "Bevy-0.2.2.tar.gz", hash = "sha256:6f68a1b3ce8cd903c35778ea090a576d7d203aaebb5d6a865ca38dc9c2713842"},
 ]
 certifi = [
     {file = "certifi-2020.6.20-py2.py3-none-any.whl", hash = "sha256:8fc0819f1f30ba15bdb34cceffb9ef04d99f420f68eb75d901e9560b8749fc41"},
