@@ -48,7 +48,7 @@ description = "Simple app framework that helps you build looesly coupled applica
 name = "bevy"
 optional = false
 python-versions = ">=3.7,<4.0"
-version = "0.2.2"
+version = "0.2.3"
 
 [[package]]
 category = "dev"
@@ -283,7 +283,7 @@ python-versions = "*"
 version = "0.2.5"
 
 [metadata]
-content-hash = "6f97f456d91bc2d3336f2d987bdfe31ed858de58df9b65aaff2aadf9bf12a321"
+content-hash = "6aef2044306a4193f699a34c43653f439d11bb35175469930cf34b99f952bad6"
 python-versions = "^3.8"
 
 [metadata.files]
