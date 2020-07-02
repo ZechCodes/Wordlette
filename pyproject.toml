@@ -10,7 +10,7 @@ python = "^3.8"
 starlette = "^0.13.4"
 tortoise-orm = "0.16.13"
 asyncpg = "^0.20.1"
-bevy = "^0.2.1"
+bevy = "^0.2.2"
 toml = "^0.10.1"
 mako = "^1.1.3"
 
