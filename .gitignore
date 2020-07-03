@@ -2,3 +2,4 @@
 .idea
 secret.*
 postgres-data
+__pycache__
