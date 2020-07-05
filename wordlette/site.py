@@ -50,7 +50,7 @@ class Site(bevy.Bevy):
         return os.environ.get(name, default)
 
     def load_settings(self) -> Dict[str, Any]:
-        return self.config.get("settings", {}, require=True)
+        return self.config.get("settings", require=True)
 
     async def setup(self):
         self._settings = self.load_settings()
