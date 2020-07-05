@@ -44,9 +44,8 @@ class Path(bevy.Bevy):
 
         return path
 
-    def importer(self, module_name: str) -> Optional[ModuleType]:
-        full_name = f"{self.package}.{module_name}"
-        spec = importlib.util.find_spec(full_name)
-        if spec:
-            return spec.loader.load_module()
-        return None
+    def importer(self, *module_path: str) -> Optional[ModuleType]:
+        for index in range(len(module_path)):
+            spec = importlib.util.find_spec(".".join(module_path[index:]))
+            if spec:
+                return spec.loader.load_module()
