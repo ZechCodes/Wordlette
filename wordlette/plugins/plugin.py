@@ -23,7 +23,7 @@ class PluginLoader(bevy.Bevy):
     @property
     def import_from(self) -> Tuple[str]:
         import_from: str = self._settings.get("import", "")
-        return tuple(import_from.split(".")) if import_from else (self.path.package, "plugins", self.name)
+        return tuple(import_from.split(".")) if import_from else (f"{self.path.package}.plugins", self.name)
 
     @property
     def scope(self) -> Dict[str, Any]:
