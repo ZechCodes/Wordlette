@@ -1,11 +1,14 @@
 import bevy
 import importlib.util
 import pathlib
+import wordlette.logging
 from typing import Optional
 from types import ModuleType
 
 
 class Path(bevy.Bevy):
+    log: wordlette.logging.Logging
+
     def __init__(self):
         self._path: Optional[pathlib.Path] = None
 
@@ -46,6 +49,7 @@ class Path(bevy.Bevy):
 
     def importer(self, *module_path: str) -> Optional[ModuleType]:
         for index in range(len(module_path)):
+            self.log.debug(f"Attempt to import '{'.'.join(module_path[index:])}'")
             spec = importlib.util.find_spec(".".join(module_path[index:]))
             if spec:
                 return spec.loader.load_module()
