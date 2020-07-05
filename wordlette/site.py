@@ -1,9 +1,11 @@
 import bevy
+import logging
 import os
 import pathlib
 import starlette.routing
 import wordlette.config
 import wordlette.database
+import wordlette.logging
 import wordlette.models
 import wordlette.path
 import wordlette.plugins
@@ -15,31 +17,55 @@ class Site(bevy.Bevy):
     config: wordlette.config.Config
     path: wordlette.path.Path
     plugin_factory: bevy.Factory[wordlette.plugins.PluginLoader]
+    log: wordlette.logging.Logging
 
     def __init__(self, file: str, /):
         self.path.path = file
         self._project_path = pathlib.Path(file).parent
         self._plugins: List[wordlette.plugins.PluginLoader] = []
         self._routes: List[starlette.routing.Route] = []
+        self._settings = None
 
     @property
     def local_path(self) -> pathlib.Path:
         return self._project_path
 
-    async def setup(self):
-        await self._bootstrap()
+    def configure(self):
+        self.configure_logging()
+
+    def configure_logging(self):
+        log_levels = {
+            "INFO": logging.INFO,
+            "WARN": logging.WARN,
+            "DEBUG": logging.DEBUG,
+            "ERROR": logging.ERROR,
+            "CRITICAL": logging.CRITICAL
+        }
+        logging_settings = self._settings.get("logging", {}).copy()
+        logging_settings["level"] = log_levels.get(logging_settings.get("level"), logging.INFO)
+
+        logging.basicConfig(**logging_settings)
 
     def get_env_setting(self, name: str, /, *, default: Optional[Any] = None) -> Any:
         return os.environ.get(name, default)
 
+    def load_settings(self) -> Dict[str, Any]:
+        return self.config.get("settings", {}, require=True)
+
+    async def setup(self):
+        self._settings = self.load_settings()
+        self.configure()
+        await self._bootstrap()
+
     async def _bootstrap(self):
         """ Load the site settings before attempting to load anything else. """
+        self.log.debug("Loading plugins")
+        plugins = self._settings.get("plugins", {})
+        self._load_plugins(plugins)
+
         await self.db.connect(
             self._get_db_config([])
         )
-
-        plugins = self.config.get("settings", {}, require=True).get("plugins", {})
-        self._load_plugins(plugins)
 
     def _get_db_config(self, models: List[str]) -> Dict[str, Any]:
         return {
