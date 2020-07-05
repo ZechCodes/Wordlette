@@ -1,6 +1,6 @@
 import bevy
 import wordlette.path
-from typing import Any, Dict
+from typing import Any, Dict, Tuple
 
 
 class Plugin(bevy.Bevy):
@@ -17,6 +17,11 @@ class PluginLoader(bevy.Bevy):
 
         if self.enabled:
             self.load()
+
+    @property
+    def import_from(self) -> Tuple[str]:
+        import_from: str = self._settings.get("import", "")
+        return tuple(import_from.split(".")) if import_from else (self.path.package, "plugins", self.name)
 
     @property
     def scope(self) -> Dict[str, Any]:
@@ -37,4 +42,6 @@ class PluginLoader(bevy.Bevy):
         if not self.enabled:
             raise ImportError(f"Cannot load the plugin '{self.name}' because it is disabled")
 
-        self._plugin = self.path.importer(f"plugins.{self.name}")
+        self._plugin = self.path.importer(*self.import_from)
+        if not self._plugin:
+            raise ImportError(f"Could not find a module for the plugin '{self.name}'")
