@@ -1,4 +1,5 @@
 import bevy
+import wordlette.logging
 import wordlette.path
 from typing import Any, Dict, Tuple
 
@@ -9,6 +10,7 @@ class Plugin(bevy.Bevy):
 
 class PluginLoader(bevy.Bevy):
     path: wordlette.path.Path
+    log: wordlette.logging.Logging
 
     def __init__(self, name: str, settings: Dict[str, Any]):
         self.name = name
@@ -36,6 +38,7 @@ class PluginLoader(bevy.Bevy):
         return self._settings.get("enabled", False)
 
     def load(self):
+        self.log.debug(f"Attempting to load plugin '{self.name}'")
         if self._plugin:
             raise ImportError(f"The plugin '{self.name}' is already loaded")
 
@@ -45,3 +48,5 @@ class PluginLoader(bevy.Bevy):
         self._plugin = self.path.importer(*self.import_from)
         if not self._plugin:
             raise ImportError(f"Could not find a module for the plugin '{self.name}'")
+
+        self.log.debug(f"Imported plugin '{self.name}'")

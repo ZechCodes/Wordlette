@@ -58,26 +58,32 @@ class Site(bevy.Bevy):
         await self._bootstrap()
 
     async def _bootstrap(self):
-        """ Load the site settings before attempting to load anything else. """
         self.log.debug("Loading plugins")
         plugins = self._settings.get("plugins", {})
         self._load_plugins(plugins)
 
-        await self.db.connect(
-            self._get_db_config([])
-        )
+        self.log.debug("Connecting to database")
+        await self.db.connect(self._get_db_config([]))
 
     def _get_db_config(self, models: List[str]) -> Dict[str, Any]:
+        host = self.get_env_setting("DB_HOST", default="localhost")
+        port = self.get_env_setting("DB_PORT", default="5432")
+        user = self.get_env_setting("DB_USER", default="postgresadmin")
+        password = self.get_env_setting("DB_PASS", default="dev-env-password-safe-to-be-public")
+        database = self.get_env_setting("DB_NAME", default="bpydb")
+        self.log.debug(
+            f"DB Connection Details -> {user}:****@{host}:{port}/{database}"
+        )
         return {
             "connections": {
                 "wordlette": {
                     "engine": "tortoise.backends.asyncpg",
                     "credentials": {
-                        "host": self.get_env_setting("DB_HOST", default="localhost"),
-                        "port": self.get_env_setting("DB_PORT", default="5432"),
-                        "user": self.get_env_setting("DB_USER", default="postgresadmin"),
-                        "password": self.get_env_setting("DB_PASS", default="dev-env-password-safe-to-be-public"),
-                        "database": self.get_env_setting("DB_NAME", default="bpydb"),
+                        "host": host,
+                        "port": port,
+                        "user": user,
+                        "password": password,
+                        "database": database
                     }
                 },
             },
