@@ -1,8 +1,0 @@
-[plugins.testing]
-enabled=true
-
-[plugins.foobar]
-enabled=true
-
-[plugins.foobar.scope]
-pages=[123, 12342]
