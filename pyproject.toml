@@ -1,22 +1,27 @@
 [tool.poetry]
 name = "wordlette"
-version = "0.1.0"
+version = "0.1.0-alpha.1"
 description = "Simple and easy content management system that anyone can use."
 authors = ["Zech Zimmerman <hi@zech.codes>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.8"
-starlette = "^0.13.4"
-tortoise-orm = "0.16.13"
-asyncpg = "^0.20.1"
-bevy = "^0.2.3"
-toml = "^0.10.1"
-mako = "^1.1.3"
+python = "^3.10"
+starlette = "^0.20.4"
+bevy = "^1.3.12"
+Mako = "^1.2.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.4.3"
 requests = "^2.24.0"
+uvicorn = "^0.18.2"
+
+[tool.poetry.extras]
+sqlite = ["sqlalchemy", "aiosqlite"]
+postgres = ["sqlalchemy", "asyncpg"]
+toml = ["tomli"]
+yaml = ["pyyaml"]
+
 
 [build-system]
 requires = ["poetry>=0.12"]
