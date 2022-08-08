@@ -22,6 +22,9 @@ class StateMachine:
         for to_state_name, transition in transitions.items():
             state.add_transition(self._get_state_or_create(to_state_name), transition)
 
+    def create_state(self, state_name: str, enter_transition: Transition | None = None):
+        self._states[state_name] = State(state_name, enter_transition)
+
     async def transition(self, state_name: str):
         """Transitions from the current state to the requested state.
 
@@ -43,7 +46,7 @@ class StateMachine:
 
     def _get_state_or_create(self, state_name: str) -> State:
         if state_name not in self._states:
-            self._states[state_name] = State(state_name)
+            self.create_state(state_name)
 
         return self._states[state_name]
 
