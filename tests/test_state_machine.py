@@ -124,3 +124,34 @@ async def test_state_machine_enter_transitions():
     machine.add_transitions("STATE_B", STATE_A=lambda: ...)
     await machine.transition_to("STATE_B")
     assert was_entered
+
+
+@pytest.mark.asyncio
+async def test_state_machine_schema():
+    transitioned = False
+    entered = False
+
+    class TestStateMachine(StateMachineSchema):
+        @state
+        def STATE_A(self):
+            ...
+
+        @state
+        def STATE_B(self):
+            nonlocal entered
+            entered = True
+
+        @STATE_A >> STATE_B
+        def transition_from_a_to_b(self):
+            nonlocal transitioned
+            transitioned = True
+
+        @STATE_B >> STATE_A
+        def transition_from_b_to_a(self):
+            ...
+
+    machine = TestStateMachine.create(TestStateMachine.STATE_A)
+    await machine.transition_to(TestStateMachine.STATE_B)
+    assert machine.state == TestStateMachine.STATE_B
+    assert transitioned
+    assert entered
