@@ -25,7 +25,7 @@ class StateMachine:
     def create_state(self, state_name: str, enter_transition: Transition | None = None):
         self._states[state_name] = State(state_name, enter_transition)
 
-    async def transition(self, state_name: str):
+    async def transition_to(self, state_name: str):
         """Transitions from the current state to the requested state.
 
         Raises WordletteDeadendState if the requested state has no transitions.
@@ -41,7 +41,7 @@ class StateMachine:
                 f"{self} cannot transition to {state} because it has no transitions"
             )
 
-        await self._state.transition(state)
+        await self._state.transition_to(state)
         self._state = state
 
     def _get_state_or_create(self, state_name: str) -> State:

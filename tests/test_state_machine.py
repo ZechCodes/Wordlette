@@ -20,7 +20,7 @@ async def test_successful_state_transition():
         ran = True
 
     a.add_transition(b, transition)
-    await a.transition(b)
+    await a.transition_to(b)
     assert ran
 
 
@@ -29,7 +29,7 @@ async def test_unsuccessful_state_no_transition():
     a = State("A")
     b = State("B")
     with pytest.raises(WordletteTransitionImpossible):
-        await a.transition(b)
+        await a.transition_to(b)
 
 
 @pytest.mark.asyncio
@@ -42,7 +42,7 @@ async def test_unsuccessful_state_failed_transition():
 
     a.add_transition(b, transition)
     with pytest.raises(WordletteTransitionFailed):
-        await a.transition(b)
+        await a.transition_to(b)
 
 
 @pytest.mark.asyncio
@@ -57,7 +57,7 @@ async def test_state_entered():
     b = State("B", entered)
 
     a.add_transition(b, lambda: ...)
-    await a.transition(b)
+    await a.transition_to(b)
     assert was_entered
 
 
@@ -72,7 +72,7 @@ async def test_transition_params():
         state = to_state
 
     a.add_transition(b, transition_a)
-    await a.transition(b)
+    await a.transition_to(b)
     assert state is b
 
     state = None
@@ -82,7 +82,7 @@ async def test_transition_params():
         state = from_state
 
     b.add_transition(a, transition_b)
-    await b.transition(a)
+    await b.transition_to(a)
     assert state is b
 
 
@@ -91,7 +91,7 @@ async def test_state_machine():
     machine = StateMachine("test_machine", "STATE_A")
     machine.add_transitions("STATE_A", STATE_B=lambda: ...)
     machine.add_transitions("STATE_B", STATE_A=lambda: ...)
-    await machine.transition("STATE_B")
+    await machine.transition_to("STATE_B")
     assert machine.state == "STATE_B"
 
 
@@ -100,14 +100,14 @@ async def test_state_machine_deadend_state():
     machine = StateMachine("test_machine", "STATE_A")
     machine.add_transitions("STATE_A", STATE_B=lambda: ...)
     with pytest.raises(WordletteDeadendState):
-        await machine.transition("STATE_B")
+        await machine.transition_to("STATE_B")
 
 
 @pytest.mark.asyncio
 async def test_state_machine_no_such_state():
     machine = StateMachine("test_machine", "STATE_A")
     with pytest.raises(WordletteNoSuchState):
-        await machine.transition("STATE_B")
+        await machine.transition_to("STATE_B")
 
 
 @pytest.mark.asyncio
@@ -122,5 +122,5 @@ async def test_state_machine_enter_transitions():
     machine.create_state("STATE_B", entered)
     machine.add_transitions("STATE_A", STATE_B=lambda: ...)
     machine.add_transitions("STATE_B", STATE_A=lambda: ...)
-    await machine.transition("STATE_B")
+    await machine.transition_to("STATE_B")
     assert was_entered

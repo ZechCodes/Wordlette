@@ -42,7 +42,7 @@ class State:
         """Removes a transition from this state to a different state."""
         del self._transitions[state]
 
-    async def transition(self, state: State):
+    async def transition_to(self, state: State):
         """Runs the transition function that goes from this state to the requested state.
 
         Raises WordletteTransitionImpossible if there is no transition registered for the requested state.
