@@ -1,55 +1,65 @@
 import pytest
 import pytest_asyncio
-from wordlette.state_machine import StateMachine, state
-from wordlette.exceptions import (
-    WordletteTransitionImpossible,
-    WordletteTransitionFailed,
-)
+from wordlette.state_machine import StateMachine, State
+from wordlette.exceptions import WordletteNoTransitionFound
 
 
 @pytest_asyncio.fixture()
 async def two_state_machine():
     class Machine(StateMachine):
-        def __init__(self, *args):
-            super().__init__(*args)
+        def __init__(self):
+            super().__init__()
             self.result = []
 
-        @state
-        def state_a(self):
+        @State
+        async def state_a(self, value):
             self.result.append("state_a_run")
 
-        @state
-        def state_b(self):
+        @State
+        async def state_b(self, value):
             self.result.append("state_b_run")
 
         @state_a >> state_b
-        def transition_a_to_b(self):
-            self.result.append("a_to_b")
+        async def transition_a_to_b(self, value):
+            if value == "b":
+                self.result.append("a_to_b")
+                return True
+
+            return False
 
         @state_b >> state_a
-        def transition_b_to_a(self):
-            self.result.append("b_to_a")
+        async def transition_b_to_a(self, value):
+            if value == "a":
+                self.result.append("b_to_a")
+                return True
 
-    return await Machine(Machine.state_a)
+            return False
+
+    return await Machine().start(Machine.state_a, "")
 
 
 @pytest_asyncio.fixture()
 async def two_state_failure_machine():
     class Machine(StateMachine):
-        fail_a = state()
-        fail_b = state()
+        @State
+        async def fail_a(self, value):
+            ...
+
+        @State
+        async def fail_b(self, value):
+            ...
 
         @fail_a >> fail_b
-        def transition_a_to_b(self):
+        async def transition_a_to_b(self, value):
             raise Exception()
 
-    return await Machine(Machine.fail_a)
+    return await Machine().start(Machine.fail_a, "")
 
 
 @pytest.mark.asyncio
 async def test_state_machine(two_state_machine):
-    await two_state_machine.to(two_state_machine.state_b)
-    await two_state_machine.to(two_state_machine.state_a)
+    await two_state_machine.next("b")
+    await two_state_machine.next("a")
     assert two_state_machine.result == [
         "state_a_run",
         "a_to_b",
@@ -61,11 +71,5 @@ async def test_state_machine(two_state_machine):
 
 @pytest.mark.asyncio
 async def test_unsuccessful_state_no_transition(two_state_machine):
-    with pytest.raises(WordletteTransitionImpossible):
-        await two_state_machine.to(two_state_machine.state_a)
-
-
-@pytest.mark.asyncio
-async def test_transition_failure(two_state_failure_machine):
-    with pytest.raises(WordletteTransitionFailed):
-        await two_state_failure_machine.to(two_state_failure_machine.fail_b)
+    with pytest.raises(WordletteNoTransitionFound):
+        await two_state_machine.next("a")
