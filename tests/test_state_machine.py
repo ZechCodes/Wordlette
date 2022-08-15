@@ -1,126 +1,154 @@
 import pytest
-from wordlette.state.state import State
-from wordlette.state import StateMachine
-from wordlette.exceptions import (
-    WordletteTransitionImpossible,
-    WordletteTransitionFailed,
-    WordletteDeadendState,
-    WordletteNoSuchState,
-)
+import pytest_asyncio
+from wordlette.state_machine import StateMachine, State
+from wordlette.exceptions import WordletteNoTransitionFound
+
+
+@pytest_asyncio.fixture()
+async def two_state_machine():
+    class Machine(StateMachine):
+        def __init__(self):
+            super().__init__()
+            self.result = []
+
+        @State
+        async def state_a(self, value):
+            self.result.append("state_a_run")
+
+        @State
+        async def state_b(self, value):
+            self.result.append("state_b_run")
+
+        @state_a.goes_to(state_b).when
+        async def transition_a_to_b(self, value):
+            if value == "b":
+                self.result.append("a_to_b")
+                return True
+
+            return False
+
+        @state_b.goes_to(state_a).when
+        async def transition_b_to_a(self, value):
+            if value == "a":
+                self.result.append("b_to_a")
+                return True
+
+            return False
+
+    return await Machine().start(Machine.state_a, "")
 
 
 @pytest.mark.asyncio
-async def test_successful_state_transition():
-    a = State("A")
-    b = State("B")
-    ran = False
-
-    def transition():
-        nonlocal ran
-        ran = True
-
-    a.add_transition(b, transition)
-    await a.transition_to(b)
-    assert ran
+async def test_state_machine(two_state_machine):
+    await two_state_machine.next("b")
+    await two_state_machine.next("a")
+    assert two_state_machine.result == [
+        "state_a_run",
+        "a_to_b",
+        "state_b_run",
+        "b_to_a",
+        "state_a_run",
+    ]
 
 
 @pytest.mark.asyncio
-async def test_unsuccessful_state_no_transition():
-    a = State("A")
-    b = State("B")
-    with pytest.raises(WordletteTransitionImpossible):
-        await a.transition_to(b)
+async def test_unsuccessful_state_no_transition(two_state_machine):
+    with pytest.raises(WordletteNoTransitionFound):
+        await two_state_machine.next("a")
 
 
 @pytest.mark.asyncio
-async def test_unsuccessful_state_failed_transition():
-    a = State("A")
-    b = State("B")
+async def test_aggregate_transitions():
+    states = []
 
-    def transition():
-        raise RuntimeError("TESTING")
+    class TestMachine(StateMachine):
+        @State
+        async def A(self, arg):
+            states.append("A")
 
-    a.add_transition(b, transition)
-    with pytest.raises(WordletteTransitionFailed):
-        await a.transition_to(b)
+        @State
+        async def B(self, arg):
+            states.append("B")
 
+        @State
+        async def C(self, arg):
+            states.append("C")
 
-@pytest.mark.asyncio
-async def test_state_entered():
-    was_entered = False
+        @ (A & B).goes_to(C).when
+        async def arg_is_c(self, arg):
+            return arg == "C"
 
-    async def entered():
-        nonlocal was_entered
-        was_entered = True
+        C.goes_to(B)
 
-    a = State("A")
-    b = State("B", entered)
-
-    a.add_transition(b, lambda: ...)
-    await a.transition_to(b)
-    assert was_entered
-
-
-@pytest.mark.asyncio
-async def test_transition_params():
-    a = State("A")
-    b = State("B")
-    state = None
-
-    def transition_a(to_state: State):
-        nonlocal state
-        state = to_state
-
-    a.add_transition(b, transition_a)
-    await a.transition_to(b)
-    assert state is b
-
-    state = None
-
-    def transition_b(from_state: State):
-        nonlocal state
-        state = from_state
-
-    b.add_transition(a, transition_b)
-    await b.transition_to(a)
-    assert state is b
+    machine = TestMachine()
+    await machine.start(TestMachine.A, "STARTING")
+    await machine.next("C")
+    await machine.next("B")
+    await machine.next("C")
+    assert states == ["A", "C", "B", "C"]
 
 
 @pytest.mark.asyncio
-async def test_state_machine():
-    machine = StateMachine("test_machine", "STATE_A")
-    machine.add_transitions("STATE_A", STATE_B=lambda: ...)
-    machine.add_transitions("STATE_B", STATE_A=lambda: ...)
-    await machine.transition_to("STATE_B")
-    assert machine.state == "STATE_B"
+async def test_aggregate_transitions():
+    states = []
+
+    class TestMachine(StateMachine):
+        @State
+        async def A(self, arg):
+            states.append("A")
+
+        @State
+        async def B(self, arg):
+            states.append("B")
+
+        @State
+        async def C(self, arg):
+            states.append("C")
+
+        @ (A & B).goes_to(C).when
+        async def arg_is_c(self, arg):
+            return arg == "C"
+
+        C.goes_to(B)
+
+    machine = TestMachine()
+    await machine.start(TestMachine.A, "STARTING")
+    await machine.next("C")
+    await machine.next("B")
+    await machine.next("C")
+    assert states == ["A", "C", "B", "C"]
 
 
 @pytest.mark.asyncio
-async def test_state_machine_deadend_state():
-    machine = StateMachine("test_machine", "STATE_A")
-    machine.add_transitions("STATE_A", STATE_B=lambda: ...)
-    with pytest.raises(WordletteDeadendState):
-        await machine.transition_to("STATE_B")
+async def test_default_transitions():
+    states = []
 
+    class TestMachine(StateMachine):
+        @State
+        async def A(self, arg):
+            states.append("A")
 
-@pytest.mark.asyncio
-async def test_state_machine_no_such_state():
-    machine = StateMachine("test_machine", "STATE_A")
-    with pytest.raises(WordletteNoSuchState):
-        await machine.transition_to("STATE_B")
+        @State
+        async def B(self, arg):
+            states.append("B")
 
+        @State
+        async def C(self, arg):
+            states.append("C")
 
-@pytest.mark.asyncio
-async def test_state_machine_enter_transitions():
-    was_entered = False
+        @ (A & B).goes_to(C).when
+        async def arg_is_c(self, arg):
+            return arg == "C"
 
-    def entered():
-        nonlocal was_entered
-        was_entered = True
+        C.goes_to(B)
+        A.goes_to(B)
+        B.goes_to(A)
 
-    machine = StateMachine("test_machine", "STATE_A")
-    machine.create_state("STATE_B", entered)
-    machine.add_transitions("STATE_A", STATE_B=lambda: ...)
-    machine.add_transitions("STATE_B", STATE_A=lambda: ...)
-    await machine.transition_to("STATE_B")
-    assert was_entered
+    machine = TestMachine()
+    await machine.start(TestMachine.A, "STARTING")
+    await machine.next("GO TO B")  # At A, will go to B
+    await machine.next("GO TO A")  # At B, will go to A
+    await machine.next("C")  # At A, will go to C
+    await machine.next("GO TO B")  # At C, will go to B
+    await machine.next("C")  # At B, will go to C
+    assert states == ["A", "B", "A", "C", "B", "C"]
