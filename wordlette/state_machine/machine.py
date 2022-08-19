@@ -14,6 +14,10 @@ class StateMachine(Generic[T, P]):
         self._current_value: T | None = None
 
     @property
+    def started(self) -> bool:
+        return self._current_state is not None
+
+    @property
     def state(self) -> State[T, P]:
         return self._current_state
 
