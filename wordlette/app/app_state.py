@@ -4,7 +4,7 @@ from wordlette.state_machine import StateMachine, State
 from wordlette.config import Config
 
 
-class App(StateMachine, Bevy):
+class AppState(StateMachine, Bevy):
     @State
     async def starting(self):
         ...
