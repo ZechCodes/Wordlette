@@ -1,3 +1,4 @@
+from __future__ import annotations
 from bevy import Bevy, Inject
 from bevy.providers.function_provider import bevy_method
 from wordlette.state_machine import StateMachine, State
