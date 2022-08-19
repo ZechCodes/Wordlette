@@ -8,3 +8,7 @@ class WordletteNoTransitionFound(WordletteException):
 
 class WordletteStateMachineAlreadyStarted(WordletteException):
     """Raised when start is called on a state machine that has already been started."""
+
+
+class WordletteNoStarletteAppFound(WordletteException):
+    """Raised when the state machine has not added a Starlette app to the current state context."""
