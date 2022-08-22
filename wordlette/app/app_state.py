@@ -1,10 +1,11 @@
+from __future__ import annotations
 from bevy import Bevy, Inject
 from bevy.providers.function_provider import bevy_method
 from wordlette.state_machine import StateMachine, State
 from wordlette.config import Config
 
 
-class App(StateMachine, Bevy):
+class AppState(StateMachine, Bevy):
     @State
     async def starting(self):
         ...
