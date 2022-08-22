@@ -1,6 +1,7 @@
 from __future__ import annotations
 from typing import Any, Awaitable, Callable, Iterable, ParamSpec, TypeAlias
 from inspect import iscoroutinefunction
+from abc import ABC, abstractmethod
 
 
 P = ParamSpec("P")
@@ -22,11 +23,25 @@ async def _call(func: Callable[[...], Any], *args, **kwargs) -> Any:
 def _is_coroutine(obj) -> bool:
     if iscoroutinefunction(obj):
         return True
+class Predicate(ABC):
+    @abstractmethod
+    async def __call__(self, *args: P.args, **kwargs: P.kwargs):
+        ...
 
-    return iscoroutinefunction(getattr(obj, "__call__", None))
+    @abstractmethod
+    def __and__(self, other):
+        ...
+
+    @abstractmethod
+    def __or__(self, other):
+        ...
+
+    @abstractmethod
+    def __invert__(self):
+        ...
 
 
-class AndPredicate:
+class AndPredicate(Predicate):
     def __init__(self, *predicates: PredicateFunction):
         self._predicates = list(predicates)
 
