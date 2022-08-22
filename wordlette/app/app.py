@@ -1,12 +1,13 @@
 from wordlette.app.app_protocol import AppProtocol
 from wordlette.state_machine import StateMachine
 from wordlette.app.app_state import AppState
-from bevy import Context
+from bevy import Bevy, Context
 from wordlette.smart_functions import call
 from typing import Callable, Type, TypeAlias
 from starlette.types import Receive, Scope, Send
 from starlette.applications import Starlette
 from wordlette.exceptions import WordletteNoStarletteAppFound
+import logging
 
 
 StateMachineConstructor: TypeAlias = (
@@ -14,22 +15,17 @@ StateMachineConstructor: TypeAlias = (
     | Callable[[AppProtocol], StateMachine]
     | Callable[[], StateMachine]
 )
-import logging
 
 logger = logging.root.getChild("APP")
 
 
-class App:
+class App(Bevy):
     def __init__(self, state_machine_constructor: StateMachineConstructor = AppState):
-        self._app_context = Context.factory()
         self._state = call(state_machine_constructor, self)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         if not self.state.started:
-            try:
-                await self.state.start(self.state.starting, self)
-            except Exception:
-                logger.exception("ERROR ENCOUNTERED")
+            await self._start()
 
         if not self.app:
             raise WordletteNoStarletteAppFound(
@@ -45,7 +41,7 @@ class App:
 
     @property
     def app_context(self) -> Context:
-        return self._app_context
+        return self.bevy
 
     @property
     def context(self) -> Context:
@@ -54,3 +50,9 @@ class App:
     @property
     def state(self) -> StateMachine:
         return self._state
+
+    async def _start(self):
+        try:
+            await self.state.start(self.state.starting, self)
+        except Exception as exception:
+            logger.exception("ERROR ENCOUNTERED")
