@@ -1,30 +1,106 @@
 from __future__ import annotations
-from bevy import Bevy, Inject
-from bevy.providers.function_provider import bevy_method
+from bevy import Bevy, Context, Inject, bevy_method
 from wordlette.state_machine import StateMachine, State
 from wordlette.config import Config
+from wordlette.wordlette.error_app import create_error_application
+from starlette.applications import Starlette
+from wordlette.events import EventManager
+from dataclasses import dataclass
+from typing import Any
+from collections import deque
 
 
-class AppState(StateMachine, Bevy):
+@dataclass()
+class StateChangeEvent:
+    type: str
+    old_state: State
+    new_state: State
+    context: Context
+    args: tuple[Any]
+    kwargs: dict[str, Any]
+
+
+class DispatchedStateMachine(StateMachine, Bevy):
+    def __init__(self):
+        super().__init__()
+        self._dispatch_queue = deque()
+
+    async def _set_current_state(self, new_state, *args, **kwargs):
+        old_state = self.state
+        await self._dispatch("changing-state", old_state, new_state, args, kwargs)
+        self._queue_dispatch("changed-state", old_state, new_state, args, kwargs)
+        context = await super()._set_current_state(new_state, *args, **kwargs)
+        await self._dispatch_oldest()
+        return context
+
+    @bevy_method
+    async def _dispatch(
+        self,
+        type: str,
+        old_state: State,
+        new_state: State,
+        args: tuple[Any],
+        kwargs: dict[str, Any],
+        events: EventManager = Inject,
+    ):
+        label = {
+            "type": type,
+            "old-state": old_state,
+            "new-state": new_state,
+        }
+        event = StateChangeEvent(type, old_state, new_state, self.value, args, kwargs)
+        await events.dispatch(label, event)
+
+    def _dispatch_oldest(self):
+        return self._dispatch_queue.popleft()
+
+    def _queue_dispatch(
+        self,
+        type: str,
+        old_state: State,
+        new_state: State,
+        args: tuple[Any],
+        kwargs: dict[str, Any],
+    ):
+        self._dispatch_queue.append(
+            self._dispatch(type, old_state, new_state, args, kwargs)
+        )
+
+
+class AppState(DispatchedStateMachine):
     @State
-    async def starting(self):
-        ...
+    async def starting(self, app):
+        # Add a catch-all starlette application that 400's every request to tell the user that something has gone
+        # wrong with the application routing.
+        self.bevy.add(
+            create_error_application(
+                "Wordlette could not find a valid Starlette application to handle request routing.",
+                "No Router Found",
+            ),
+            use_as=Starlette,
+        )
+        return await self.next(app)
 
     @State
-    async def loading_extensions(self):
-        ...
+    async def loading_extensions(self, app):
+        context = self.bevy.branch()
+        context.add(
+            create_error_application("Testing loading extensions", "Testing"),
+            use_as=Starlette,
+        )
+        return context
 
     @State
-    async def creating_site_config(self):
-        ...
+    async def creating_site_config(self, app):
+        return await self.next(app)
 
     @State
-    async def creating_db_config(self):
-        ...
+    async def creating_db_config(self, app):
+        return await self.next(app)
 
     @State
-    async def connecting_db(self):
-        ...
+    async def connecting_db(self, app):
+        return await self.next(app)
 
     @State
     async def serving_site(self):

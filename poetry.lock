@@ -71,7 +71,7 @@ unicode_backport = ["unicodedata2"]
 name = "click"
 version = "8.1.3"
 description = "Composable command line interface toolkit"
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=3.7"
 
@@ -82,7 +82,7 @@ colorama = {version = "*", markers = "platform_system == \"Windows\""}
 name = "colorama"
 version = "0.4.5"
 description = "Cross-platform colored terminal text."
-category = "dev"
+category = "main"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
@@ -355,7 +355,7 @@ yaml = []
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.10"
-content-hash = "b221b11b8132749f08ff2908ee4e325aa86a95bda7b8ad2b47d3debd546f590e"
+content-hash = "14d5297addb66e4e5525b41e0d76909db5242ff68c17b8303839f33e0dcac011"
 
 [metadata.files]
 anyio = [
