@@ -31,8 +31,8 @@ def _show_error_message(message: str):
         click.wrap_text(
             message,
             60,
-            initial_indent="    ",
-            subsequent_indent="    ",
+            initial_indent="  ",
+            subsequent_indent="  ",
         )
     )
 
