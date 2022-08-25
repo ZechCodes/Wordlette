@@ -3,28 +3,39 @@ from bevy import Bevy, Inject
 from bevy.providers.function_provider import bevy_method
 from wordlette.state_machine import StateMachine, State
 from wordlette.config import Config
+from wordlette.wordlette.error_app import create_error_application
+from starlette.applications import Starlette
 
 
 class AppState(StateMachine, Bevy):
     @State
-    async def starting(self):
-        ...
+    async def starting(self, app):
+        # Add a catch-all starlette application that 400's every request to tell the user that something has gone
+        # wrong with the application routing.
+        self.bevy.add(
+            create_error_application(
+                "Wordlette could not find a valid Starlette application to handle request routing.",
+                "No Router Found",
+            ),
+            use_as=Starlette,
+        )
+        return await self.next(app)
 
     @State
-    async def loading_extensions(self):
-        ...
+    async def loading_extensions(self, app):
+        return self.bevy
 
     @State
-    async def creating_site_config(self):
-        ...
+    async def creating_site_config(self, app):
+        return await self.next(app)
 
     @State
-    async def creating_db_config(self):
-        ...
+    async def creating_db_config(self, app):
+        return await self.next(app)
 
     @State
-    async def connecting_db(self):
-        ...
+    async def connecting_db(self, app):
+        return await self.next(app)
 
     @State
     async def serving_site(self):
