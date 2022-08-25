@@ -26,7 +26,7 @@ class App(Bevy):
     events: EventManager = Inject
 
     def __init__(self, state_machine_constructor: StateMachineConstructor = AppState):
-        self.events.listen({"type": "changing-state"}, self._log_state_transition)
+        self.events.listen({"type": "changed-state"}, self._log_state_transition)
         self._state = call(self.bevy.bind(state_machine_constructor), self)
 
     async def _log_state_transition(self, event: StateChangeEvent):
