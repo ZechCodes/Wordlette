@@ -3,11 +3,12 @@ from wordlette.state_machine import StateMachine
 from wordlette.app.app_state import AppState
 from bevy import Bevy, Context
 from wordlette.smart_functions import call
-from typing import Callable, Type, TypeAlias
+from typing import Callable, Iterator, Type, TypeAlias
 from starlette.types import Receive, Scope, Send
 from starlette.applications import Starlette
 from wordlette.exceptions import WordletteNoStarletteAppFound
 import logging
+import uvicorn
 
 
 StateMachineConstructor: TypeAlias = (
@@ -56,3 +57,8 @@ class App(Bevy):
             await self.state.start(self.state.starting, self)
         except Exception as exception:
             logger.exception("ERROR ENCOUNTERED")
+
+    @classmethod
+    def start(cls, host: str, port: int, extensions_modules: Iterator[str]):
+        app = cls()
+        uvicorn.run(app, host=host, port=port)

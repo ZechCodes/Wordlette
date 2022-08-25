@@ -22,7 +22,7 @@ def launch(extension: tuple[str], host_port: str):
     except WordletteException as exception:
         _show_error_message(exception.args[0])
     else:
-        App.start(host=host, port=port, extensions=extension)
+        App.start(host=host, port=port, extensions_modules=extension)
 
 
 def _show_error_message(message: str):
