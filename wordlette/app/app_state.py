@@ -7,6 +7,7 @@ from starlette.applications import Starlette
 from wordlette.events import EventManager
 from dataclasses import dataclass
 from typing import Any
+from collections import deque
 
 
 @dataclass()
@@ -20,11 +21,16 @@ class StateChangeEvent:
 
 
 class DispatchedStateMachine(StateMachine, Bevy):
+    def __init__(self):
+        super().__init__()
+        self._dispatch_queue = deque()
+
     async def _set_current_state(self, new_state, *args, **kwargs):
         old_state = self.state
         await self._dispatch("changing-state", old_state, new_state, args, kwargs)
+        self._queue_dispatch("changed-state", old_state, new_state, args, kwargs)
         context = await super()._set_current_state(new_state, *args, **kwargs)
-        await self._dispatch("changed-state", old_state, new_state, args, kwargs)
+        await self._dispatch_oldest()
         return context
 
     @bevy_method
@@ -44,6 +50,21 @@ class DispatchedStateMachine(StateMachine, Bevy):
         }
         event = StateChangeEvent(type, old_state, new_state, self.value, args, kwargs)
         await events.dispatch(label, event)
+
+    def _dispatch_oldest(self):
+        return self._dispatch_queue.popleft()
+
+    def _queue_dispatch(
+        self,
+        type: str,
+        old_state: State,
+        new_state: State,
+        args: tuple[Any],
+        kwargs: dict[str, Any],
+    ):
+        self._dispatch_queue.append(
+            self._dispatch(type, old_state, new_state, args, kwargs)
+        )
 
 
 class AppState(DispatchedStateMachine):
