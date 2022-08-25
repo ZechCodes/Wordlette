@@ -1,13 +1,52 @@
 from __future__ import annotations
-from bevy import Bevy, Inject
-from bevy.providers.function_provider import bevy_method
+from bevy import Bevy, Context, Inject, bevy_method
 from wordlette.state_machine import StateMachine, State
 from wordlette.config import Config
 from wordlette.wordlette.error_app import create_error_application
 from starlette.applications import Starlette
+from wordlette.events import EventManager
+from dataclasses import dataclass
+from typing import Any
 
 
-class AppState(StateMachine, Bevy):
+@dataclass()
+class StateChangeEvent:
+    type: str
+    old_state: State
+    new_state: State
+    context: Context
+    args: tuple[Any]
+    kwargs: dict[str, Any]
+
+
+class DispatchedStateMachine(StateMachine, Bevy):
+    async def _set_current_state(self, new_state, *args, **kwargs):
+        old_state = self.state
+        await self._dispatch("changing-state", old_state, new_state, args, kwargs)
+        context = await super()._set_current_state(new_state, *args, **kwargs)
+        await self._dispatch("changed-state", old_state, new_state, args, kwargs)
+        return context
+
+    @bevy_method
+    async def _dispatch(
+        self,
+        type: str,
+        old_state: State,
+        new_state: State,
+        args: tuple[Any],
+        kwargs: dict[str, Any],
+        events: EventManager = Inject,
+    ):
+        label = {
+            "type": type,
+            "old-state": old_state,
+            "new-state": new_state,
+        }
+        event = StateChangeEvent(type, old_state, new_state, self.value, args, kwargs)
+        await events.dispatch(label, event)
+
+
+class AppState(DispatchedStateMachine):
     @State
     async def starting(self, app):
         # Add a catch-all starlette application that 400's every request to tell the user that something has gone
@@ -23,7 +62,12 @@ class AppState(StateMachine, Bevy):
 
     @State
     async def loading_extensions(self, app):
-        return self.bevy
+        context = self.bevy.branch()
+        context.add(
+            create_error_application("Testing loading extensions", "Testing"),
+            use_as=Starlette,
+        )
+        return context
 
     @State
     async def creating_site_config(self, app):
