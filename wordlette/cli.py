@@ -38,11 +38,15 @@ def _show_error_message(message: str):
 
 
 def _show_launch_settings(host: str, port: int, extensions: tuple[str, ...]):
-    click.echo(f"Starting your a server\n    Host: {host}\n    Port: {port}")
+    click.echo(f"Starting your server\n  Host: {host}\n  Port: {port}")
     if extensions:
-        click.echo(f"    Extensions:")
+        click.echo(f"  Extensions:")
         for extension in extensions:
-            click.echo(f"    - {extension}")
+            click.echo(f"  - {extension}")
+
+    click.echo()
+    click.echo("-" * 78)
+    click.echo()
 
 
 def _split_host_port(host_port: str) -> tuple[str, int]:
