@@ -1,73 +1,11 @@
 from __future__ import annotations
-from bevy import Bevy, Context, Inject, bevy_method
+from bevy import Inject, bevy_method
 from wordlette.state_machine import StateMachine, State
-from wordlette.config import Config
 from wordlette.wordlette.error_app import create_error_application
 from starlette.applications import Starlette
-from wordlette.events import EventManager
-from dataclasses import dataclass
-from typing import Any
-from collections import deque
 
 
-@dataclass()
-class StateChangeEvent:
-    type: str
-    old_state: State
-    new_state: State
-    context: Context
-    args: tuple[Any]
-    kwargs: dict[str, Any]
-
-
-class DispatchedStateMachine(StateMachine, Bevy):
-    def __init__(self):
-        super().__init__()
-        self._dispatch_queue = deque()
-
-    async def _set_current_state(self, new_state, *args, **kwargs):
-        old_state = self.state
-        await self._dispatch("changing-state", old_state, new_state, args, kwargs)
-        self._queue_dispatch("changed-state", old_state, new_state, args, kwargs)
-        context = await super()._set_current_state(new_state, *args, **kwargs)
-        await self._dispatch_oldest()
-        return context
-
-    @bevy_method
-    async def _dispatch(
-        self,
-        type: str,
-        old_state: State,
-        new_state: State,
-        args: tuple[Any],
-        kwargs: dict[str, Any],
-        events: EventManager = Inject,
-    ):
-        label = {
-            "type": type,
-            "old-state": old_state,
-            "new-state": new_state,
-        }
-        event = StateChangeEvent(type, old_state, new_state, self.value, args, kwargs)
-        await events.dispatch(label, event)
-
-    def _dispatch_oldest(self):
-        return self._dispatch_queue.popleft()
-
-    def _queue_dispatch(
-        self,
-        type: str,
-        old_state: State,
-        new_state: State,
-        args: tuple[Any],
-        kwargs: dict[str, Any],
-    ):
-        self._dispatch_queue.append(
-            self._dispatch(type, old_state, new_state, args, kwargs)
-        )
-
-
-class AppState(DispatchedStateMachine):
+class AppState(StateMachine):
     @State
     async def starting(self, app):
         # Add a catch-all starlette application that 400's every request to tell the user that something has gone
