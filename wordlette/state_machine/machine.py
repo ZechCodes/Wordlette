@@ -5,7 +5,6 @@ from typing import Any, Generic, ParamSpec, TypeVar
 from bevy import Bevy, Context, Inject, bevy_method
 from wordlette.events import EventManager
 from dataclasses import dataclass
-from asyncio.locks import Lock
 import asyncio
 
 P = ParamSpec("P")
@@ -14,6 +13,17 @@ T = TypeVar("T")
 
 class TransitionResultFuture(asyncio.Task):
     ...
+
+
+class DepthCounter:
+    def __init__(self):
+        self.count = 0
+
+    async def __aenter__(self):
+        self.count += 1
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        self.count -= 1
 
 
 @dataclass()
@@ -30,7 +40,7 @@ class StateMachine(Generic[T, P], Bevy):
     def __init__(self):
         self._current_state: State[T, P] | None = None
         self._current_value: T | None = None
-        self._entering_state = Lock()
+        self._entered_states = DepthCounter()
 
     @State
     async def starting(self):
@@ -61,11 +71,7 @@ class StateMachine(Generic[T, P], Bevy):
 
     async def next(self, *args: P.args, **kwargs: P.kwargs) -> T:
         next_state = await self._current_state.next(self, *args, **kwargs)
-        set_state_coro = self._set_current_state(next_state, *args, **kwargs)
-        if self._entering_state.locked():
-            return TransitionResultFuture(set_state_coro)
-
-        return await set_state_coro
+        return await self._set_current_state(next_state, *args, **kwargs)
 
     async def _set_current_state(
         self, new_state: State[T, P], *args: P.args, **kwargs: P.kwargs
@@ -76,14 +82,12 @@ class StateMachine(Generic[T, P], Bevy):
             await self._current_state.leave(self, *args, **kwargs)
 
         self._current_state = new_state
-        async with self._entering_state:
-            ret = await self._current_state.run(self, *args, **kwargs)
+        async with self._entered_states:
+            self._current_value = await self._current_state.run(self, *args, **kwargs)
 
-        await self._dispatch("changed-state", old_state, new_state, args, kwargs)
-        if isinstance(ret, TransitionResultFuture):
-            ret = await ret
+        if self._entered_states.count == 0:
+            await self._dispatch("changed-state", old_state, self.state, args, kwargs)
 
-        self._current_value = ret
         return self._current_value
 
     @bevy_method

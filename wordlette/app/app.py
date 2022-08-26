@@ -27,11 +27,15 @@ class App(Bevy):
     events: EventManager = Inject
 
     def __init__(self, state_machine_constructor: StateMachineConstructor = AppState):
-        self.events.listen({"type": "changed-state"}, self._log_state_transition)
         self._state = call(self.bevy.bind(state_machine_constructor), self)
+        self.events.listen({"type": "changing-state"}, self._log_state_transition_to)
+        self.events.listen({"type": "changed-state"}, self._log_state_entered)
 
-    async def _log_state_transition(self, event: StateChangeEvent):
-        logger.info(f"{event.old_state} -> {event.new_state}")
+    async def _log_state_transition_to(self, event: StateChangeEvent):
+        logger.info(f"Transitioning {event.old_state} to {event.new_state}")
+
+    async def _log_state_entered(self, event: StateChangeEvent):
+        logger.info(f"Entered {event.new_state} from {event.old_state}")
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         logging.getLogger("uvicorn.error").setLevel(logging.ERROR)
