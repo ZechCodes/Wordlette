@@ -1,6 +1,7 @@
 from wordlette.app.app_protocol import AppProtocol
 from wordlette.state_machine import StateMachine
-from wordlette.app.app_state import AppState, StateChangeEvent
+from wordlette.app.app_state import AppState
+from wordlette.state_machine.machine import StateChangeEvent
 from bevy import Bevy, Context, Inject
 from wordlette.smart_functions import call
 from typing import Callable, Iterator, Type, TypeAlias
