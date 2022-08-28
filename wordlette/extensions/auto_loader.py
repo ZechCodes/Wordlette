@@ -18,24 +18,24 @@ class ExtensionInfo:
 def auto_load_directory(
     path: Path, scan_for: Iterable[T]
 ) -> Generator[None, tuple[Path, ExtensionInfo], None]:
-    package = path.stem
     for file in path.iterdir():
         if can_import(file):
-            import_path = f"{package}.{file.stem}"
-            module, found_classes = load_extension_package(
-                import_path, scan_for, package
-            )
-            info = ExtensionInfo(import_path, module, found_classes)
-            yield file, info
+            yield file, import_package(file, path.stem, scan_for)
 
 
 def can_import(path: Path) -> bool:
     return is_python_file(path) or is_package(path)
 
 
-def is_python_file(path: Path) -> bool:
-    return path.suffix in {".py", ".pyc"}
+def import_package(path: Path, package: str, scan_for: Iterable[T]) -> ExtensionInfo:
+    import_path = f"{package}.{path.stem}"
+    module, found_classes = load_extension_package(import_path, scan_for, package)
+    return ExtensionInfo(import_path, module, found_classes)
 
 
 def is_package(path: Path) -> bool:
     return (path / "__init__.py").exists()
+
+
+def is_python_file(path: Path) -> bool:
+    return path.suffix in {".py", ".pyc"}
