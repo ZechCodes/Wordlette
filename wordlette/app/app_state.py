@@ -5,6 +5,7 @@ from pathlib import Path
 from starlette.applications import Starlette
 
 from wordlette.extensions.auto_loader import auto_load_directory
+from wordlette.extensions.page import Page
 from wordlette.state_machine import StateMachine, State
 from wordlette.wordlette.error_app import create_error_application
 
@@ -60,33 +61,47 @@ class AppState(StateMachine):
         return await self.next(app)
 
     @State
-    async def serving_site(self):
-        ...
+    async def serving_site(self, app):
+        site = Starlette()
+        context = self.bevy.branch()
+        context.add(site, use_as=Starlette)
+
+        pages_directory = Path("pages").resolve()
+        if pages_directory.exists():
+            page_extensions = dict(auto_load_directory(pages_directory, [Page]))
+            for extension in page_extensions.values():
+                for page in extension.found_classes[Page]:
+                    page.register(site)
+
+        else:
+            print("No pages to load")
+
+        return context
 
     @State
     async def shutting_down(self):
         ...
 
-    starting.goes_to(loading_extensions)
+    starting.goes_to(loading_app_plugins)
 
-    @loading_extensions.goes_to(creating_site_config).when
+    @loading_app_plugins.goes_to(creating_site_config).when
     @bevy_method
     async def site_config_is_incomplete(self, site_config: SiteConfig = Inject) -> bool:
-        return site_config.has_missing_values
+        return False and site_config.has_missing_values
 
-    @ (loading_extensions & creating_site_config).goes_to(creating_db_config).when
+    @ (loading_app_plugins & creating_site_config).goes_to(creating_db_config).when
     @bevy_method
     async def db_config_is_incomplete(self, db_config: DatabaseConfig = Inject) -> bool:
-        return db_config.has_missing_values
+        return False and db_config.has_missing_values
 
-    (loading_extensions & creating_site_config & creating_db_config).goes_to(
+    (loading_app_plugins & creating_site_config & creating_db_config).goes_to(
         connecting_db
     )
 
     @connecting_db.goes_to(creating_db_config).when
     @bevy_method
     async def database_failed_to_connect(self, database: Database = Inject) -> bool:
-        return database.failed_to_connect
+        return False and database.failed_to_connect
 
     connecting_db.goes_to(serving_site)
     serving_site.goes_to(shutting_down)
