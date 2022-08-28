@@ -1,8 +1,19 @@
 from __future__ import annotations
+
 from bevy import Inject, bevy_method
+from pathlib import Path
+from starlette.applications import Starlette
+
+from wordlette.extensions.auto_loader import auto_load_directory
 from wordlette.state_machine import StateMachine, State
 from wordlette.wordlette.error_app import create_error_application
-from starlette.applications import Starlette
+
+
+class SiteConfig:
+    ...
+
+
+Database = DatabaseConfig = SiteConfig
 
 
 class AppState(StateMachine):
@@ -20,13 +31,21 @@ class AppState(StateMachine):
         return await self.next(app)
 
     @State
-    async def loading_extensions(self, app):
+    async def loading_app_plugins(self, app):
         context = self.bevy.branch()
         context.add(
             create_error_application("Testing loading extensions", "Testing"),
             use_as=Starlette,
         )
-        return context
+        app_plugins_directory = Path("app_plugins").resolve()
+        if app_plugins_directory.exists():
+            app_plugins = dict(auto_load_directory(app_plugins_directory, []))
+            print("Loaded app plugins:", *app_plugins.keys())
+
+        else:
+            print("No app plugins to load")
+
+        return await self.next(app)
 
     @State
     async def creating_site_config(self, app):
