@@ -1,18 +1,18 @@
-from wordlette.app.app_protocol import AppProtocol
-from wordlette.state_machine import StateMachine
-from wordlette.app.app_state import AppState
-from wordlette.state_machine.machine import StateChangeEvent
-from bevy import Bevy, Context, Inject
-from wordlette.smart_functions import call
-from typing import Callable, Iterator, Type, TypeAlias
-from starlette.types import Receive, Scope, Send
-from starlette.applications import Starlette
-from wordlette.exceptions import WordletteNoStarletteAppFound
 import logging
 import uvicorn
-from wordlette.events import EventManager
+from bevy import Bevy, Context, Inject
 from copy import deepcopy
+from starlette.applications import Starlette
+from starlette.types import Receive, Scope, Send
+from typing import Callable, Iterator, Type, TypeAlias
 
+from wordlette.app.app_protocol import AppProtocol
+from wordlette.app.app_state import AppState
+from wordlette.events import EventManager
+from wordlette.exceptions import WordletteNoStarletteAppFound
+from wordlette.smart_functions import call
+from wordlette.state_machine import StateMachine
+from wordlette.state_machine.machine import StateChangeEvent
 
 StateMachineConstructor: TypeAlias = (
     Type[StateMachine]
