@@ -85,6 +85,28 @@ async def test_page_error_handlers():
 
 
 @pytest.mark.asyncio
+async def test_page_union_error_handlers():
+    response_content = "Test Exception Response"
+    status_code = 500
+
+    class TestPage(Page):
+        path = "/"
+
+        async def response(self):
+            raise RuntimeError(response_content)
+
+        async def on_test_error_response(self, error: RuntimeError | ZeroDivisionError):
+            return HTMLResponse(error.args[0], status_code=status_code)
+
+    app = create_app(TestPage)
+    async with AsyncClient(app=app) as client:
+        response = await client.get("http://localhost:8000/")
+
+    assert response.status_code == status_code
+    assert response.content.decode() == response_content
+
+
+@pytest.mark.asyncio
 async def test_page_error_in_error_handler():
     response_content_a = "Test Exception Response A"
     response_content_b = "Test Exception Response B"
