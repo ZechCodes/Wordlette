@@ -36,7 +36,9 @@ class Page(ABC):
                 cls.submit_handlers[sig.parameters["form"].annotation] = attr
 
     @abstractmethod
-    async def response(self, *args: P.args, **kwargs: P.kwargs) -> Response:
+    async def response(
+        self, *args: P.args, **kwargs: P.kwargs
+    ) -> Response | str | bytes:
         ...
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
@@ -54,6 +56,9 @@ class Page(ABC):
 
             else:
                 response = await self.exception_handler(exception)
+
+        if isinstance(response, (str, bytes)):
+            response = HTMLResponse(response)
 
         return await response(scope, receive, send)
 
