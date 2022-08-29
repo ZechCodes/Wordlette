@@ -4,7 +4,10 @@ from abc import ABC, abstractmethod
 from inspect import signature
 from starlette.applications import Starlette
 from starlette.responses import Response, HTMLResponse
+from starlette.types import Receive, Scope, Send
 from typing import Awaitable, Callable, ParamSpec, Type, TypeVar
+
+from wordlette.smart_functions import call
 
 P = ParamSpec("P")
 T = TypeVar("T", bound=type)
@@ -36,22 +39,29 @@ class Page(ABC):
     async def response(self, *args: P.args, **kwargs: P.kwargs) -> Response:
         ...
 
-    async def __call__(self, *args, **kwargs):
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
         try:
-            response = await self.response()
+            response = await call(self.response, **scope.get("path_params", {}))
         except Exception as exception:
             for error_type, handler in self.error_handlers.items():
                 if isinstance(exception, error_type):
-                    response = await handler.__get__(self, type(self))(exception)
+                    try:
+                        response = await handler.__get__(self, type(self))(exception)
+                    except Exception as e:
+                        response = await self.exception_handler(e)
+
                     break
+
             else:
                 response = await self.exception_handler(exception)
 
-        return await response(*args, **kwargs)
+        return await response(scope, receive, send)
 
     async def exception_handler(self, exception: Exception):
         st = traceback.format_exc()
-        return HTMLResponse(f"<h1>400 {type(exception).__name__}</h1><pre>{st}</pre>")
+        return HTMLResponse(
+            f"<h1>500 {type(exception).__name__}</h1><pre>{st}</pre>", status_code=500
+        )
 
     @classmethod
     def register(cls, app: Starlette):

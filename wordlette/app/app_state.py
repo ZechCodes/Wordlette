@@ -5,7 +5,7 @@ from pathlib import Path
 from starlette.applications import Starlette
 
 from wordlette.extensions.auto_loader import auto_load_directory
-from wordlette.extensions.page import Page
+from wordlette.extensions.pages import Page
 from wordlette.state_machine import StateMachine, State
 from wordlette.wordlette.error_app import create_error_application
 
