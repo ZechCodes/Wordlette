@@ -4,7 +4,7 @@ from starlette.applications import Starlette
 from starlette.responses import HTMLResponse
 
 from wordlette.app import App
-from wordlette.extensions.pages import Page
+from wordlette.pages import Page
 from wordlette.state_machine import StateMachine, State
 
 
