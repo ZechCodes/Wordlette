@@ -1,7 +1,8 @@
-from typing import Any, Callable, ParamSpec, Type, TypeVar
-from inspect import signature, Signature
 from collections import defaultdict
 
+from inspect import signature, Signature
+from types import UnionType
+from typing import Any, Callable, ParamSpec, Type, TypeVar, get_origin, get_args
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -29,8 +30,13 @@ def _get_param_type_matching_arg(
 ) -> Type | None:
     t = type(arg)
     for pt in param_types:
-        if issubclass(pt, t) or issubclass(t, pt):
-            return pt
+        types = [pt]
+        if get_origin(pt) is UnionType:
+            types = get_args(pt)
+
+        for type_ in types:
+            if type_ is not None and issubclass(type_, t) or issubclass(t, type_):
+                return type_
 
     return None
 
@@ -42,7 +48,8 @@ def _match_params_to_args(
     for arg in args:
         param_type = _get_param_type_matching_arg(param_types, arg)
         if param_type and param_types[param_type]:
-            params[param_types[param_type].pop(0)] = arg
+            name = param_types[param_type].pop(0)
+            params[name] = arg
 
     return params
 
@@ -50,6 +57,11 @@ def _match_params_to_args(
 def _organize_by_param_types(sig: Signature) -> dict[Type, list[str]]:
     param_types = defaultdict(list)
     for name, param in sig.parameters.items():
-        param_types[param.annotation].append(name)
+        types = [param.annotation]
+        if get_origin(types[0]) is UnionType:
+            types = {t for t in get_args(types[0]) if t is not None}
+
+        for type_ in types:
+            param_types[type_].append(name)
 
     return param_types
