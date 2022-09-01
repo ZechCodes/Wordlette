@@ -8,6 +8,7 @@ from starlette.responses import Response, HTMLResponse
 from starlette.types import Receive, Scope, Send
 from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeAlias, TypeVar
 
+from wordlette.exceptions import WordlettePageDoesntSupportForm
 from wordlette.forms import Form
 from wordlette.smart_functions import call
 
@@ -83,7 +84,9 @@ class Page(ABC):
         form_data = await request.form()
         form_type, submit_handler = self._find_form_handler(form_data)
         if not form_type:
-            return
+            raise WordlettePageDoesntSupportForm(
+                "Wordlette could not find an on submit handler for the submitted form."
+            )
 
         return await call(
             submit_handler.__get__(self, type(self)),

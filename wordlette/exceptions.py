@@ -20,3 +20,7 @@ class WordletteHostAndPortRequired(WordletteException):
 
 class WordlettePortMustBeAnInteger(WordletteException):
     """Raised when Wordlette is launched using the CLI & is given an invalid port."""
+
+
+class WordlettePageDoesntSupportForm(WordletteException):
+    """Raised when a form is submitted to a page and the page doesn't have an on submit handler that matches it."""
