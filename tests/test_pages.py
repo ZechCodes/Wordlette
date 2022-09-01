@@ -4,6 +4,7 @@ from starlette.applications import Starlette
 from starlette.responses import HTMLResponse
 
 from wordlette.app import App
+from wordlette.forms import Form, Field
 from wordlette.pages import Page
 from wordlette.state_machine import StateMachine, State
 
@@ -26,24 +27,6 @@ def create_app(page):
 
 
 @pytest.mark.asyncio
-async def test_page_get():
-    response_content = "Test Response"
-
-    class TestPage(Page):
-        path = "/"
-
-        async def response(self):
-            return HTMLResponse(response_content)
-
-    app = create_app(TestPage)
-    async with AsyncClient(app=app) as client:
-        response = await client.get("http://localhost:8000/")
-
-    assert response.status_code == 200
-    assert response.content.decode() == response_content
-
-
-@pytest.mark.asyncio
 async def test_page_get_url_parameter():
     response_content = "Test Response"
     request_word = "Parameter"
@@ -58,8 +41,68 @@ async def test_page_get_url_parameter():
     async with AsyncClient(app=app) as client:
         response = await client.get(f"http://localhost:8000/{request_word}")
 
-    # assert response.status_code == 200
+    assert response.status_code == 200
     assert response.content.decode() == f"{response_content} - {request_word}"
+
+
+@pytest.mark.asyncio
+async def test_page_post():
+    submit_value = "test field"
+
+    class TestForm(Form):
+        test_field: str
+
+    class TestPage(Page):
+        path = "/"
+
+        def __init__(self):
+            self.message = "NO SUBMIT"
+
+        async def response(self, form: TestForm):
+            return HTMLResponse(f"{form.test_field} {self.message}")
+
+        async def on_form_submit(self, form: TestForm):
+            self.message = form.test_field
+            return form
+
+    app = create_app(TestPage)
+    async with AsyncClient(app=app) as client:
+        response = await client.post(
+            f"http://localhost:8000/", data={"test_field": submit_value}
+        )
+
+    # assert response.status_code == 200
+    assert response.content.decode() == f"{submit_value} {submit_value}"
+
+
+@pytest.mark.asyncio
+async def test_page_post_optional_fields():
+    submit_value = "test field"
+
+    class TestForm(Form):
+        test_field: str
+        testing_optionals: int = Field(optional=True)
+
+    class TestPage(Page):
+        path = "/"
+
+        def __init__(self):
+            self.message = "NO SUBMIT"
+
+        async def response(self, form: TestForm):
+            return HTMLResponse(f"{form.test_field} {self.message}")
+
+        async def on_form_submit(self, form: TestForm):
+            self.message = form.test_field
+            return form
+
+    app = create_app(TestPage)
+    async with AsyncClient(app=app) as client:
+        response = await client.post(
+            f"http://localhost:8000/", data={"test_field": submit_value}
+        )
+
+    assert response.content.decode() == f"{submit_value} {submit_value}"
 
 
 @pytest.mark.asyncio
