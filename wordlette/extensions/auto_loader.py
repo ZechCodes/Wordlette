@@ -24,6 +24,9 @@ def auto_load_directory(
 
 
 def can_import(path: Path) -> bool:
+    if path.name.startswith("_"):
+        return False
+
     return is_python_file(path) or is_package(path)
 
 
