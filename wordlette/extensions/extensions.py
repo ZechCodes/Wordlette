@@ -17,3 +17,6 @@ class Extension(Bevy):
     def __repr__(self):
         return f"{type(self).__name__}({self.name!r}, plugins={self.plugins})"
 
+
+class AppExtension(Extension):
+    ...
