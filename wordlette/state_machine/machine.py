@@ -1,11 +1,13 @@
 from __future__ import annotations
-from wordlette.state_machine.state import State
-from wordlette.exceptions import WordletteStateMachineAlreadyStarted
-from typing import Any, Generic, ParamSpec, TypeVar
-from bevy import Bevy, Context, Inject, bevy_method
-from wordlette.events import EventManager
-from dataclasses import dataclass
+
 import asyncio
+from bevy import Bevy, Context, Inject, bevy_method
+from dataclasses import dataclass
+from typing import Any, Generic, ParamSpec, TypeVar
+
+from wordlette.events import EventManager
+from wordlette.exceptions import WordletteStateMachineAlreadyStarted
+from wordlette.state_machine.state import State
 
 P = ParamSpec("P")
 T = TypeVar("T")
@@ -89,6 +91,9 @@ class StateMachine(Generic[T, P], Bevy):
             await self._dispatch("changed-state", old_state, self.state, args, kwargs)
 
         return self._current_value
+
+    def __repr__(self):
+        return f"{type(self).__name__}(state={self.state})"
 
     @bevy_method
     async def _dispatch(
