@@ -5,6 +5,7 @@ from pathlib import Path
 from starlette.applications import Starlette
 
 from wordlette.extensions.auto_loader import auto_load_directory
+from wordlette.extensions.plugins import Plugin
 from wordlette.pages import Page
 from wordlette.state_machine import StateMachine, State
 from wordlette.wordlette.error_app import create_error_application
@@ -40,11 +41,10 @@ class AppState(StateMachine):
         )
         app_plugins_directory = Path("app_plugins").resolve()
         if app_plugins_directory.exists():
-            app_plugins = dict(auto_load_directory(app_plugins_directory, []))
-            print("Loaded app plugins:", *app_plugins.keys())
-
-        else:
-            print("No app plugins to load")
+            for module, extension_info in auto_load_directory(
+                app_plugins_directory, [Plugin]
+            ):
+                app.load_app_extension(extension_info)
 
         return await self.next(app)
 
