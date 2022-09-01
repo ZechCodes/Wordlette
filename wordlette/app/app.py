@@ -74,7 +74,8 @@ class App(Bevy):
 
     @classmethod
     def start(cls, host: str, port: int, extensions_modules: Iterator[str]):
-        app = cls()
+        context = Context.factory()
+        app = context.create(cls, cache=True)
         uvicorn.run(app, host=host, port=port, log_config=cls._create_logging_config())
 
     @staticmethod
