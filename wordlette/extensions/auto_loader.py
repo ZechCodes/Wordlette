@@ -10,6 +10,7 @@ T = TypeVar("T", bound=type)
 
 @dataclass()
 class ExtensionInfo:
+    path: Path
     import_path: str
     module: ModuleType
     found_classes: dict[T, set[T]]
@@ -33,7 +34,7 @@ def can_import(path: Path) -> bool:
 def import_package(path: Path, package: str, scan_for: Iterable[T]) -> ExtensionInfo:
     import_path = f"{package}.{path.stem}"
     module, found_classes = load_extension_package(import_path, scan_for, package)
-    return ExtensionInfo(import_path, module, found_classes)
+    return ExtensionInfo(path, import_path, module, found_classes)
 
 
 def is_package(path: Path) -> bool:
