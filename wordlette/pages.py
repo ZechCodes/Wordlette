@@ -6,13 +6,14 @@ from bevy import Context
 from inspect import signature
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import Response, HTMLResponse
+from starlette.responses import HTMLResponse
 from starlette.types import Receive, Scope, Send
 from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeAlias, TypeVar
 
 from wordlette.bevy_utils import bind_proxy
 from wordlette.exceptions import WordlettePageDoesntSupportForm
 from wordlette.forms import Form
+from wordlette.responses import Response
 from wordlette.smart_functions import call
 
 P = ParamSpec("P")
@@ -78,8 +79,12 @@ class Page(ABC, Bevy):
             else:
                 response = await self.exception_handler(exception)
 
-        if isinstance(response, (str, bytes)):
-            response = HTMLResponse(response)
+        match response:
+            case str() | bytes():
+                response = HTMLResponse(response)
+
+            case Response():
+                response = await bind_proxy(self.bevy, response).create_response()
 
         return await response(scope, receive, send)
 
