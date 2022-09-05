@@ -71,7 +71,7 @@ class AppState(StateMachine):
             page_extensions = dict(auto_load_directory(pages_directory, [Page]))
             for extension in page_extensions.values():
                 for page in extension.found_classes[Page]:
-                    page.register(site)
+                    page.register(site, context)
 
         else:
             print("No pages to load")

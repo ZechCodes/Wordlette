@@ -1,6 +1,8 @@
 import re
 import traceback
 from abc import ABC, abstractmethod
+from bevy import Bevy
+from bevy import Context
 from inspect import signature
 from starlette.applications import Starlette
 from starlette.requests import Request
@@ -20,7 +22,7 @@ ErrorHandler: TypeAlias = Callable[[Exception], Awaitable[Response]]
 SubmitHandler: TypeAlias = Callable[P, Awaitable[T]]
 
 
-class Page(ABC):
+class Page(ABC, Bevy):
     path: str
 
     error_handlers: dict[Type[Exception], ErrorHandler]
@@ -110,9 +112,9 @@ class Page(ABC):
         )
 
     @classmethod
-    def register(cls, app: Starlette):
+    def register(cls, site: Starlette, context: Context):
         methods = ["get"]
         if cls.submit_handlers:
             methods.append("post")
 
-        app.add_route(cls.path, cls(), methods, cls.__qualname__)
+        site.add_route(cls.path, context.bind(cls)(), methods, cls.__qualname__)
