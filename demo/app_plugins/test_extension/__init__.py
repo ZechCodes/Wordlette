@@ -33,4 +33,4 @@ class BevyPlugin(Plugin, Bevy):
         if event.new_state == self.app.state.serving_site:
             engine: TemplateEngine = self.bevy.find(TemplateEngine)
             print(engine.search_paths)
-            TestPage.register(self.app.context.find(Starlette), self.app.context)
+            TestPage.register(self.app.context.find(Starlette), self.bevy)
