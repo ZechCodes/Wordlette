@@ -2,6 +2,7 @@ import logging
 import uvicorn
 from bevy import Bevy, Context, Inject
 from copy import deepcopy
+from pathlib import Path
 from starlette.applications import Starlette
 from starlette.types import Receive, Scope, Send
 from typing import Callable, Iterator, Type, TypeAlias
@@ -16,6 +17,7 @@ from wordlette.extensions.plugins import Plugin
 from wordlette.smart_functions import call
 from wordlette.state_machine import StateMachine
 from wordlette.state_machine.machine import StateChangeEvent
+from wordlette.templates import TemplateEngine
 
 StateMachineConstructor: TypeAlias = (
     Type[StateMachine]
@@ -31,6 +33,9 @@ class App(Bevy):
 
     def __init__(self, state_machine_constructor: StateMachineConstructor = AppState):
         self.extensions = set()
+        self.template_engine = self.bevy.create(
+            TemplateEngine, "SITE", [Path("themes").resolve() / "default"], cache=True
+        )
         self._state = call(self.bevy.bind(state_machine_constructor), self)
         self.events.listen({"type": "changing-state"}, self._log_state_transition_to)
         self.events.listen({"type": "changed-state"}, self._log_state_entered)
