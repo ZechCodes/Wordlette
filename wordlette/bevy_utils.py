@@ -1,7 +1,16 @@
 from bevy import Context
 from typing import TypeVar
 
+from wordlette.exceptions import WordletteNotBoundToABevyContextError
+
 T = TypeVar("T")
+
+
+class UnboundBevyContext(Context):
+    def __get__(self, instance, __):
+        raise WordletteNotBoundToABevyContextError(
+            f"{instance!r} is not bound to a Bevy context"
+        )
 
 
 def bind_proxy(context: Context, instance: T) -> T:

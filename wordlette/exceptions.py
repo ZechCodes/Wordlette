@@ -24,3 +24,7 @@ class WordlettePortMustBeAnInteger(WordletteException):
 
 class WordlettePageDoesntSupportForm(WordletteException):
     """Raised when a form is submitted to a page and the page doesn't have an on submit handler that matches it."""
+
+
+class WordletteNotBoundToABevyContextError(WordletteException):
+    """Raised when attempting to access the Bevy context of an object when it is not bound to a context."""
