@@ -46,7 +46,7 @@ class App(Bevy):
     ):
         context = self.app_context.branch()
         extension: Extension = context.create(
-            extension_type, extension_info.import_path
+            extension_type, extension_info.import_path, cache=True
         )
         self.extensions.add(extension)
 
