@@ -10,6 +10,7 @@ from starlette.responses import Response, HTMLResponse
 from starlette.types import Receive, Scope, Send
 from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeAlias, TypeVar
 
+from wordlette.bevy_utils import bind_proxy
 from wordlette.exceptions import WordlettePageDoesntSupportForm
 from wordlette.forms import Form
 from wordlette.smart_functions import call
@@ -51,6 +52,9 @@ class Page(ABC, Bevy):
         ...
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        return await bind_proxy(self.bevy.branch(), self)._handle_request(scope, receive, send)
+
+    async def _handle_request(self, scope: Scope, receive: Receive, send: Send):
         request = Request(scope, receive)
         call_params = [request]
         try:
