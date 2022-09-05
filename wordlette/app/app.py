@@ -50,6 +50,13 @@ class App(Bevy):
         self, extension_info: ExtensionInfo, extension_type: Type[Extension]
     ):
         context = self.app_context.branch()
+        context.create(
+            TemplateEngine,
+            extension_info.path.stem,
+            [extension_info.path / "templates"] if extension_info.path.is_dir() else [],
+            self.template_engine,
+            cache=True,
+        )
         extension: Extension = context.create(
             extension_type, extension_info.import_path, cache=True
         )
