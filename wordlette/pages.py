@@ -53,7 +53,9 @@ class Page(ABC, Bevy):
         ...
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
-        return await bind_proxy(self.bevy.branch(), self)._handle_request(scope, receive, send)
+        return await bind_proxy(self.bevy.branch(), self)._handle_request(
+            scope, receive, send
+        )
 
     async def _handle_request(self, scope: Scope, receive: Receive, send: Send):
         request = Request(scope, receive)

@@ -4,6 +4,7 @@ from pathlib import Path
 
 from wordlette.null_type import NullType
 from wordlette.templates.renderers import TemplateRenderer
+from typing import Generator
 
 
 class TemplateEngine:
@@ -18,20 +19,15 @@ class TemplateEngine:
         self.search_paths = search_paths
 
     async def get_template(self, relative_path: str) -> TemplateRenderer:
-        return TemplateRenderer(await self.find_template_file(relative_path))
+        return TemplateRenderer(relative_path, self.get_template_search_paths())
 
-    async def find_template_file(self, relative_path: str):
-        clean_path = relative_path.lstrip(r"\/")
-        if template_file := await self.parent.find_template_file(
-            f"{self.name}/{clean_path}"
-        ):
-            return template_file
-
-        for search_path in self.search_paths:
-            path = search_path / clean_path
-            print("CHECKING", path)
-            if path.exists():
-                return path
+    def get_template_search_paths(self) -> Generator[None, Path, None]:
+        yield from (
+            path
+            for search_path in self.parent.get_template_search_paths()
+            if (path := search_path / self.name).exists()
+        )
+        yield from self.search_paths
 
     def __repr__(self):
         parent_simple_repr = (
@@ -47,5 +43,5 @@ class NullTemplateEngine(TemplateEngine, NullType):
     async def get_template(self, *_) -> None:
         return None
 
-    async def find_template_file(self, *_) -> None:
-        return None
+    def get_template_search_paths(self, *_) -> Generator[None, None, None]:
+        yield from []
