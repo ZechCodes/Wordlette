@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import ParamSpec, TypeAlias, TypeVar
+from typing import Awaitable, Callable, ParamSpec, TypeAlias, TypeVar
 
 P = ParamSpec("P")
-PolicyCollection: TypeAlias = set["Policy"]
 T = TypeVar("T")
+
+PolicyCollection: TypeAlias = set[Callable[P, Awaitable] | "Policy"]
 
 
 class Policy(ABC):
@@ -13,8 +14,8 @@ class Policy(ABC):
         self._policies = PolicyCollection()
         self._preempt_policies = PolicyCollection()
 
-    async def __call__(self, value: T, *args: P.args, **kwargs: P.kwargs) -> T:
-        return await self.enforce(value, *args, **kwargs)
+    async def __call__(self, *args: P.args, **kwargs: P.kwargs):
+        await self.enforce(*args, **kwargs)
 
     @property
     @abstractmethod
@@ -31,11 +32,10 @@ class Policy(ABC):
     def add_preempting_policy(self, policy: Policy):
         self._add_policy(policy, self._preempt_policies)
 
-    async def enforce(self, value: T, *args: P.args, **kwargs: P.kwargs) -> T:
-        value = await self._run_policies(self._preempt_policies, value, *args, **kwargs)
         value = await self.run(value, *args, **kwargs)
-        value = await self._run_policies(value, self._policies, *args, **kwargs)
-        return value
+    async def enforce(self, *args: P.args, **kwargs: P.kwargs):
+        await self._run_policies(self._preempt_policies, *args, **kwargs)
+        await self._run_policies(self._policies, *args, **kwargs)
 
     @staticmethod
     def _add_policy(policy: Policy, policy_collection: set[Policy]):
@@ -43,9 +43,7 @@ class Policy(ABC):
 
     @staticmethod
     async def _run_policies(
-        policies: PolicyCollection, value: T, *args: P.args, **kwargs: P.kwargs
-    ) -> T:
+        policies: PolicyCollection, *args: P.args, **kwargs: P.kwargs
+    ):
         for policy in policies:
-            value = await policy(value, *args, **kwargs)
-
-        return value
+            await policy(*args, **kwargs)
