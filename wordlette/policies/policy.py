@@ -14,6 +14,8 @@ class Policy(ABC):
         self._policies = PolicyCollection()
         self._preempt_policies = PolicyCollection()
 
+        self._policies.add(self.rule)
+
     async def __call__(self, *args: P.args, **kwargs: P.kwargs):
         await self.enforce(*args, **kwargs)
 
@@ -23,7 +25,7 @@ class Policy(ABC):
         ...
 
     @abstractmethod
-    async def run(self, value: T, *args: P.args, **kwargs: P.kwargs) -> T:
+    async def rule(self, *args: P.args, **kwargs: P.kwargs):
         ...
 
     def add_policy(self, policy: Policy):
@@ -32,7 +34,6 @@ class Policy(ABC):
     def add_preempting_policy(self, policy: Policy):
         self._add_policy(policy, self._preempt_policies)
 
-        value = await self.run(value, *args, **kwargs)
     async def enforce(self, *args: P.args, **kwargs: P.kwargs):
         await self._run_policies(self._preempt_policies, *args, **kwargs)
         await self._run_policies(self._policies, *args, **kwargs)
