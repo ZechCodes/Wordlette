@@ -41,6 +41,13 @@ class App(Bevy):
         self.events.listen({"type": "changing-state"}, self._log_state_transition_to)
         self.events.listen({"type": "changed-state"}, self._log_state_entered)
 
+    @classmethod
+    def start(cls, host: str, port: int, extensions_modules: Iterator[str]):
+        context = Context.factory()
+        context.add_provider(PolicyProvider)
+        app = context.create(cls, cache=True)
+        uvicorn.run(app, host=host, port=port, log_config=cls._create_logging_config())
+
     def load_app_extension(self, extension_info: ExtensionInfo):
         self._load_extension(extension_info, AppExtension)
 
@@ -109,13 +116,6 @@ class App(Bevy):
             await self.state.start(self.state.starting, self)
         except Exception as exception:
             logger.exception("ERROR ENCOUNTERED")
-
-    @classmethod
-    def start(cls, host: str, port: int, extensions_modules: Iterator[str]):
-        context = Context.factory()
-        context.add_provider(PolicyProvider)
-        app = context.create(cls, cache=True)
-        uvicorn.run(app, host=host, port=port, log_config=cls._create_logging_config())
 
     @staticmethod
     def _create_logging_config():
