@@ -14,6 +14,7 @@ from wordlette.exceptions import WordletteNoStarletteAppFound
 from wordlette.extensions.auto_loader import ExtensionInfo
 from wordlette.extensions.extensions import AppExtension, Extension
 from wordlette.extensions.plugins import Plugin
+from wordlette.policies.provider import PolicyProvider
 from wordlette.smart_functions import call
 from wordlette.state_machine import StateMachine
 from wordlette.state_machine.machine import StateChangeEvent
@@ -112,6 +113,7 @@ class App(Bevy):
     @classmethod
     def start(cls, host: str, port: int, extensions_modules: Iterator[str]):
         context = Context.factory()
+        context.add_provider(PolicyProvider)
         app = context.create(cls, cache=True)
         uvicorn.run(app, host=host, port=port, log_config=cls._create_logging_config())
 
