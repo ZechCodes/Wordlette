@@ -39,7 +39,7 @@ class Policy(ABC):
         await self._run_policies(self._policies, *args, **kwargs)
 
     @staticmethod
-    def _add_policy(policy: Policy, policy_collection: set[Policy]):
+    def _add_policy(policy: Policy, policy_collection: PolicyCollection):
         policy_collection.add(policy)
 
     @staticmethod
