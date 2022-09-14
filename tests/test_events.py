@@ -1,30 +1,24 @@
-from wordlette.events import EventManager
 import pytest
+from bevy import Context
+
+from wordlette.events import Eventable
 
 
 @pytest.mark.asyncio
 async def test_event_dispatch():
-    value_received = None
+    class Test(Eventable):
+        ...
 
-    async def listener(value):
-        nonlocal value_received
-        value_received = value
+    class TestListener(Eventable):
+        ran = False
 
-    events = EventManager()
-    events.listen({"name": "test-event"}, listener)
-    await events.dispatch({"name": "test-event"}, "test value")
-    assert value_received == "test value"
+        @Test.on("test-event")
+        async def test_event_handler(self):
+            self.ran = True
 
+    context = Context.factory()
+    dispatcher = context.create(Test, cache=True)
+    listener = context.create(TestListener)
 
-@pytest.mark.asyncio
-async def test_event_label_subset_matching():
-    value_received = None
-
-    async def listener(value):
-        nonlocal value_received
-        value_received = value
-
-    events = EventManager()
-    events.listen({"name": "test-event"}, listener)
-    await events.dispatch({"name": "test-event", "testing": True}, "test value")
-    assert value_received == "test value"
+    await dispatcher.dispatch("test-event")
+    assert listener.ran
