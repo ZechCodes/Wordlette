@@ -1,10 +1,11 @@
-from bevy import Bevy, Inject, bevy_method
+from bevy import Inject, bevy_method
 from starlette.applications import Starlette
 
 from wordlette.app import App
-from wordlette.events import EventManager
+from wordlette.events import Eventable
 from wordlette.extensions.plugins import Plugin
 from wordlette.pages import Page
+from wordlette.state_machine import StateMachine
 from wordlette.templates import Template, TemplateEngine
 
 
@@ -20,17 +21,15 @@ class TestPlugin(Plugin):
         print("STARTED PLUGIN")
 
 
-class BevyPlugin(Plugin, Bevy):
-    events: EventManager = Inject
-
+class BevyPlugin(Plugin, Eventable):
     @bevy_method
     def __init__(self, app: App = Inject):
+        super().__init__()
         self.app = app
-        print(app.state)
-        self.events.listen({"type": "changed-state"}, self.register_pages)
+        print(">>> CURRENT STATE", app.state)
 
+    @StateMachine.on("changed-state[serving_site]")
     async def register_pages(self, event):
-        if event.new_state == self.app.state.serving_site:
-            engine: TemplateEngine = self.bevy.find(TemplateEngine)
-            print(engine.search_paths)
-            TestPage.register(self.app.context.find(Starlette), self.bevy)
+        engine: TemplateEngine = self.bevy.find(TemplateEngine)
+        print(">>> SEARCH PATHS", engine.search_paths)
+        TestPage.register(self.app.context.find(Starlette), self.bevy)
