@@ -20,7 +20,7 @@ class TestPlugin(Plugin):
         print("STARTED PLUGIN")
 
 
-class BevyPlugin(Plugin):
+class Plugin(Plugin):
     @bevy_method
     def __init__(self, app: App = Inject):
         super().__init__()
