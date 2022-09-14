@@ -1,6 +1,6 @@
 import logging
 import uvicorn
-from bevy import Bevy, Context, Inject
+from bevy import Context
 from copy import deepcopy
 from pathlib import Path
 from starlette.applications import Starlette
@@ -9,13 +9,12 @@ from typing import Callable, Iterator, Type, TypeAlias
 
 from wordlette.app.app_protocol import AppProtocol
 from wordlette.app.app_state import AppState
-from wordlette.events import EventManager
+from wordlette.events import Eventable
 from wordlette.exceptions import WordletteNoStarletteAppFound
 from wordlette.extensions.auto_loader import ExtensionInfo
 from wordlette.extensions.extensions import AppExtension, Extension
 from wordlette.extensions.plugins import Plugin
 from wordlette.policies.provider import PolicyProvider
-from wordlette.smart_functions import call
 from wordlette.state_machine import StateMachine
 from wordlette.state_machine.machine import StateChangeEvent
 from wordlette.templates import TemplateEngine
@@ -29,17 +28,15 @@ StateMachineConstructor: TypeAlias = (
 logger = logging.getLogger("wordlette")
 
 
-class App(Bevy):
-    events: EventManager = Inject
-
+class App(Eventable):
     def __init__(self, state_machine_constructor: StateMachineConstructor = AppState):
         self.extensions = set()
         self.template_engine = self.bevy.create(
             TemplateEngine, "SITE", [Path("themes").resolve() / "default"], cache=True
         )
-        self._state = call(self.bevy.bind(state_machine_constructor), self)
-        self.events.listen({"type": "changing-state"}, self._log_state_transition_to)
-        self.events.listen({"type": "changed-state"}, self._log_state_entered)
+        self._state = self.bevy.create(state_machine_constructor, cache=True)
+
+        self._register_listeners()
 
     @classmethod
     def start(cls, host: str, port: int, extensions_modules: Iterator[str]):
@@ -76,9 +73,11 @@ class App(Bevy):
         )
         logger.info(f"{extension_type.__name__} Loaded: {extension.name}")
 
+    @StateMachine.on("changing-state")
     async def _log_state_transition_to(self, event: StateChangeEvent):
         logger.info(f"Transitioning {event.old_state} to {event.new_state}")
 
+    @StateMachine.on("changed-state")
     async def _log_state_entered(self, event: StateChangeEvent):
         logger.info(f"Entered {event.new_state} from {event.old_state}")
 
