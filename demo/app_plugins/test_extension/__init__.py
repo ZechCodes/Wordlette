@@ -2,7 +2,6 @@ from bevy import Inject, bevy_method
 from starlette.applications import Starlette
 
 from wordlette.app import App
-from wordlette.events import Eventable
 from wordlette.extensions.plugins import Plugin
 from wordlette.pages import Page
 from wordlette.state_machine import StateMachine
@@ -21,7 +20,7 @@ class TestPlugin(Plugin):
         print("STARTED PLUGIN")
 
 
-class BevyPlugin(Plugin, Eventable):
+class BevyPlugin(Plugin):
     @bevy_method
     def __init__(self, app: App = Inject):
         super().__init__()
