@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from typing import Awaitable, Callable, Generic, ParamSpec, TypeAlias, TypeVar
 
 from .policy import Policy
@@ -11,7 +11,7 @@ T = TypeVar("T")
 PolicyCollection: TypeAlias = set[Callable[P, Awaitable[T]] | "ValuePolicy[T]"]
 
 
-class ValuePolicy(ABC, Policy, Generic[T]):
+class ValuePolicy(Generic[T], Policy):
     async def __call__(self, value: T, *args: P.args, **kwargs: P.kwargs) -> T:
         return await self.enforce(*args, **kwargs)
 
