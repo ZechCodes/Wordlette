@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 import asyncio
-from bevy import Bevy, Context, Inject, bevy_method
+from bevy import Context
 from dataclasses import dataclass
 from typing import Any, Generic, ParamSpec, TypeVar
 
-from wordlette.events import EventManager
+from wordlette.events import Eventable
 from wordlette.exceptions import WordletteStateMachineAlreadyStarted
 from wordlette.state_machine.state import State
 
@@ -30,7 +30,7 @@ class DepthCounter:
 
 @dataclass()
 class StateChangeEvent:
-    type: str
+    event: str
     old_state: State
     new_state: State
     context: Context
@@ -38,8 +38,9 @@ class StateChangeEvent:
     kwargs: dict[str, Any]
 
 
-class StateMachine(Generic[T, P], Bevy):
+class StateMachine(Generic[T, P], Eventable):
     def __init__(self):
+        super().__init__()
         self._current_state: State[T, P] | None = None
         self._current_value: T | None = None
         self._entered_states = DepthCounter()
@@ -95,20 +96,16 @@ class StateMachine(Generic[T, P], Bevy):
     def __repr__(self):
         return f"{type(self).__name__}(state={self.state})"
 
-    @bevy_method
     async def _dispatch(
         self,
-        type: str,
+        event: str,
         old_state: State,
         new_state: State,
         args: tuple[Any],
         kwargs: dict[str, Any],
-        events: EventManager = Inject,
     ):
-        label = {
-            "type": type,
-            "old-state": old_state,
-            "new-state": new_state,
-        }
-        event = StateChangeEvent(type, old_state, new_state, self.value, args, kwargs)
-        await events.dispatch(label, event)
+        payload = StateChangeEvent(
+            event, old_state, new_state, self.value, args, kwargs
+        )
+        await self.dispatch(event, payload)
+        await self.dispatch(f"{event}[{new_state.name}]", payload)
