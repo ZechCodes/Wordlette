@@ -1,10 +1,16 @@
 from bevy import bevy_method, Inject
+from itertools import compress
 from pathlib import Path
 from starlette.applications import Starlette
 
+import wordlette.config.json_loader as json_loader
+import wordlette.config.toml_loader as toml_loader
+import wordlette.config.yaml_loader as yaml_loader
+from wordlette.config.config import Config
 from wordlette.extensions.auto_loader import auto_load_directory
 from wordlette.extensions.plugins import Plugin
 from wordlette.pages import Page
+from wordlette.settings import Settings
 from wordlette.state_machine import State
 from wordlette.wordlette.error_app import create_error_application
 from .base_app import BaseApp
@@ -54,7 +60,20 @@ class LoadingAppPlugins(BaseAppState):
 
 
 class LoadingConfig(BaseAppState):
-    async def enter(self):
+    @bevy_method
+    async def enter(self, settings: Settings = Inject, config: Config = Inject):
+        # Add file type loaders that have the necessary modules installed
+        settings["file_loaders"] = list(
+            compress(
+                [
+                    yaml_loader.YamlFileLoader,
+                    toml_loader.TomlFileLoader,
+                    json_loader.JsonFileLoader,
+                ],
+                [yaml_loader.yaml, toml_loader.toml, json_loader.json],
+            )
+        )
+        await config.load_config()
         return True
 
     async def next(self):
