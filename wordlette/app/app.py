@@ -7,9 +7,7 @@ from starlette.applications import Starlette
 from starlette.types import Receive, Scope, Send
 from typing import Callable, Iterator, Type, TypeAlias
 
-from wordlette.app.app_protocol import AppProtocol
-from wordlette.app.app_state import AppState
-from wordlette.events import Eventable
+from wordlette.app.app_state import BaseAppState, Starting
 from wordlette.exceptions import WordletteNoStarletteAppFound
 from wordlette.extensions.auto_loader import ExtensionInfo
 from wordlette.extensions.extensions import AppExtension, Extension
@@ -18,25 +16,25 @@ from wordlette.policies.provider import PolicyProvider
 from wordlette.state_machine import StateMachine
 from wordlette.state_machine.machine import StateChangeEvent
 from wordlette.templates import TemplateEngine
+from .base_app import BaseApp
 
 StateMachineConstructor: TypeAlias = (
-    Type[StateMachine]
-    | Callable[[AppProtocol], StateMachine]
-    | Callable[[], StateMachine]
+    Type[StateMachine] | Callable[[BaseApp], StateMachine] | Callable[[], StateMachine]
 )
 
 logger = logging.getLogger("wordlette")
 
 
-class App(Eventable):
-    def __init__(self, state_machine_constructor: StateMachineConstructor = AppState):
+class App(BaseApp):
+    def __init__(self, starting_state: Type[BaseAppState] = Starting):
         self.extensions = set()
         self.template_engine = self.bevy.create(
             TemplateEngine, "SITE", [Path("themes").resolve() / "default"], cache=True
         )
-        self._state = self.bevy.create(state_machine_constructor, cache=True)
+        self._state_machine = self.bevy.create(StateMachine, cache=True)
+        self._starting_state = starting_state
 
-        self._register_listeners()
+        super().__init__()
 
     @classmethod
     def start(cls, host: str, port: int, extensions_modules: Iterator[str]):
@@ -73,22 +71,22 @@ class App(Eventable):
         )
         logger.info(f"{extension_type.__name__} Loaded: {extension.name}")
 
-    @StateMachine.on("changing-state")
+    @StateMachine.on("transitioned-to-state")
     async def _log_state_transition_to(self, event: StateChangeEvent):
         logger.info(f"Transitioning {event.old_state} to {event.new_state}")
 
-    @StateMachine.on("changed-state")
+    @StateMachine.on("entered-state")
     async def _log_state_entered(self, event: StateChangeEvent):
         logger.info(f"Entered {event.new_state} from {event.old_state}")
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         logging.getLogger("uvicorn.error").setLevel(logging.ERROR)
-        if not self.state.started:
+        if not self.state_machine.started:
             await self._start()
 
         if not self.app:
             raise WordletteNoStarletteAppFound(
-                f"Cannot handle {scope['type']=} because the current application state has not added a Starlette app "
+                f"Cannot handle {scope['type']=} because the current application state_machine has not added a Starlette app "
                 "to the context."
             )
 
@@ -104,15 +102,19 @@ class App(Eventable):
 
     @property
     def context(self) -> Context:
-        return self.state.value
+        return self.state_machine.state.context
 
     @property
-    def state(self) -> StateMachine:
-        return self._state
+    def router(self) -> Starlette | None:
+        return self.context.find(Starlette)
+
+    @property
+    def state_machine(self) -> StateMachine[BaseAppState]:
+        return self._state_machine
 
     async def _start(self):
         try:
-            await self.state.start(self.state.starting, self)
+            await self.state_machine.start(self._starting_state)
         except Exception as exception:
             logger.exception("ERROR ENCOUNTERED")
 

@@ -1,5 +1,4 @@
 from bevy import Inject, bevy_method
-from starlette.applications import Starlette
 
 from wordlette.app import App
 from wordlette.extensions.plugins import Plugin
@@ -17,6 +16,7 @@ class TestPage(Page):
 
 class TestPlugin(Plugin):
     def __init__(self):
+        super(TestPlugin, self).__init__()
         print("STARTED PLUGIN")
 
 
@@ -25,10 +25,10 @@ class Plugin(Plugin):
     def __init__(self, app: App = Inject):
         super().__init__()
         self.app = app
-        print(">>> CURRENT STATE", app.state)
+        print(">>> CURRENT STATE", app.state_machine)
 
-    @StateMachine.on("changed-state[serving_site]")
+    @StateMachine.on("entered-state[ServingSite]")
     async def register_pages(self, event):
         engine: TemplateEngine = self.bevy.find(TemplateEngine)
         print(">>> SEARCH PATHS", engine.search_paths)
-        TestPage.register(self.app.context.find(Starlette), self.bevy)
+        TestPage.register(self.app.router, self.bevy)

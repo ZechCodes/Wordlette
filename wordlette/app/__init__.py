@@ -1,2 +1,2 @@
-from wordlette.app.app import App
-from wordlette.app.app_protocol import AppProtocol
+from .app import App
+from .base_app import BaseApp

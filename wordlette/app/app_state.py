@@ -1,41 +1,42 @@
-from __future__ import annotations
-
-from bevy import Inject, bevy_method
+from bevy import bevy_method, Inject
 from pathlib import Path
 from starlette.applications import Starlette
 
 from wordlette.extensions.auto_loader import auto_load_directory
 from wordlette.extensions.plugins import Plugin
 from wordlette.pages import Page
-from wordlette.state_machine import StateMachine, State
+from wordlette.state_machine import State
 from wordlette.wordlette.error_app import create_error_application
+from .base_app import BaseApp
 
 
-class SiteConfig:
-    ...
+class BaseAppState(State):
+    def __init__(self):
+        self.context = self.bevy.branch()
 
 
-Database = DatabaseConfig = SiteConfig
-
-
-class AppState(StateMachine):
-    @State
-    async def starting(self, app):
-        # Add a catch-all starlette application that 400's every request to tell the user that something has gone
-        # wrong with the application routing.
-        self.bevy.add(
+class Starting(BaseAppState):
+    async def enter(self):
+        """Add a catch-all starlette application that 400's every request to tell the user that something has gone wrong
+        with the application routing."""
+        self.context.add(
             create_error_application(
                 "Wordlette could not find a valid Starlette application to handle request routing.",
                 "No Router Found",
             ),
             use_as=Starlette,
         )
-        return await self.next(app)
 
-    @State
-    async def loading_app_plugins(self, app):
-        context = self.bevy.branch()
-        context.add(
+        return True
+
+    async def next(self):
+        return LoadingAppPlugins
+
+
+class LoadingAppPlugins(BaseAppState):
+    @bevy_method
+    async def enter(self, app: BaseApp = Inject):
+        self.context.add(
             create_error_application("Testing loading extensions", "Testing"),
             use_as=Starlette,
         )
@@ -46,62 +47,81 @@ class AppState(StateMachine):
             ):
                 app.load_app_extension(extension_info)
 
-        return await self.next(app)
+        return True
 
-    @State
-    async def creating_site_config(self, app):
-        return await self.next(app)
+    async def next(self):
+        return LoadingConfig
 
-    @State
-    async def creating_db_config(self, app):
-        return await self.next(app)
 
-    @State
-    async def connecting_db(self, app):
-        return await self.next(app)
+class LoadingConfig(BaseAppState):
+    async def enter(self):
+        return True
 
-    @State
-    async def serving_site(self, app):
+    async def next(self):
+        return ConnectingDB
+
+
+class CreatingConfig(BaseAppState):
+    async def enter(self):
+        return True
+
+    async def next(self):
+        return LoadingConfig
+
+
+class ConnectingDB(BaseAppState):
+    async def enter(self):
+        return True
+
+    async def next(self):
+        return LoadingPlugins
+
+
+class ConfiguringDB(BaseAppState):
+    async def enter(self):
+        return True
+
+    async def next(self):
+        return ConnectingDB
+
+
+class LoadingPlugins(BaseAppState):
+    async def enter(self):
+        return True
+
+    async def next(self):
+        return ServingSite
+
+
+class ServingSite(BaseAppState):
+    async def enter(self):
         site = Starlette()
-        context = self.bevy.branch()
-        context.add(site, use_as=Starlette)
-
+        self.context.add(site, use_as=Starlette)
         pages_directory = Path("pages").resolve()
         if pages_directory.exists():
             page_extensions = dict(auto_load_directory(pages_directory, [Page]))
             for extension in page_extensions.values():
                 for page in extension.found_classes[Page]:
-                    page.register(site, context)
+                    page.register(site, self.context)
 
         else:
             print("No pages to load")
 
-        return context
+    async def next(self):
+        return ShuttingDown
 
-    @State
-    async def shutting_down(self):
-        ...
 
-    starting.goes_to(loading_app_plugins)
+class ShuttingDown(BaseAppState):
+    async def enter(self):
+        self.context.add(
+            create_error_application(
+                "Wordlette has shut down. There is no active router to serve content.",
+                "Server Shut Down",
+            ),
+            use_as=Starlette,
+        )
 
-    @loading_app_plugins.goes_to(creating_site_config).when
-    @bevy_method
-    async def site_config_is_incomplete(self, site_config: SiteConfig = Inject) -> bool:
-        return False and site_config.has_missing_values
+        return True
 
-    @ (loading_app_plugins & creating_site_config).goes_to(creating_db_config).when
-    @bevy_method
-    async def db_config_is_incomplete(self, db_config: DatabaseConfig = Inject) -> bool:
-        return False and db_config.has_missing_values
-
-    (loading_app_plugins & creating_site_config & creating_db_config).goes_to(
-        connecting_db
-    )
-
-    @connecting_db.goes_to(creating_db_config).when
-    @bevy_method
-    async def database_failed_to_connect(self, database: Database = Inject) -> bool:
-        return False and database.failed_to_connect
-
-    connecting_db.goes_to(serving_site)
-    serving_site.goes_to(shutting_down)
+    async def next(self):
+        return type(self)
