@@ -1,4 +1,5 @@
 from bevy import Inject, bevy_method
+from dataclasses import dataclass, field
 
 from wordlette.app import App
 from wordlette.extensions.plugins import Plugin
@@ -7,11 +8,11 @@ from wordlette.state_machine import StateMachine
 from wordlette.templates import Template, TemplateEngine
 
 
+@dataclass
 class TestConfigModel:
     __config_table__ = "testing"
 
-    def __init__(self, test: str = "Nope 😕"):
-        self.test = test
+    test: str = field(default="Nope 😕")
 
 
 class TestPage(Page):
