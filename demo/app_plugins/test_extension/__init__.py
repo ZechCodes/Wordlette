@@ -7,6 +7,13 @@ from wordlette.state_machine import StateMachine
 from wordlette.templates import Template, TemplateEngine
 
 
+class TestConfigModel:
+    __config_table__ = "testing"
+
+    def __init__(self, test: str = "Nope 😕"):
+        self.test = test
+
+
 class TestPage(Page):
     path = "/ext"
 
@@ -28,7 +35,9 @@ class Plugin(Plugin):
         print(">>> CURRENT STATE", app.state_machine)
 
     @StateMachine.on("entered-state[ServingSite]")
-    async def register_pages(self, event):
+    @bevy_method
+    async def register_pages(self, event, settings: TestConfigModel = Inject):
+        print("Does config injection work?", settings.test)
         engine: TemplateEngine = self.bevy.find(TemplateEngine)
         print(">>> SEARCH PATHS", engine.search_paths)
         TestPage.register(self.app.router, self.bevy)
