@@ -8,6 +8,7 @@ from starlette.types import Receive, Scope, Send
 from typing import Callable, Iterator, Type, TypeAlias
 
 from wordlette.app.states import BaseAppState, Starting
+from wordlette.config.provider import ConfigProvider
 from wordlette.exceptions import WordletteNoStarletteAppFound
 from wordlette.extensions.auto_loader import ExtensionInfo
 from wordlette.extensions.extensions import AppExtension, Extension
@@ -39,6 +40,7 @@ class App(BaseApp):
     @classmethod
     def start(cls, host: str, port: int, extensions_modules: Iterator[str]):
         context = Context.factory()
+        context.add_provider(ConfigProvider)
         context.add_provider(PolicyProvider)
         app = context.create(cls, cache=True)
         uvicorn.run(app, host=host, port=port, log_config=cls._create_logging_config())
