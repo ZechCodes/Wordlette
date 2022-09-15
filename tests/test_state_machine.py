@@ -1,154 +1,106 @@
 import pytest
 import pytest_asyncio
+from bevy import bevy_method, Context, Inject
+
+from wordlette.exceptions import WordletteStateMachineAlreadyStarted
 from wordlette.state_machine import StateMachine, State
-from wordlette.exceptions import WordletteNoTransitionFound
+from wordlette.state_machine.machine import StateChangeEvent
+
+
+class LoggedStateMachine(StateMachine):
+    def __init__(self):
+        super(LoggedStateMachine, self).__init__()
+        self.state_history = []
+
+
+async def _create_machine(state):
+    context = Context.factory()
+    machine = context.create(LoggedStateMachine, cache=True)
+    await machine.start(state)
+    return machine
 
 
 @pytest_asyncio.fixture()
 async def two_state_machine():
-    class Machine(StateMachine):
-        def __init__(self):
-            super().__init__()
-            self.result = []
+    class StateA(State):
+        @bevy_method
+        async def enter(self, machine: LoggedStateMachine = Inject):
+            machine.state_history.append("StateA")
 
-        @State
-        async def state_a(self, value):
-            self.result.append("state_a_run")
+        async def next(self):
+            return StateB
 
-        @State
-        async def state_b(self, value):
-            self.result.append("state_b_run")
+    class StateB(State):
+        @bevy_method
+        async def enter(self, machine: LoggedStateMachine = Inject):
+            machine.state_history.append("StateB")
 
-        @state_a.goes_to(state_b).when
-        async def transition_a_to_b(self, value):
-            if value == "b":
-                self.result.append("a_to_b")
-                return True
+        async def next(self):
+            return StateA
 
-            return False
+    return await _create_machine(StateA)
 
-        @state_b.goes_to(state_a).when
-        async def transition_b_to_a(self, value):
-            if value == "a":
-                self.result.append("b_to_a")
-                return True
 
-            return False
+@pytest_asyncio.fixture()
+async def immediate_transition_machine():
+    class StateA(State):
+        @bevy_method
+        async def enter(self, machine: LoggedStateMachine = Inject):
+            machine.state_history.append("StateA")
+            return True
 
-    return await Machine().start(Machine.state_a, "")
+        async def next(self):
+            return StateB
+
+    class StateB(State):
+        @bevy_method
+        async def enter(self, machine: LoggedStateMachine = Inject):
+            machine.state_history.append("StateB")
+
+        async def next(self):
+            return StateA
+
+    return await _create_machine(StateA)
 
 
 @pytest.mark.asyncio
 async def test_state_machine(two_state_machine):
-    await two_state_machine.next("b")
-    await two_state_machine.next("a")
-    assert two_state_machine.result == [
-        "state_a_run",
-        "a_to_b",
-        "state_b_run",
-        "b_to_a",
-        "state_a_run",
+    await two_state_machine.next()
+    await two_state_machine.next()
+    assert two_state_machine.state_history == ["StateA", "StateB", "StateA"]
+
+
+@pytest.mark.asyncio
+async def test_repeated_start_attempt(two_state_machine):
+    with pytest.raises(WordletteStateMachineAlreadyStarted):
+        await two_state_machine.start(...)
+
+
+@pytest.mark.asyncio
+async def test_immediate_transitions(immediate_transition_machine):
+    assert immediate_transition_machine.state_history == ["StateA", "StateB"]
+
+
+@pytest.mark.asyncio
+async def test_event_dispatch(immediate_transition_machine: LoggedStateMachine):
+    event_history = []
+
+    async def transition_event(payload: StateChangeEvent):
+        event_history.append(f"Transition {payload.new_state.name}")
+
+    async def entered_event(payload: StateChangeEvent):
+        event_history.append(f"Entered {payload.new_state.name}")
+
+    immediate_transition_machine.on("entered-state", entered_event)
+    immediate_transition_machine.on("transitioned-to-state", transition_event)
+
+    await immediate_transition_machine.next()
+    await immediate_transition_machine.next()
+    assert event_history == [
+        "Transition StateA",
+        "Transition StateB",
+        "Entered StateB",
+        "Transition StateA",
+        "Transition StateB",
+        "Entered StateB",
     ]
-
-
-@pytest.mark.asyncio
-async def test_unsuccessful_state_no_transition(two_state_machine):
-    with pytest.raises(WordletteNoTransitionFound):
-        await two_state_machine.next("a")
-
-
-@pytest.mark.asyncio
-async def test_aggregate_transitions():
-    states = []
-
-    class TestMachine(StateMachine):
-        @State
-        async def A(self, arg):
-            states.append("A")
-
-        @State
-        async def B(self, arg):
-            states.append("B")
-
-        @State
-        async def C(self, arg):
-            states.append("C")
-
-        @ (A & B).goes_to(C).when
-        async def arg_is_c(self, arg):
-            return arg == "C"
-
-        C.goes_to(B)
-
-    machine = TestMachine()
-    await machine.start(TestMachine.A, "STARTING")
-    await machine.next("C")
-    await machine.next("B")
-    await machine.next("C")
-    assert states == ["A", "C", "B", "C"]
-
-
-@pytest.mark.asyncio
-async def test_aggregate_transitions():
-    states = []
-
-    class TestMachine(StateMachine):
-        @State
-        async def A(self, arg):
-            states.append("A")
-
-        @State
-        async def B(self, arg):
-            states.append("B")
-
-        @State
-        async def C(self, arg):
-            states.append("C")
-
-        @ (A & B).goes_to(C).when
-        async def arg_is_c(self, arg):
-            return arg == "C"
-
-        C.goes_to(B)
-
-    machine = TestMachine()
-    await machine.start(TestMachine.A, "STARTING")
-    await machine.next("C")
-    await machine.next("B")
-    await machine.next("C")
-    assert states == ["A", "C", "B", "C"]
-
-
-@pytest.mark.asyncio
-async def test_default_transitions():
-    states = []
-
-    class TestMachine(StateMachine):
-        @State
-        async def A(self, arg):
-            states.append("A")
-
-        @State
-        async def B(self, arg):
-            states.append("B")
-
-        @State
-        async def C(self, arg):
-            states.append("C")
-
-        @ (A & B).goes_to(C).when
-        async def arg_is_c(self, arg):
-            return arg == "C"
-
-        C.goes_to(B)
-        A.goes_to(B)
-        B.goes_to(A)
-
-    machine = TestMachine()
-    await machine.start(TestMachine.A, "STARTING")
-    await machine.next("GO TO B")  # At A, will go to B
-    await machine.next("GO TO A")  # At B, will go to A
-    await machine.next("C")  # At A, will go to C
-    await machine.next("GO TO B")  # At C, will go to B
-    await machine.next("C")  # At B, will go to C
-    assert states == ["A", "B", "A", "C", "B", "C"]

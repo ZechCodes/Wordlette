@@ -1,20 +1,13 @@
 from __future__ import annotations
 
-import asyncio
-from bevy import Context
 from dataclasses import dataclass
-from typing import Any, Generic, ParamSpec, TypeVar
+from typing import Generic, Type, TypeVar
 
 from wordlette.events import Eventable
 from wordlette.exceptions import WordletteStateMachineAlreadyStarted
-from wordlette.state_machine.state import State
+from .state import State
 
-P = ParamSpec("P")
-T = TypeVar("T")
-
-
-class TransitionResultFuture(asyncio.Task):
-    ...
+S = TypeVar("S", bound=State)
 
 
 class DepthCounter:
@@ -33,79 +26,54 @@ class StateChangeEvent:
     event: str
     old_state: State
     new_state: State
-    context: Context
-    args: tuple[Any]
-    kwargs: dict[str, Any]
 
 
-class StateMachine(Generic[T, P], Eventable):
+class StateMachine(Generic[S], Eventable):
     def __init__(self):
         super().__init__()
-        self._current_state: State[T, P] | None = None
-        self._current_value: T | None = None
-        self._entered_states = DepthCounter()
-
-    @State
-    async def starting(self):
-        ...
+        self._current_state: S | None = None
+        self._transition_depth = DepthCounter()
 
     @property
     def started(self) -> bool:
         return self._current_state is not None
 
     @property
-    def state(self) -> State[T, P]:
+    def state(self) -> S:
         return self._current_state
 
-    @property
-    def value(self) -> T:
-        return self._current_value
-
-    async def start(
-        self, initial_state: State[T, P], *args: P.args, **kwargs: P.kwargs
-    ) -> StateMachine[T, P]:
-        if self._current_state:
+    async def start(self, initial_state_type: Type[S]):
+        if self.started:
             raise WordletteStateMachineAlreadyStarted(
-                f"{self} has already been started"
+                f"The state machine ({self}) has already been started"
             )
 
-        await self._set_current_state(initial_state, *args, **kwargs)
-        return self
+        await self._transition_to_state(initial_state_type)
 
-    async def next(self, *args: P.args, **kwargs: P.kwargs) -> T:
-        next_state = await self._current_state.next(self, *args, **kwargs)
-        return await self._set_current_state(next_state, *args, **kwargs)
+    async def next(self):
+        next_state_type = await self._current_state.next()
+        await self._transition_to_state(next_state_type)
 
-    async def _set_current_state(
-        self, new_state: State[T, P], *args: P.args, **kwargs: P.kwargs
-    ) -> T:
-        old_state = self.state
-        await self._dispatch("changing-state", old_state, new_state, args, kwargs)
-        if self._current_state:
-            await self._current_state.leave(self, *args, **kwargs)
+    async def _transition_to_state(self, state_type: Type[S]):
+        old_state, self._current_state = self._current_state, self.bevy.create(
+            state_type
+        )
+        async with self._transition_depth:
+            transition_immediately = await self._current_state.enter()
+            await self._dispatch(
+                "transitioned-to-state", old_state, self._current_state
+            )
 
-        self._current_state = new_state
-        async with self._entered_states:
-            self._current_value = await self._current_state.run(self, *args, **kwargs)
+            if transition_immediately:
+                await self.next()
 
-        if self._entered_states.count == 0:
-            await self._dispatch("changed-state", old_state, self.state, args, kwargs)
-
-        return self._current_value
+        if self._transition_depth.count == 0:
+            await self._dispatch("entered-state", old_state, self._current_state)
 
     def __repr__(self):
         return f"{type(self).__name__}(state={self.state})"
 
-    async def _dispatch(
-        self,
-        event: str,
-        old_state: State,
-        new_state: State,
-        args: tuple[Any],
-        kwargs: dict[str, Any],
-    ):
-        payload = StateChangeEvent(
-            event, old_state, new_state, self.value, args, kwargs
-        )
+    async def _dispatch(self, event: str, old_state: State, new_state: State):
+        payload = StateChangeEvent(event, old_state, new_state)
         await self.dispatch(event, payload)
         await self.dispatch(f"{event}[{new_state.name}]", payload)
