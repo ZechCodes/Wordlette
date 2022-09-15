@@ -7,7 +7,7 @@ from starlette.applications import Starlette
 from starlette.types import Receive, Scope, Send
 from typing import Callable, Iterator, Type, TypeAlias
 
-from wordlette.app.app_state import BaseAppState, Starting
+from wordlette.app.states import BaseAppState, Starting
 from wordlette.exceptions import WordletteNoStarletteAppFound
 from wordlette.extensions.auto_loader import ExtensionInfo
 from wordlette.extensions.extensions import AppExtension, Extension
