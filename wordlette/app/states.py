@@ -1,3 +1,4 @@
+import os
 from bevy import bevy_method, Inject
 from itertools import compress
 from pathlib import Path
@@ -22,7 +23,8 @@ class BaseAppState(State):
 
 
 class Starting(BaseAppState):
-    async def enter(self):
+    @bevy_method
+    async def enter(self, settings: Settings = Inject):
         """Add a catch-all starlette application that 400's every request to tell the user that something has gone wrong
         with the application routing."""
         self.context.add(
@@ -33,6 +35,8 @@ class Starting(BaseAppState):
             use_as=Starlette,
         )
 
+        dev_var = os.getenv("WORDLETTE_DEV", "")
+        settings["dev"] = dev_var.casefold() not in {"false", "no", "0"}
         return True
 
     async def next(self):
