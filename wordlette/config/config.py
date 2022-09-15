@@ -17,7 +17,7 @@ class ConfigFile:
 
     def populate_model(self, model_type: Type[M] = dict, section: str = "") -> M | None:
         if not section:
-            section = model_type.section_name
+            section = model_type.__config_table__
 
         if section in self._data:
             data = self._data[section]
