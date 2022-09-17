@@ -110,6 +110,9 @@ class App(BaseApp):
             logging.getLogger("uvicorn.error").setLevel(logging.ERROR)
 
             if not self.app:
+                if self.state_machine.last_exception:
+                    raise self.state_machine.last_exception
+
                 raise WordletteNoStarletteAppFound(
                     f"The application has not loaded any page routes that Wordlette can use."
                 )
