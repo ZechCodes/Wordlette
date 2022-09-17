@@ -4,6 +4,7 @@ from bevy import Context
 from copy import deepcopy
 from pathlib import Path
 from starlette.applications import Starlette
+from starlette.responses import HTMLResponse
 from starlette.types import Receive, Scope, Send
 from typing import Callable, Iterator, Type, TypeAlias
 
@@ -24,6 +25,33 @@ StateMachineConstructor: TypeAlias = (
 )
 
 logger = logging.getLogger("wordlette")
+
+
+class ResponseContext:
+    def __init__(self, scope: Scope, receive: Receive, send: Send):
+        self.scope = scope
+        self.receive = receive
+        self.send = send
+        self.app = None
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        if exc_type:
+            self.app = app = HTMLResponse(
+                f"<h1>Wordlette Enountered An Error</h1><p>{exc_val.args[0]}</p>",
+                status_code=500,
+            )
+
+        elif not self.app:
+            self.app = self.app = app = HTMLResponse(
+                f"<h1>Wordlette Enountered A Problem</h1><p>Wordlette could not find an application to build a "
+                f"response with.</p>",
+                status_code=500,
+            )
+
+        await self.app(self.scope, self.receive, self.send)
 
 
 class App(BaseApp):
@@ -82,17 +110,16 @@ class App(BaseApp):
         logger.info(f"Entered {event.new_state} from {event.old_state}")
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
-        logging.getLogger("uvicorn.error").setLevel(logging.ERROR)
-        if not self.state_machine.started:
-            await self._start()
+        async with ResponseContext(scope, receive, send) as response:
+            if not self.state_machine.started:
+                await self._start()
 
-        if not self.app:
-            raise WordletteNoStarletteAppFound(
-                f"Cannot handle {scope['type']=} because the current application state_machine has not added a Starlette app "
-                "to the context."
-            )
+            logging.getLogger("uvicorn.error").setLevel(logging.ERROR)
 
-        await self.app(scope, receive, send)
+            if not self.app:
+                raise WordletteNoStarletteAppFound(
+                    f"The application has not loaded any page routes that Wordlette can use."
+                )
 
     @property
     def app(self) -> Starlette | None:
