@@ -19,3 +19,6 @@ class State(ABC, Bevy):
     async def next(self) -> Type[State]:
         """Run when the state is being transitioned away from. This should return the type of state that should be
         transitioned to next."""
+
+    def __repr__(self):
+        return f"<State:{self.name}>"
