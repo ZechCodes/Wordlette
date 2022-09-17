@@ -12,7 +12,7 @@ from typing import Any, Callable, Iterator, Type, TypeAlias
 
 from wordlette.app.states import BaseAppState, Starting
 from wordlette.config.provider import ConfigProvider
-from wordlette.exceptions import WordletteNoStarletteAppFound
+from wordlette.exceptions import WordletteException, WordletteNoStarletteAppFound
 from wordlette.extensions.auto_loader import ExtensionInfo
 from wordlette.extensions.extensions import AppExtension, Extension
 from wordlette.extensions.plugins import Plugin
@@ -62,7 +62,15 @@ class ResponseContext:
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if exc_type:
-            message = self._build_response_error_message(exc_val.args[0], exc_val)
+            match exc_val:
+                case WordletteException():
+                    message = self._build_response_error_message(exc_val.args[0], exc_val)
+                case _:
+                    message = self._build_response_error_message(
+                        "Something unexpected has happen and Wordlette cannot recover. Please have an admin check the "
+                        "system logs for more information.", exc_val
+                    )
+
             self.app = app = HTMLResponse(
                 f"<h1>Wordlette Enountered An Error</h1>{message}",
                 status_code=500,
