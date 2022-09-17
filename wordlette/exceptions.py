@@ -36,3 +36,7 @@ class WordlettePageDoesntSupportForm(WordletteException):
 
 class WordletteNotBoundToABevyContextError(WordletteException):
     """Raised when attempting to access the Bevy context of an object when it is not bound to a context."""
+
+
+class WordletteNoDatabaseDriverFound(WordletteException):
+    """Raised when no database class is found in a database extension."""
