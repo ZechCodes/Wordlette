@@ -1,5 +1,17 @@
 class WordletteException(Exception):
-    ...
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.state = None
+
+    def __str__(self):
+        s = super().__str__()
+        if self.state:
+            return f"state={self.state.name}: {s}"
+
+        return s
+
+    def __repr__(self):
+        return f"<Exception:{type(self).__name__}: {self}>"
 
 
 class WordletteStateMachineAlreadyStarted(WordletteException):
