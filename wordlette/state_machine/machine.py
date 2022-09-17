@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import TracebackType
 from typing import Generic, Type, TypeVar
 
 from wordlette.events import Eventable
@@ -19,6 +20,24 @@ class DepthCounter:
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         self.count -= 1
+
+
+class StateEnterContext:
+    def __init__(self, state_machine: StateMachine):
+        self.state_machine = state_machine
+        self.transition_to: Type[State] | None = None
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(
+        self, exc_type: Type[Exception], exc_val: Exception, exc_tb: TracebackType
+    ):
+        if not exc_type:
+            return False
+
+        self.transition_to = await self.state_machine.state.on_error(exc_val)
+        return bool(self.transition_to)
 
 
 @dataclass()
@@ -59,12 +78,17 @@ class StateMachine(Generic[S], Eventable):
             state_type
         )
         async with self._transition_depth:
-            transition_immediately = await self._current_state.enter()
+            async with StateEnterContext(self) as enter_context:
+                transition_immediately = await self._current_state.enter()
+
             await self._dispatch(
                 "transitioned-to-state", old_state, self._current_state
             )
 
-            if transition_immediately:
+            if enter_context.transition_to:
+                await self._transition_to_state(enter_context.transition_to)
+
+            elif transition_immediately:
                 await self.next()
 
         if self._transition_depth.count == 0:
