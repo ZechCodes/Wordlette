@@ -64,11 +64,14 @@ class ResponseContext:
         if exc_type:
             match exc_val:
                 case WordletteException():
-                    message = self._build_response_error_message(exc_val.args[0], exc_val)
+                    message = self._build_response_error_message(
+                        exc_val.args[0], exc_val
+                    )
                 case _:
                     message = self._build_response_error_message(
-                        "Something unexpected has happen and Wordlette cannot recover. Please have an admin check the "
-                        "system logs for more information.", exc_val
+                        "Something unexpected has happened and Wordlette cannot recover. Please have an admin check "
+                        "the system logs for more information.",
+                        exc_val,
                     )
 
             self.app = app = HTMLResponse(
