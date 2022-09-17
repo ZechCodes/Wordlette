@@ -99,6 +99,18 @@ class App(BaseApp):
 
         super().__init__()
 
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        async with ResponseContext(self, scope, receive, send) as response:
+            if not self.state_machine.started:
+                await self._start()
+
+            logging.getLogger("uvicorn.error").setLevel(logging.ERROR)
+
+            if not self.app:
+                raise WordletteNoStarletteAppFound(
+                    f"The application has not loaded any page routes that Wordlette can use."
+                )
+
     @classmethod
     def start(cls, host: str, port: int, extensions_modules: Iterator[str]):
         context = Context.factory()
@@ -142,18 +154,6 @@ class App(BaseApp):
     @StateMachine.on("entered-state")
     async def _log_state_entered(self, event: StateChangeEvent):
         logger.info(f"Entered {event.new_state} from {event.old_state}")
-
-    async def __call__(self, scope: Scope, receive: Receive, send: Send):
-        async with ResponseContext(self, scope, receive, send) as response:
-            if not self.state_machine.started:
-                await self._start()
-
-            logging.getLogger("uvicorn.error").setLevel(logging.ERROR)
-
-            if not self.app:
-                raise WordletteNoStarletteAppFound(
-                    f"The application has not loaded any page routes that Wordlette can use."
-                )
 
     @property
     def app(self) -> Starlette | None:
