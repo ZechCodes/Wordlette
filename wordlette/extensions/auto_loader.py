@@ -21,7 +21,7 @@ def auto_load_directory(
 ) -> Generator[None, tuple[Path, ExtensionInfo], None]:
     for file in path.iterdir():
         if can_import(file):
-            yield file, import_package_from_file(file, path.stem, scan_for)
+            yield file, import_package_from_file(file, scan_for, path.stem)
 
 
 def can_import(path: Path) -> bool:
@@ -32,17 +32,17 @@ def can_import(path: Path) -> bool:
 
 
 def import_package_from_file(
-    path: Path, package: str, scan_for: Iterable[T]
+    path: Path, scan_for: Iterable[T], package: str
 ) -> ExtensionInfo:
     import_path = f"{package}.{path.stem}"
-    return import_package(path, import_path, package, scan_for)
+    return import_package(import_path, scan_for, package)
 
 
 def import_package(
-    path: Path, import_path: str, package: str, scan_for: Iterable[T]
+    import_path: str, scan_for: Iterable[T] = (), package: str = ""
 ) -> ExtensionInfo:
     module, found_classes = load_extension_package(import_path, scan_for, package)
-    return ExtensionInfo(path, import_path, module, found_classes)
+    return ExtensionInfo(Path(module.__file__), import_path, module, found_classes)
 
 
 def is_package(path: Path) -> bool:
