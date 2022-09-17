@@ -36,6 +36,7 @@ class StateEnterContext:
         if not exc_type:
             return False
 
+        exc_val.state = self.state_machine.state
         self.transition_to = await self.state_machine.state.on_error(exc_val)
         return bool(self.transition_to)
 
