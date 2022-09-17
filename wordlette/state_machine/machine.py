@@ -37,6 +37,7 @@ class StateEnterContext:
             return False
 
         exc_val.state = self.state_machine.state
+        self.state_machine.last_exception = exc_val
         self.transition_to = await self.state_machine.state.on_error(exc_val)
         return bool(self.transition_to)
 
@@ -53,6 +54,7 @@ class StateMachine(Generic[S], Eventable):
         super().__init__()
         self._current_state: S | None = None
         self._transition_depth = DepthCounter()
+        self.last_exception = None
 
     @property
     def started(self) -> bool:
