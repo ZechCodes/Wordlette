@@ -40,3 +40,11 @@ class WordletteNotBoundToABevyContextError(WordletteException):
 
 class WordletteNoDatabaseDriverFound(WordletteException):
     """Raised when no database class is found in a database extension."""
+
+
+class WordletteInsufficientPermissionsToView(WordletteException):
+    """Raised when attempting to access a model's field that the requesting user has no permissions to access."""
+
+
+class WordletteInsufficientPermissionsToChange(WordletteException):
+    """Raised when attempting to modify a model's field that the requesting user has no permissions to modify."""
