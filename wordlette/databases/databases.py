@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Type, TypeVar
 
 from bevy import Bevy
-from .queryfilter import Query, QueryFilter, QueryResult
+from .query import Query, QueryFilter, QueryResult
 
 TModel = TypeVar("TModel")
 
