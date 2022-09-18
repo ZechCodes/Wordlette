@@ -9,6 +9,10 @@ TModel = TypeVar("TModel")
 
 class Database(ABC, Bevy):
     @abstractmethod
+    async def add(self, model: TModel):
+        ...
+
+    @abstractmethod
     async def connect(self):
         ...
 
