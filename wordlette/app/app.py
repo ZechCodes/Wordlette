@@ -103,7 +103,7 @@ class App(BaseApp):
         super().__init__()
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
-        async with ResponseContext(self, scope, receive, send) as response:
+        async with ResponseContext(self, scope, receive, send):
             if not self.state_machine.started:
                 await self._start()
 
