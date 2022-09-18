@@ -36,10 +36,18 @@ class ResponseContext:
         self.receive = receive
         self.send = send
         self.wordlette = wordlette
-        self.app = None
+        self._app = None
 
     async def __aenter__(self):
         return self
+
+    @property
+    def app(self) -> Starlette | None:
+        return self.wordlette.app if self.wordlette.context else None
+
+    @app.setter
+    def app(self, app: Starlette):
+        self._app = app
 
     def _build_response_error_message(self, content: str, *debug: Any):
         message = f"<p>{content}</p>"
