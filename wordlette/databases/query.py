@@ -12,7 +12,7 @@ TModel = TypeVar("TModel", bound=Model)
 class Query(ABC, Generic[TModel]):
     def __init__(self, model: Type[TModel], query_filter: QueryFilter | None = None):
         self.model = model
-        self.filters = QueryFilter() if query_filter is None else query_filter
+        self.filter = QueryFilter() if query_filter is None else query_filter
 
     @abstractmethod
     async def delete(self):
@@ -31,7 +31,7 @@ class Query(ABC, Generic[TModel]):
         ...
 
     def find(self, query_filter: QueryFilter) -> Query:
-        self.filters &= query_filter
+        self.filter &= query_filter
         return self
 
 
