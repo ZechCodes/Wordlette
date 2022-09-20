@@ -104,12 +104,11 @@ class ConnectingDB(BaseAppState):
                 "Unable to find a database driver to connect to the database."
             )
 
-        await self.connect_db(db_package_info.found_classes[Database].pop())
+        await self._connect_db(db_package_info.found_classes[Database].pop())
         return True
 
-    async def connect_db(self, engine_type: Type[Database]):
-        engine: Database = self.bevy.create(engine_type, cache=True)
-        await engine.connect()
+    async def next_state(self):
+        return LoadingPlugins
 
     @staticmethod
     async def on_error_next_state(exception: Exception) -> Type[State] | None:
@@ -124,8 +123,9 @@ class ConnectingDB(BaseAppState):
                 )
                 return ConfiguringDB
 
-    async def next_state(self):
-        return LoadingPlugins
+    async def _connect_db(self, engine_type: Type[Database]):
+        engine: Database = self.bevy.create(engine_type, cache=True)
+        await engine.connect()
 
 
 class ConfiguringDB(BaseAppState):
