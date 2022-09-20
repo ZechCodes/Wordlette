@@ -1,20 +1,31 @@
 import os
-from bevy import bevy_method, Inject
+from dataclasses import dataclass
 from itertools import compress
 from pathlib import Path
 from starlette.applications import Starlette
+from typing import Type
 
 import wordlette.config.json_loader as json_loader
 import wordlette.config.toml_loader as toml_loader
 import wordlette.config.yaml_loader as yaml_loader
+from bevy import bevy_method, Inject
 from wordlette.config.config import Config
-from wordlette.extensions.auto_loader import auto_load_directory
+from wordlette.databases import Database
+from wordlette.exceptions import WordletteNoDatabaseDriverFound
+from wordlette.extensions.auto_loader import auto_load_directory, import_package
 from wordlette.extensions.plugins import Plugin
 from wordlette.pages import Page
 from wordlette.settings import Settings
 from wordlette.state_machine import State
 from wordlette.wordlette.error_app import create_error_application
 from .base_app import BaseApp
+
+
+@dataclass
+class DBEngineImportConfig:
+    __config_table__ = "db"
+
+    engine_import: str
 
 
 class BaseAppState(State):
@@ -85,8 +96,27 @@ class CreatingConfig(BaseAppState):
 
 
 class ConnectingDB(BaseAppState):
-    async def enter(self):
+    @bevy_method
+    async def enter(self, db_config: DBEngineImportConfig = Inject):
+        db_package_info = import_package(db_config.engine_import, [Database])
+        if not db_package_info.found_classes[Database]:
+            raise WordletteNoDatabaseDriverFound(
+                "Unable to find a database driver to connect to the database."
+            )
+
+        await self.connect_db(db_package_info.found_classes[Database].pop())
         return True
+
+    async def connect_db(self, engine_type: Type[Database]):
+        engine: Database = self.bevy.create(engine_type, cache=True)
+        await engine.connect()
+
+    @staticmethod
+    async def on_error(exception: Exception) -> Type[State] | None:
+        match exception:
+            case ModuleNotFoundError():
+                print(f"Could not find the database driver module: {exception!r}")
+                return ConfiguringDB
 
     async def next(self):
         return LoadingPlugins
@@ -94,7 +124,7 @@ class ConnectingDB(BaseAppState):
 
 class ConfiguringDB(BaseAppState):
     async def enter(self):
-        return True
+        return False
 
     async def next(self):
         return ConnectingDB
