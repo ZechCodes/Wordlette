@@ -24,7 +24,7 @@ async def _create_machine(state):
 async def two_state_machine():
     class StateA(State):
         @bevy_method
-        async def enter(self, machine: LoggedStateMachine = Inject):
+        async def enter_state(self, machine: LoggedStateMachine = Inject):
             machine.state_history.append("StateA")
 
         async def next_state(self):
@@ -32,7 +32,7 @@ async def two_state_machine():
 
     class StateB(State):
         @bevy_method
-        async def enter(self, machine: LoggedStateMachine = Inject):
+        async def enter_state(self, machine: LoggedStateMachine = Inject):
             machine.state_history.append("StateB")
 
         async def next_state(self):
@@ -45,7 +45,7 @@ async def two_state_machine():
 async def immediate_transition_machine():
     class StateA(State):
         @bevy_method
-        async def enter(self, machine: LoggedStateMachine = Inject):
+        async def enter_state(self, machine: LoggedStateMachine = Inject):
             machine.state_history.append("StateA")
             return True
 
@@ -54,7 +54,7 @@ async def immediate_transition_machine():
 
     class StateB(State):
         @bevy_method
-        async def enter(self, machine: LoggedStateMachine = Inject):
+        async def enter_state(self, machine: LoggedStateMachine = Inject):
             machine.state_history.append("StateB")
 
         async def next_state(self):

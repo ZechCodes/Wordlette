@@ -11,7 +11,7 @@ class State(ABC, Bevy):
         return type(self).__name__
 
     @abstractmethod
-    async def enter(self):
+    async def enter_state(self):
         """Run once the state has been transitioned to. This should return True if it should immediately advance to the
         next state."""
 

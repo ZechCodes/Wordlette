@@ -82,7 +82,7 @@ class StateMachine(Generic[S], Eventable):
         )
         async with self._transition_depth:
             async with StateEnterContext(self) as enter_context:
-                transition_immediately = await self._current_state.enter()
+                transition_immediately = await self._current_state.enter_state()
 
             await self._dispatch(
                 "transitioned-to-state", old_state, self._current_state

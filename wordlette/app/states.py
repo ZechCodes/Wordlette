@@ -35,7 +35,7 @@ class BaseAppState(State):
 
 class Starting(BaseAppState):
     @bevy_method
-    async def enter(self, settings: Settings = Inject):
+    async def enter_state(self, settings: Settings = Inject):
         """Add a catch-all starlette application that 400's every request to tell the user that something has gone wrong
         with the application routing."""
         dev_var = os.getenv("WORDLETTE_DEV", "")
@@ -48,7 +48,7 @@ class Starting(BaseAppState):
 
 class LoadingAppPlugins(BaseAppState):
     @bevy_method
-    async def enter(self, app: BaseApp = Inject):
+    async def enter_state(self, app: BaseApp = Inject):
         self.context.add(
             create_error_application("Testing loading extensions", "Testing"),
             use_as=Starlette,
@@ -68,7 +68,7 @@ class LoadingAppPlugins(BaseAppState):
 
 class LoadingConfig(BaseAppState):
     @bevy_method
-    async def enter(self, settings: Settings = Inject, config: Config = Inject):
+    async def enter_state(self, settings: Settings = Inject, config: Config = Inject):
         # Add file type loaders that have the necessary modules installed
         settings["file_loaders"] = list(
             compress(
@@ -88,7 +88,7 @@ class LoadingConfig(BaseAppState):
 
 
 class CreatingConfig(BaseAppState):
-    async def enter(self):
+    async def enter_state(self):
         return True
 
     async def next_state(self):
@@ -97,7 +97,7 @@ class CreatingConfig(BaseAppState):
 
 class ConnectingDB(BaseAppState):
     @bevy_method
-    async def enter(self, db_config: DBEngineImportConfig = Inject):
+    async def enter_state(self, db_config: DBEngineImportConfig = Inject):
         db_package_info = import_package(db_config.engine_import, [Database])
         if not db_package_info.found_classes[Database]:
             raise WordletteNoDatabaseDriverFound(
@@ -129,7 +129,7 @@ class ConnectingDB(BaseAppState):
 
 
 class ConfiguringDB(BaseAppState):
-    async def enter(self):
+    async def enter_state(self):
         return False
 
     async def next_state(self):
@@ -137,7 +137,7 @@ class ConfiguringDB(BaseAppState):
 
 
 class LoadingPlugins(BaseAppState):
-    async def enter(self):
+    async def enter_state(self):
         return True
 
     async def next_state(self):
@@ -145,7 +145,7 @@ class LoadingPlugins(BaseAppState):
 
 
 class ServingSite(BaseAppState):
-    async def enter(self):
+    async def enter_state(self):
         site = Starlette()
         self.context.add(site, use_as=Starlette)
         pages_directory = Path("pages").resolve()
@@ -163,7 +163,7 @@ class ServingSite(BaseAppState):
 
 
 class ShuttingDown(BaseAppState):
-    async def enter(self):
+    async def enter_state(self):
         self.context.add(
             create_error_application(
                 "Wordlette has shut down. There is no active router to serve content.",
