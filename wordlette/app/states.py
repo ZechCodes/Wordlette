@@ -27,14 +27,6 @@ class Starting(BaseAppState):
     async def enter(self, settings: Settings = Inject):
         """Add a catch-all starlette application that 400's every request to tell the user that something has gone wrong
         with the application routing."""
-        self.context.add(
-            create_error_application(
-                "Wordlette could not find a valid Starlette application to handle request routing.",
-                "No Router Found",
-            ),
-            use_as=Starlette,
-        )
-
         dev_var = os.getenv("WORDLETTE_DEV", "")
         settings["dev"] = dev_var.casefold() not in {"false", "no", "0"}
         return True
