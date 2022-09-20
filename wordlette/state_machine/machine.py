@@ -38,7 +38,7 @@ class StateEnterContext:
 
         exc_val.state = self.state_machine.state
         self.state_machine.last_exception = exc_val
-        self.transition_to = await self.state_machine.state.on_error(exc_val)
+        self.transition_to = await self.state_machine.state.on_error_next_state(exc_val)
         return bool(self.transition_to)
 
 

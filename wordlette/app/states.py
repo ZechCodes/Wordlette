@@ -112,7 +112,7 @@ class ConnectingDB(BaseAppState):
         await engine.connect()
 
     @staticmethod
-    async def on_error(exception: Exception) -> Type[State] | None:
+    async def on_error_next_state(exception: Exception) -> Type[State] | None:
         match exception:
             case ModuleNotFoundError():
                 print(f"Could not find the database driver extension: {exception!r}")

@@ -21,7 +21,7 @@ class State(ABC, Bevy):
         transitioned to next."""
 
     @staticmethod
-    async def on_error(exception: Exception) -> Type[State] | None:
+    async def on_error_next_state(exception: Exception) -> Type[State] | None:
         """This will be run if the enter method raises any exceptions. If this returns a state type, it is expected that
         the state machine will be transitioned to that state. If None is returned it is expected that the error is
         cleaned up by this method."""
