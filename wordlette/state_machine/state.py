@@ -16,7 +16,7 @@ class State(ABC, Bevy):
         next state."""
 
     @abstractmethod
-    async def next(self) -> Type[State]:
+    async def next_state(self) -> Type[State]:
         """Run when the state is being transitioned away from. This should return the type of state that should be
         transitioned to next."""
 

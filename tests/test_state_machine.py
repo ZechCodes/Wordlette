@@ -1,7 +1,7 @@
 import pytest
 import pytest_asyncio
-from bevy import bevy_method, Context, Inject
 
+from bevy import bevy_method, Context, Inject
 from wordlette.exceptions import WordletteStateMachineAlreadyStarted
 from wordlette.state_machine import StateMachine, State
 from wordlette.state_machine.machine import StateChangeEvent
@@ -27,7 +27,7 @@ async def two_state_machine():
         async def enter(self, machine: LoggedStateMachine = Inject):
             machine.state_history.append("StateA")
 
-        async def next(self):
+        async def next_state(self):
             return StateB
 
     class StateB(State):
@@ -35,7 +35,7 @@ async def two_state_machine():
         async def enter(self, machine: LoggedStateMachine = Inject):
             machine.state_history.append("StateB")
 
-        async def next(self):
+        async def next_state(self):
             return StateA
 
     return await _create_machine(StateA)
@@ -49,7 +49,7 @@ async def immediate_transition_machine():
             machine.state_history.append("StateA")
             return True
 
-        async def next(self):
+        async def next_state(self):
             return StateB
 
     class StateB(State):
@@ -57,7 +57,7 @@ async def immediate_transition_machine():
         async def enter(self, machine: LoggedStateMachine = Inject):
             machine.state_history.append("StateB")
 
-        async def next(self):
+        async def next_state(self):
             return StateA
 
     return await _create_machine(StateA)
@@ -65,8 +65,8 @@ async def immediate_transition_machine():
 
 @pytest.mark.asyncio
 async def test_state_machine(two_state_machine):
-    await two_state_machine.next()
-    await two_state_machine.next()
+    await two_state_machine.next_state()
+    await two_state_machine.next_state()
     assert two_state_machine.state_history == ["StateA", "StateB", "StateA"]
 
 

@@ -73,7 +73,7 @@ class StateMachine(Generic[S], Eventable):
         await self._transition_to_state(initial_state_type)
 
     async def next(self):
-        next_state_type = await self._current_state.next()
+        next_state_type = await self._current_state.next_state()
         await self._transition_to_state(next_state_type)
 
     async def _transition_to_state(self, state_type: Type[S]):

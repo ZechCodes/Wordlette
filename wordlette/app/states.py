@@ -42,7 +42,7 @@ class Starting(BaseAppState):
         settings["dev"] = dev_var.casefold() not in {"false", "no", "0"}
         return True
 
-    async def next(self):
+    async def next_state(self):
         return LoadingAppPlugins
 
 
@@ -62,7 +62,7 @@ class LoadingAppPlugins(BaseAppState):
 
         return True
 
-    async def next(self):
+    async def next_state(self):
         return LoadingConfig
 
 
@@ -83,7 +83,7 @@ class LoadingConfig(BaseAppState):
         await config.load_config()
         return True
 
-    async def next(self):
+    async def next_state(self):
         return ConnectingDB
 
 
@@ -91,7 +91,7 @@ class CreatingConfig(BaseAppState):
     async def enter(self):
         return True
 
-    async def next(self):
+    async def next_state(self):
         return LoadingConfig
 
 
@@ -124,7 +124,7 @@ class ConnectingDB(BaseAppState):
                 )
                 return ConfiguringDB
 
-    async def next(self):
+    async def next_state(self):
         return LoadingPlugins
 
 
@@ -132,7 +132,7 @@ class ConfiguringDB(BaseAppState):
     async def enter(self):
         return False
 
-    async def next(self):
+    async def next_state(self):
         return ConnectingDB
 
 
@@ -140,7 +140,7 @@ class LoadingPlugins(BaseAppState):
     async def enter(self):
         return True
 
-    async def next(self):
+    async def next_state(self):
         return ServingSite
 
 
@@ -158,7 +158,7 @@ class ServingSite(BaseAppState):
         else:
             print("No pages to load")
 
-    async def next(self):
+    async def next_state(self):
         return ShuttingDown
 
 
@@ -174,5 +174,5 @@ class ShuttingDown(BaseAppState):
 
         return True
 
-    async def next(self):
+    async def next_state(self):
         return type(self)
