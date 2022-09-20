@@ -115,7 +115,13 @@ class ConnectingDB(BaseAppState):
     async def on_error(exception: Exception) -> Type[State] | None:
         match exception:
             case ModuleNotFoundError():
-                print(f"Could not find the database driver module: {exception!r}")
+                print(f"Could not find the database driver extension: {exception!r}")
+                return ConfiguringDB
+
+            case WordletteNoDatabaseDriverFound():
+                print(
+                    f"Could not find a database driver type in the database driver extension: {exception!r}"
+                )
                 return ConfiguringDB
 
     async def next(self):
