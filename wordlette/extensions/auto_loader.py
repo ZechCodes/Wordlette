@@ -15,6 +15,10 @@ class ExtensionInfo:
     module: ModuleType
     found_classes: dict[T, set[T]]
 
+    @property
+    def name(self) -> str:
+        return self.path.stem
+
 
 def auto_load_directory(
     path: Path, scan_for: Iterable[T]
