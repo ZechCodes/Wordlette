@@ -35,14 +35,18 @@ def import_package_from_file(
     path: Path, scan_for: Iterable[T], package: str
 ) -> ExtensionInfo:
     import_path = f"{package}.{path.stem}"
-    return import_package(import_path, scan_for, package)
+    return import_package(import_path, scan_for, package, path)
 
 
 def import_package(
-    import_path: str, scan_for: Iterable[T] = (), package: str = ""
+    import_path: str,
+    scan_for: Iterable[T] = (),
+    package: str = "",
+    path: Path | None = None,
 ) -> ExtensionInfo:
     module, found_classes = load_extension_package(import_path, scan_for, package)
-    return ExtensionInfo(Path(module.__file__), import_path, module, found_classes)
+    module_path = path or Path(module.__file__)
+    return ExtensionInfo(module_path, import_path, module, found_classes)
 
 
 def is_package(path: Path) -> bool:
