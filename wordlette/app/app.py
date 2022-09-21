@@ -140,12 +140,8 @@ class App(BaseApp):
     def load_extension(self, extension_info: ExtensionInfo):
         self._load_extension(extension_info, Extension)
 
-    @bevy_method
     def _load_extension(
-        self,
-        extension_info: ExtensionInfo,
-        extension_type: Type[Extension],
-        logger: Logging = Inject,
+        self, extension_info: ExtensionInfo, extension_type: Type[Extension]
     ):
         context = self.app_context.branch()
         context.create(
@@ -155,18 +151,17 @@ class App(BaseApp):
             self.template_engine,
             cache=True,
         )
-        print(extension_info)
+        logger = self.app_context.create(Logging[extension_info.name], cache=False)
         context.add(
-            self.app_context.create(Logging[extension_info.name], cache=False),
+            logger,
             use_as=Logging,
         )
-        context.get(Logging).info("HELLO")
         extension: Extension = context.create(
             extension_type, extension_info.import_path, cache=True
         )
         self.extensions.add(extension)
 
-        logger.info(f"Loading {extension_type.__name__}: {extension.name}")
+        logger.info(f"{extension_type.__name__} Loading: {extension.name}")
         extension.load_plugins(
             constructor for constructor in extension_info.found_classes[Plugin]
         )
