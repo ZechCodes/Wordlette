@@ -20,17 +20,20 @@ class LoggingProvider(TypeProvider, priority="high"):
         return obj
 
     def create(self, obj: Logging | Type[Logging], add: bool = False) -> Logger:
-        if isinstance(obj, Logging):
+        if obj not in self._repository and isinstance(obj, Logging):
             parent_logger: Logger = self.get(Logging)
             logger = parent_logger.getChild(f"{obj.name}")
             logger.addHandler(parent_logger.handlers[0])
-            return logger
+            self._repository[obj] = logger
 
         return self.get(obj)
 
     def get(
         self, obj: Logging | Type[Logging], default: Logger | None = None
     ) -> Logger:
+        if obj in self._repository:
+            return self._repository[obj]
+
         if isinstance(obj, Logging):
             return self.create(obj)
 
