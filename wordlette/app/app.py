@@ -2,7 +2,6 @@ from html import escape
 
 import logging
 import uvicorn
-from bevy import Context
 from copy import deepcopy
 from pathlib import Path
 from starlette.applications import Starlette
@@ -10,12 +9,14 @@ from starlette.responses import HTMLResponse
 from starlette.types import Receive, Scope, Send
 from typing import Any, Callable, Iterator, Type, TypeAlias
 
+from bevy import Context, bevy_method, Inject
 from wordlette.app.states import BaseAppState, Starting
 from wordlette.config.provider import ConfigProvider
 from wordlette.exceptions import WordletteException, WordletteNoStarletteAppFound
 from wordlette.extensions.auto_loader import ExtensionInfo
 from wordlette.extensions.extensions import AppExtension, Extension
 from wordlette.extensions.plugins import Plugin
+from wordlette.logger import LoggingProvider, Logging
 from wordlette.policies.provider import PolicyProvider
 from wordlette.settings import Settings
 from wordlette.state_machine import StateMachine
@@ -26,8 +27,6 @@ from .base_app import BaseApp
 StateMachineConstructor: TypeAlias = (
     Type[StateMachine] | Callable[[BaseApp], StateMachine] | Callable[[], StateMachine]
 )
-
-logger = logging.getLogger("wordlette")
 
 
 class ResponseContext:
@@ -130,6 +129,8 @@ class App(BaseApp):
         context = Context.factory()
         context.add_provider(ConfigProvider)
         context.add_provider(PolicyProvider)
+        context.add_provider(LoggingProvider)
+        context.add(logging.getLogger("wordlette"), use_as=Logging)
         app = context.create(cls, cache=True)
         uvicorn.run(app, host=host, port=port, log_config=cls._create_logging_config())
 
@@ -139,17 +140,27 @@ class App(BaseApp):
     def load_extension(self, extension_info: ExtensionInfo):
         self._load_extension(extension_info, Extension)
 
+    @bevy_method
     def _load_extension(
-        self, extension_info: ExtensionInfo, extension_type: Type[Extension]
+        self,
+        extension_info: ExtensionInfo,
+        extension_type: Type[Extension],
+        logger: Logging = Inject,
     ):
         context = self.app_context.branch()
         context.create(
             TemplateEngine,
-            extension_info.path.stem,
+            extension_info.name,
             [extension_info.path / "templates"] if extension_info.path.is_dir() else [],
             self.template_engine,
             cache=True,
         )
+        print(extension_info)
+        context.add(
+            self.app_context.create(Logging[extension_info.name], cache=False),
+            use_as=Logging,
+        )
+        context.get(Logging).info("HELLO")
         extension: Extension = context.create(
             extension_type, extension_info.import_path, cache=True
         )
@@ -162,11 +173,17 @@ class App(BaseApp):
         logger.info(f"{extension_type.__name__} Loaded: {extension.name}")
 
     @StateMachine.on("transitioned-to-state")
-    async def _log_state_transition_to(self, event: StateChangeEvent):
+    @bevy_method
+    async def _log_state_transition_to(
+        self, event: StateChangeEvent, logger: Logging = Inject
+    ):
         logger.info(f"Transitioning {event.old_state} to {event.new_state}")
 
     @StateMachine.on("entered-state")
-    async def _log_state_entered(self, event: StateChangeEvent):
+    @bevy_method
+    async def _log_state_entered(
+        self, event: StateChangeEvent, logger: Logging = Inject
+    ):
         logger.info(f"Entered {event.new_state} from {event.old_state}")
 
     @property
@@ -189,7 +206,8 @@ class App(BaseApp):
     def state_machine(self) -> StateMachine[BaseAppState]:
         return self._state_machine
 
-    async def _start(self):
+    @bevy_method
+    async def _start(self, logger: Logging = Inject):
         try:
             await self.state_machine.start(self._starting_state)
         except Exception as exception:
@@ -208,7 +226,7 @@ class App(BaseApp):
 
         log_config["formatters"]["wordlette"] = {
             "()": "uvicorn.logging.DefaultFormatter",
-            "fmt": "WORDLETTE.%(levelprefix)s %(message)s",
+            "fmt": "%(name)s.%(levelprefix)s %(message)s",
             "use_colors": None,
         }
         log_config["handlers"]["wordlette"] = {
@@ -216,6 +234,7 @@ class App(BaseApp):
             "class": "logging.StreamHandler",
             "stream": "ext://sys.stderr",
         }
+
         log_config["loggers"]["wordlette"] = {
             "handlers": ["wordlette"],
             "level": "INFO",
