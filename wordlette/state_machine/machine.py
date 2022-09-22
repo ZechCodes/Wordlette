@@ -7,7 +7,7 @@ from typing import Generic, Type, TypeVar
 from wordlette import Logging
 from wordlette.events import Eventable
 from wordlette.exceptions import WordletteStateMachineAlreadyStarted
-from wordlette.utilities.null_type import NullType
+from .null_state import NullState
 from .state import State
 
 
@@ -50,16 +50,6 @@ class StateChangeEvent:
     event: str
     old_state: State
     new_state: State
-
-
-class NullState(NullType, State):
-    name = "Null"
-
-    async def enter_state(self):
-        pass
-
-    async def next_state(self) -> Type[State]:
-        pass
 
 
 class StateMachine(Generic[S], Eventable):
