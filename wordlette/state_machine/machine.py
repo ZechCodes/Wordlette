@@ -9,20 +9,10 @@ from wordlette.events import Eventable
 from wordlette.exceptions import WordletteStateMachineAlreadyStarted
 from .null_state import NullState
 from .state import State
+from wordlette.utilities.depth_counter import DepthCounter
 
 
 S = TypeVar("S", bound=State)
-
-
-class DepthCounter:
-    def __init__(self):
-        self.count = 0
-
-    async def __aenter__(self):
-        self.count += 1
-
-    async def __aexit__(self, exc_type, exc_val, exc_tb):
-        self.count -= 1
 
 
 class StateEnterContext:
