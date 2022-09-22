@@ -7,7 +7,9 @@ from typing import Generic, Type, TypeVar
 from wordlette import Logging
 from wordlette.events import Eventable
 from wordlette.exceptions import WordletteStateMachineAlreadyStarted
+from wordlette.utilities.null_type import NullType
 from .state import State
+
 
 S = TypeVar("S", bound=State)
 
@@ -50,16 +52,26 @@ class StateChangeEvent:
     new_state: State
 
 
+class NullState(NullType, State):
+    name = "Null"
+
+    async def enter_state(self):
+        pass
+
+    async def next_state(self) -> Type[State]:
+        pass
+
+
 class StateMachine(Generic[S], Eventable):
     def __init__(self):
         super().__init__()
-        self._current_state: S | None = None
         self._transition_depth = DepthCounter()
+        self._current_state: S = NullState()
         self.last_exception = None
 
     @property
     def started(self) -> bool:
-        return self._current_state is not None
+        return not isinstance(self._current_state, NullState)
 
     @property
     def state(self) -> S:
