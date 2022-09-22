@@ -10,6 +10,7 @@ from typing import Any, Callable, Iterator, Type, TypeAlias
 
 from bevy import Context, bevy_method, Inject
 from wordlette.app.states import BaseAppState, Starting
+from wordlette.config import Config
 from wordlette.config.provider import ConfigProvider
 from wordlette.exceptions import WordletteException, WordletteNoStarletteAppFound
 from wordlette.extensions.auto_loader import ExtensionInfo
@@ -110,6 +111,7 @@ class App(BaseApp):
         self._state_machine = self.bevy.create(StateMachine, cache=True)
         self._starting_state = starting_state
         self._settings = Settings()
+        self._config = self.bevy.create(Config, cache=True)
         self.bevy.add(self._settings, use_as=Settings)
 
         super().__init__()
