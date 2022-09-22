@@ -3,7 +3,7 @@ from collections import defaultdict
 from bevy import Bevy
 from typing import Awaitable, Callable, TypeVar, ParamSpec, TypeAlias
 
-from wordlette.class_instance_dispatch import ClassOrInstanceDispatch
+from wordlette.utilities.class_instance_dispatch import ClassOrInstanceDispatch
 from .listener import EventListener
 
 R = TypeVar("R")
