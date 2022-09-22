@@ -31,8 +31,11 @@ class ConfigFile:
 
 class Config(Bevy):
     def __init__(self):
-        self._loaded = False
         self._config_files: list[ConfigFile] = []
+
+    @property
+    def found_config_files(self) -> bool:
+        return bool(self._config_files)
 
     def populate_model(
         self, model_type: Type[M], section: str = "", allow_empty: bool = True

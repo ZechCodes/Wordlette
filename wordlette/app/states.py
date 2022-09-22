@@ -1,14 +1,17 @@
 import os
 from dataclasses import dataclass
-from itertools import compress
 from pathlib import Path
-from starlette.applications import Starlette
 from typing import Type
+
+from bevy import bevy_method, Inject
+from itertools import compress
+from starlette.applications import Starlette
+from starlette.responses import HTMLResponse
 
 import wordlette.config.json_loader as json_loader
 import wordlette.config.toml_loader as toml_loader
 import wordlette.config.yaml_loader as yaml_loader
-from bevy import bevy_method, Inject
+from wordlette import Logging
 from wordlette.config.config import Config
 from wordlette.databases import Database
 from wordlette.exceptions import WordletteNoDatabaseDriverFound
@@ -88,13 +91,19 @@ class LoadingConfig(BaseAppState):
         await config.load_config()
         return True
 
-    async def next_state(self):
-        return ConnectingDB
+    @bevy_method
+    async def next_state(self, config: Config = Inject):
+        if config.found_config_files:
+            return ConnectingDB
+
+        return CreatingConfig
 
 
 class CreatingConfig(BaseAppState):
-    async def enter_state(self):
-        return True
+    @bevy_method
+    async def enter_state(self, log: Logging = Inject):
+        log.critical("No config files found.")
+        self.context.add(HTMLResponse("No config found"), use_as=Starlette)
 
     async def next_state(self):
         return LoadingConfig
