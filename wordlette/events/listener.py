@@ -9,10 +9,10 @@ Listener: TypeAlias = Callable[P, Awaitable[R]]
 
 
 class EventListener:
-    def __init__(self, event: str, listen_to: Type, listener: Listener):
-        self._event = event
+    def __init__(self, listen_to: Type, listener: Listener, **labels):
         self._listen_to = listen_to
         self._listener = listener
+        self._labels = labels
 
     def __set_name__(self, owner, name):
         if not hasattr(owner, "__event_listeners__"):
@@ -26,4 +26,4 @@ class EventListener:
     def register(self, context: Context, instance):
         target = context.find(self._listen_to)
         if target:
-            target.on(self._event, MethodType(self._listener, instance))
+            target.on(MethodType(self._listener, instance), **self._labels)

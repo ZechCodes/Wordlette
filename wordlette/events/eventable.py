@@ -1,40 +1,43 @@
-from collections import defaultdict
+from typing import Awaitable, Callable, ParamSpec, TypeAlias, TypeVar
 
 from bevy import Bevy
-from typing import Awaitable, Callable, TypeVar, ParamSpec, TypeAlias
 
+from wordlette.labels import LabelCollection
 from wordlette.utilities.class_instance_dispatch import ClassOrInstanceDispatch
 from .listener import EventListener
 
+
 R = TypeVar("R")
 P = ParamSpec("P")
+T = TypeVar("T")
 
 Listener: TypeAlias = Callable[P, Awaitable[R]]
 
 
 class Eventable(Bevy):
     __event_listeners__: set[EventListener]
+    _listeners: LabelCollection[Listener]
 
     def __init__(self):
         self._register_listeners()
 
-    async def dispatch(self, event: str, *payload_args, **payload_kwargs):
-        for listener in self._listeners.get(event, set()):
-            await listener(*payload_args, **payload_kwargs)
+    async def dispatch(self, *payload_args, **labels):
+        for listener in self._listeners.get(**labels):
+            await listener(*payload_args)
 
     @ClassOrInstanceDispatch
     @classmethod
-    def on(cls, event: str) -> Callable[[Listener], EventListener]:
+    def on(cls, **labels) -> Callable[[Listener], EventListener]:
         def register(func: Listener) -> EventListener:
-            return EventListener(event, cls, func)
+            return EventListener(cls, func, **labels)
 
         return register
 
     @on.add_method
-    def on(self, event: str, listener: Listener):
-        self._listeners[event].add(listener)
+    def on(self, listener: Listener, **labels):
+        self._listeners.add(listener, **labels)
 
     def _register_listeners(self):
-        self._listeners: dict[str, set[Listener]] = defaultdict(set)
+        self._listeners = LabelCollection[Listener]()
         for listener in getattr(self, "__event_listeners__", set()):
             listener.register(self.bevy, self)
