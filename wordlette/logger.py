@@ -50,7 +50,7 @@ class LoggingProvider(TypeProvider, priority="high"):
         handler.setLevel(logging.DEBUG)
 
         formatter = uvicorn.logging.DefaultFormatter(
-            "%(levelprefix)s<%(name)s: %(asctime)s> %(message)s"
+            "%(levelprefix)s %(asctime)s %(name)s  ::  %(message)s"
         )
         handler.setFormatter(formatter)
         handler.setStream(sys.stdout)
