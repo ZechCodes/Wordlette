@@ -1,6 +1,6 @@
-from bevy.providers import TypeProvider
 from typing import Protocol, Type, TypeVar
 
+from bevy.providers import TypeProvider
 from .config import Config
 
 
