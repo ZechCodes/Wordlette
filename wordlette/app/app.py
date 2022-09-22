@@ -170,14 +170,14 @@ class App(BaseApp):
     async def _log_state_transition_to(
         self, event: StateChangeEvent, logger: Logging = Inject
     ):
-        logger.info(f"Transitioning {event.old_state} to {event.new_state}")
+        logger.debug(f"Transitioning {event.old_state} to {event.new_state}")
 
     @StateMachine.on("entered-state")
     @bevy_method
     async def _log_state_entered(
         self, event: StateChangeEvent, logger: Logging = Inject
     ):
-        logger.info(f"Entered {event.new_state} from {event.old_state}")
+        logger.debug(f"Entered {event.new_state} from {event.old_state}")
 
     @property
     def app(self) -> Starlette | None:
