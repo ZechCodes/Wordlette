@@ -68,7 +68,7 @@ class LoggingProvider(TypeProvider, priority="high"):
             return self._repository[obj]
 
         if isinstance(obj, Logging):
-            return self.create(obj)
+            return self.create(obj, add=True)
 
         return self.create(obj, add=True)
 
