@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from bevy import Bevy
 from typing import Type
+
+from bevy import Bevy
 
 
 class State(ABC, Bevy):
