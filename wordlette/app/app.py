@@ -155,7 +155,10 @@ class App(BaseApp):
         log.info(f"{extension_type.__name__} Loaded: {extension.name}")
 
     def create_extension(
-        self, extension_info: ExtensionInfo, extension_type: Type[Extension] = Extension
+        self,
+        extension_info: ExtensionInfo,
+        extension_type: Type[Extension] = Extension,
+        log_name: str = "",
     ) -> Extension:
         context = self.app_context.branch()
         context.create(
@@ -165,7 +168,9 @@ class App(BaseApp):
             self.template_engine,
             cache=True,
         )
-        logger = self.app_context.create(Logging[extension_info.name], cache=False)
+        logger = context.create(
+            Logging, log_name or f"app.{extension_info.name}", cache=True
+        )
         context.add(
             logger,
             use_as=Logging,

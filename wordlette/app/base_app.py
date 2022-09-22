@@ -18,7 +18,10 @@ class BaseApp(ABC, Eventable):
 
     @abstractmethod
     def create_extension(
-        self, extension_info: ExtensionInfo, extension_type: Type[Extension] = Extension
+        self,
+        extension_info: ExtensionInfo,
+        extension_type: Type[Extension] = Extension,
+        log_name: str = "",
     ) -> Extension:
         ...
 
