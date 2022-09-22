@@ -5,17 +5,12 @@ from .base import FileTypeLoader
 
 
 try:
-    import tomllib as toml
+    import tomli
 
     toml_installed = True
 except ImportError:
-    try:
-        import tomli as toml
-
-        toml_installed = True
-    except ImportError:
-        toml = False
-        toml_installed = False
+    tomli = False
+    toml_installed = False
 
 
 class TomlFileLoader(FileTypeLoader):
@@ -27,8 +22,8 @@ class TomlFileLoader(FileTypeLoader):
         return self._file_path
 
     def exists(self) -> bool:
-        return toml and self.file_path.exists()
+        return tomli and self.file_path.exists()
 
     def load(self) -> dict[str, Any]:
         with self.file_path.open("b") as file:
-            return toml.load(file)
+            return tomli.load(file)
