@@ -1,6 +1,7 @@
 from dataclasses import dataclass, field
 
-from bevy import Inject, bevy_method
+from bevy import bevy_method, Inject
+
 from wordlette import Logging
 from wordlette.app import App
 from wordlette.extensions.plugins import Plugin
@@ -37,7 +38,7 @@ class Plugin(Plugin):
         self.app = app
         log.info(f"CURRENT STATE {app.state_machine}")
 
-    @StateMachine.on("entered-state[ServingSite]")
+    @StateMachine.on(event="entered-state", state="ServingSite")
     @bevy_method
     async def register_pages(
         self, event, settings: TestConfigModel = Inject, log: Logging = Inject
