@@ -41,7 +41,11 @@ class ResponseContext:
 
     @property
     def app(self) -> Starlette | None:
-        return self.wordlette.app if self.wordlette.context else None
+        return (
+            self.wordlette.app
+            if self.wordlette.context and self.wordlette.app
+            else self._app
+        )
 
     @app.setter
     def app(self, app: Starlette):
