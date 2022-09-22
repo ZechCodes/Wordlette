@@ -6,7 +6,7 @@ from bevy import Bevy, bevy_method, Inject
 
 from wordlette import Logging
 from wordlette.settings import Settings
-from .loaders import FileTypeLoader
+from .loaders.base import FileTypeLoader
 
 
 M = TypeVar("M")

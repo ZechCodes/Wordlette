@@ -8,9 +8,9 @@ from itertools import compress
 from starlette.applications import Starlette
 from starlette.responses import HTMLResponse
 
-import wordlette.config.json_loader as json_loader
-import wordlette.config.toml_loader as toml_loader
-import wordlette.config.yaml_loader as yaml_loader
+import wordlette.config.loaders.json as json_loader
+import wordlette.config.loaders.toml as toml_loader
+import wordlette.config.loaders.yaml as yaml_loader
 from wordlette import Logging
 from wordlette.config.config import Config
 from wordlette.databases import Database

@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .loaders import FileTypeLoader
+from .base import FileTypeLoader
 
 json_installed = True
 
