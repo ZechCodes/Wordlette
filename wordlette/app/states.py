@@ -107,7 +107,9 @@ class ConnectingDB(BaseAppState):
                 "Unable to find a database driver to connect to the database."
             )
 
-        db_extension = app.create_extension(db_package_info)
+        db_extension = app.create_extension(
+            db_package_info, log_name=f"db.{db_package_info.name}"
+        )
         await self._connect_db(
             db_package_info.found_classes[Database].pop(), db_extension
         )
