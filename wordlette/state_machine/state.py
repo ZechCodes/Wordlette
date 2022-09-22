@@ -3,10 +3,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Type
 
-from bevy import Bevy
+from wordlette.utilities.bevy_auto_inject import BevyAutoInject
 
 
-class State(ABC, Bevy):
+class State(ABC, BevyAutoInject):
     @property
     def name(self) -> str:
         return type(self).__name__

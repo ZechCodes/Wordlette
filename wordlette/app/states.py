@@ -3,14 +3,15 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Type
 
-from bevy import bevy_method, Inject
 from itertools import compress
 from starlette.applications import Starlette
 from starlette.responses import HTMLResponse
+import bevy.providers.function_provider
 
 import wordlette.config.loaders.json as json_loader
 import wordlette.config.loaders.toml as toml_loader
 import wordlette.config.loaders.yaml as yaml_loader
+from bevy import Inject
 from wordlette import Logging
 from wordlette.config.config import Config
 from wordlette.databases import Database
@@ -38,7 +39,6 @@ class BaseAppState(State):
 
 
 class Starting(BaseAppState):
-    @bevy_method
     async def enter_state(self, settings: Settings = Inject):
         """Add a catch-all starlette application that 400's every request to tell the user that something has gone wrong
         with the application routing."""
@@ -51,7 +51,6 @@ class Starting(BaseAppState):
 
 
 class LoadingAppPlugins(BaseAppState):
-    @bevy_method
     async def enter_state(self, app: BaseApp = Inject):
         self.context.add(
             create_error_application("Testing loading extensions", "Testing"),
@@ -71,7 +70,6 @@ class LoadingAppPlugins(BaseAppState):
 
 
 class LoadingConfig(BaseAppState):
-    @bevy_method
     async def enter_state(self, settings: Settings = Inject, config: Config = Inject):
         # Add file type loaders that have the necessary modules installed
         settings["file_loaders"] = list(
@@ -91,7 +89,6 @@ class LoadingConfig(BaseAppState):
         await config.load_config()
         return True
 
-    @bevy_method
     async def next_state(self, config: Config = Inject):
         if config.found_config_files:
             return ConnectingDB
@@ -100,7 +97,6 @@ class LoadingConfig(BaseAppState):
 
 
 class CreatingConfig(BaseAppState):
-    @bevy_method
     async def enter_state(self, log: Logging = Inject):
         log.critical("No config files found.")
         self.context.add(HTMLResponse("No config found"), use_as=Starlette)
@@ -110,7 +106,6 @@ class CreatingConfig(BaseAppState):
 
 
 class ConnectingDB(BaseAppState):
-    @bevy_method
     async def enter_state(
         self, db_config: DBEngineImportConfig = Inject, app: BaseApp = Inject
     ):

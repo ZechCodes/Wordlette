@@ -1,6 +1,9 @@
-from bevy import Context
+from functools import update_wrapper
 from types import MethodType
-from typing import Awaitable, Callable, TypeVar, ParamSpec, TypeAlias, Type
+from typing import Awaitable, Callable, ParamSpec, Type, TypeAlias, TypeVar
+
+from bevy import bevy_method, Context
+
 
 R = TypeVar("R")
 P = ParamSpec("P")
@@ -13,6 +16,7 @@ class EventListener:
         self._listen_to = listen_to
         self._listener = listener
         self._labels = labels
+        update_wrapper(self, listener)
 
     def __set_name__(self, owner, name):
         if not hasattr(owner, "__event_listeners__"):
@@ -26,4 +30,8 @@ class EventListener:
     def register(self, context: Context, instance):
         target = context.find(self._listen_to)
         if target:
-            target.on(MethodType(self._listener, instance), **self._labels)
+            func = self._listener
+            if hasattr(instance, "bevy"):
+                func = bevy_method(self._listener)
+
+            target.on(MethodType(func, instance), **self._labels)

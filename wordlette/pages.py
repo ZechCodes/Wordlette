@@ -1,20 +1,22 @@
 import re
 import traceback
 from abc import ABC, abstractmethod
-from bevy import Bevy
-from bevy import Context
 from inspect import signature
+from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeAlias, TypeVar
+
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import HTMLResponse
 from starlette.types import Receive, Scope, Send
-from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeAlias, TypeVar
 
-from wordlette.utilities.bevy_proxy import bind_proxy
+from bevy import Context
 from wordlette.exceptions import WordlettePageDoesntSupportForm
 from wordlette.forms import Form
 from wordlette.responses import Response
+from wordlette.utilities.bevy_auto_inject import BevyAutoInject
+from wordlette.utilities.bevy_proxy import bind_proxy
 from wordlette.utilities.function_calls import call
+
 
 P = ParamSpec("P")
 T = TypeVar("T", bound=type)
@@ -24,13 +26,14 @@ ErrorHandler: TypeAlias = Callable[[Exception], Awaitable[Response]]
 SubmitHandler: TypeAlias = Callable[P, Awaitable[T]]
 
 
-class Page(ABC, Bevy):
+class Page(ABC, BevyAutoInject):
     path: str
 
     error_handlers: dict[Type[Exception], ErrorHandler]
     submit_handlers: dict[TForm, SubmitHandler]
 
     def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
         cls.error_handlers = getattr(cls, "error_handlers", {})
         cls.submit_handlers = getattr(cls, "submit_handlers", {})
         for name, attr in vars(cls).items():

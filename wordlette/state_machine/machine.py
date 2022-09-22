@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from types import TracebackType
 from typing import Generic, Type, TypeVar
 
-from bevy import bevy_method, Inject
+from bevy import Inject
 
 from wordlette import Logging
 from wordlette.events import Eventable
@@ -71,7 +71,6 @@ class StateMachine(Generic[S], Eventable):
         next_state_type = await self._current_state.next_state()
         await self._transition_to_state(next_state_type)
 
-    @bevy_method
     async def _transition_to_state(
         self, state_type: Type[S], log: Logging["StateMachine"] = Inject
     ):

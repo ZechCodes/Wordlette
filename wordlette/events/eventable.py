@@ -1,8 +1,7 @@
 from typing import Awaitable, Callable, ParamSpec, TypeAlias, TypeVar
 
-from bevy import Bevy
-
 from wordlette.labels import LabelCollection
+from wordlette.utilities.bevy_auto_inject import BevyAutoInject
 from wordlette.utilities.class_instance_dispatch import ClassOrInstanceDispatch
 from .listener import EventListener
 
@@ -14,7 +13,7 @@ T = TypeVar("T")
 Listener: TypeAlias = Callable[P, Awaitable[R]]
 
 
-class Eventable(Bevy):
+class Eventable(BevyAutoInject):
     __event_listeners__: set[EventListener]
     _listeners: LabelCollection[Listener]
 
