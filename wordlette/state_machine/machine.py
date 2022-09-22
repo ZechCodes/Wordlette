@@ -7,9 +7,9 @@ from typing import Generic, Type, TypeVar
 from wordlette import Logging
 from wordlette.events import Eventable
 from wordlette.exceptions import WordletteStateMachineAlreadyStarted
+from wordlette.utilities.depth_counter import DepthCounter
 from .null_state import NullState
 from .state import State
-from wordlette.utilities.depth_counter import DepthCounter
 
 
 S = TypeVar("S", bound=State)
@@ -37,9 +37,9 @@ class StateEnterContext:
 
 @dataclass()
 class StateChangeEvent:
-    event: str
     old_state: State
     new_state: State
+    event: str
 
 
 class StateMachine(Generic[S], Eventable):
@@ -78,7 +78,7 @@ class StateMachine(Generic[S], Eventable):
                 transition_immediately = await self._current_state.enter_state()
 
             await self._dispatch(
-                "transitioned-to-state", old_state, self._current_state
+                old_state, self._current_state, event="transitioned-to-state"
             )
 
             if enter_context.transition_to:
@@ -88,7 +88,7 @@ class StateMachine(Generic[S], Eventable):
                 await self.next()
 
         if self._transition_depth.count == 0:
-            await self._dispatch("entered-state", old_state, self._current_state)
+            await self._dispatch(old_state, self._current_state, event="entered-state")
 
     def __repr__(self):
         return f"{type(self).__name__}(state={self.state})"
@@ -99,7 +99,6 @@ class StateMachine(Generic[S], Eventable):
         context.add(logger, use_as=Logging)
         return context.create(state_type)
 
-    async def _dispatch(self, event: str, old_state: State, new_state: State):
-        payload = StateChangeEvent(event, old_state, new_state)
-        await self.dispatch(event, payload)
-        await self.dispatch(f"{event}[{new_state.name}]", payload)
+    async def _dispatch(self, old_state: State, new_state: State, **labels):
+        payload = StateChangeEvent(old_state, new_state, **labels)
+        await self.dispatch(payload, **labels, state=new_state.name)
