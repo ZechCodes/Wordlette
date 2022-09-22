@@ -27,9 +27,6 @@ class LoggingProvider(TypeProvider, priority="high"):
     def create(
         self, obj: Logging | Type[Logging], name: str = "", add: bool = False, **_
     ) -> Logger | None:
-        if obj in self._repository:
-            return self.get(obj)
-
         if isinstance(obj, Logging):
             logger = self._create_child_logger(obj)
 
