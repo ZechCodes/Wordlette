@@ -3,6 +3,7 @@ from logging import Logger
 import logging
 import sys
 import uvicorn.logging
+from functools import cache
 from typing import Type
 
 from bevy.providers import TypeProvider
@@ -31,7 +32,7 @@ class LoggingProvider(TypeProvider, priority="high"):
             logger = self._create_child_logger(obj)
 
         elif issubclass(obj, Logging):
-            logger = self._create_logger(obj, name)
+            logger = _create_logger(name or obj.name)
 
         else:
             return None
@@ -44,21 +45,6 @@ class LoggingProvider(TypeProvider, priority="high"):
     def _create_child_logger(self, obj):
         parent_logger: Logger = self.bevy.get(Logging)
         logger = parent_logger.getChild(f"{obj.name}")
-        return logger
-
-    def _create_logger(self, obj, name=None):
-        handler = logging.StreamHandler()
-        handler.setLevel(logging.DEBUG)
-
-        formatter = uvicorn.logging.DefaultFormatter(
-            "%(levelprefix)s %(asctime)s %(name)s  ::  %(message)s"
-        )
-        handler.setFormatter(formatter)
-        handler.setStream(sys.stdout)
-
-        logger = logging.getLogger(name or obj.name)
-        logger.addHandler(handler)
-        logger.setLevel(logging.DEBUG)
         return logger
 
     def get(
@@ -77,3 +63,20 @@ class LoggingProvider(TypeProvider, priority="high"):
             return True
 
         return isinstance(obj, type) and issubclass(obj, Logging)
+
+
+@cache
+def _create_logger(name):
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.DEBUG)
+
+    formatter = uvicorn.logging.DefaultFormatter(
+        "%(levelprefix)s %(asctime)s %(name)s  ::  %(message)s"
+    )
+    handler.setFormatter(formatter)
+    handler.setStream(sys.stdout)
+
+    logger = logging.getLogger(name)
+    logger.addHandler(handler)
+    logger.setLevel(logging.DEBUG)
+    return logger
