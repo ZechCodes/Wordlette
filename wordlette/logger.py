@@ -42,7 +42,7 @@ class LoggingProvider(TypeProvider, priority="high"):
         return logger
 
     def _create_child_logger(self, obj):
-        parent_logger: Logger = self.get(Logging)
+        parent_logger: Logger = self.bevy.get(Logging)
         logger = parent_logger.getChild(f"{obj.name}")
         return logger
 
