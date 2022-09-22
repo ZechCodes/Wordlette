@@ -13,6 +13,7 @@ from wordlette.config.config import Config
 from wordlette.databases import Database
 from wordlette.exceptions import WordletteNoDatabaseDriverFound
 from wordlette.extensions.auto_loader import auto_load_directory, import_package
+from wordlette.extensions.extensions import Extension
 from wordlette.extensions.plugins import Plugin
 from wordlette.pages import Page
 from wordlette.settings import Settings
@@ -97,14 +98,19 @@ class CreatingConfig(BaseAppState):
 
 class ConnectingDB(BaseAppState):
     @bevy_method
-    async def enter_state(self, db_config: DBEngineImportConfig = Inject):
+    async def enter_state(
+        self, db_config: DBEngineImportConfig = Inject, app: BaseApp = Inject
+    ):
         db_package_info = import_package(db_config.engine_import, [Database])
         if not db_package_info.found_classes[Database]:
             raise WordletteNoDatabaseDriverFound(
                 "Unable to find a database driver to connect to the database."
             )
 
-        await self._connect_db(db_package_info.found_classes[Database].pop())
+        db_extension = app.create_extension(db_package_info)
+        await self._connect_db(
+            db_package_info.found_classes[Database].pop(), db_extension
+        )
         return True
 
     async def next_state(self):
@@ -123,8 +129,8 @@ class ConnectingDB(BaseAppState):
                 )
                 return ConfiguringDB
 
-    async def _connect_db(self, engine_type: Type[Database]):
-        engine: Database = self.bevy.create(engine_type, cache=True)
+    async def _connect_db(self, engine_type: Type[Database], db_extension: Extension):
+        engine: Database = db_extension.bevy.create(engine_type, cache=True)
         await engine.connect()
 
 
