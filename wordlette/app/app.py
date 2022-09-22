@@ -105,6 +105,8 @@ class App(BaseApp):
         )
         self._state_machine = self.bevy.create(StateMachine, cache=True)
         self._starting_state = starting_state
+        self._settings = Settings()
+        self.bevy.add(self._settings, use_as=Settings)
 
         super().__init__()
 
