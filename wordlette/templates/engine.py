@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from wordlette.null_type import NullType
+from wordlette.utilities.null_type import NullType
 from wordlette.templates.renderers import TemplateRenderer
 from typing import Generator
 
