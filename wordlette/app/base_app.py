@@ -1,11 +1,12 @@
 from abc import ABC, abstractmethod
-from bevy import Context
 from starlette.applications import Starlette
 from starlette.types import Receive, Scope, Send
-from typing import Iterator
+from typing import Iterator, Type
 
+from bevy import Context
 from wordlette.events import Eventable
 from wordlette.extensions.auto_loader import ExtensionInfo
+from wordlette.extensions.extensions import Extension
 from wordlette.state_machine import StateMachine
 
 
@@ -13,6 +14,12 @@ class BaseApp(ABC, Eventable):
     @classmethod
     @abstractmethod
     def start(cls, host: str, port: int, extensions_modules: Iterator[str]):
+        ...
+
+    @abstractmethod
+    def create_extension(
+        self, extension_info: ExtensionInfo, extension_type: Type[Extension] = Extension
+    ) -> Extension:
         ...
 
     @abstractmethod

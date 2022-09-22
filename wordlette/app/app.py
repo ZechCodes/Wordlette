@@ -138,9 +138,25 @@ class App(BaseApp):
     def load_extension(self, extension_info: ExtensionInfo):
         self._load_extension(extension_info, Extension)
 
+    @bevy_method
     def _load_extension(
-        self, extension_info: ExtensionInfo, extension_type: Type[Extension]
+        self,
+        extension_info: ExtensionInfo,
+        extension_type: Type[Extension],
+        log: Logging = Inject,
     ):
+        extension = self.create_extension(extension_info, extension_type)
+        self.extensions.add(extension)
+
+        log.info(f"{extension_type.__name__} Loading: {extension.name}")
+        extension.load_plugins(
+            constructor for constructor in extension_info.found_classes[Plugin]
+        )
+        log.info(f"{extension_type.__name__} Loaded: {extension.name}")
+
+    def create_extension(
+        self, extension_info: ExtensionInfo, extension_type: Type[Extension] = Extension
+    ) -> Extension:
         context = self.app_context.branch()
         context.create(
             TemplateEngine,
@@ -154,16 +170,7 @@ class App(BaseApp):
             logger,
             use_as=Logging,
         )
-        extension: Extension = context.create(
-            extension_type, extension_info.import_path, cache=True
-        )
-        self.extensions.add(extension)
-
-        logger.info(f"{extension_type.__name__} Loading: {extension.name}")
-        extension.load_plugins(
-            constructor for constructor in extension_info.found_classes[Plugin]
-        )
-        logger.info(f"{extension_type.__name__} Loaded: {extension.name}")
+        return context.create(extension_type, extension_info.import_path, cache=True)
 
     @StateMachine.on("transitioned-to-state")
     @bevy_method
