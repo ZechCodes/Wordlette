@@ -24,7 +24,9 @@ class LoggingProvider(TypeProvider, priority="high"):
     ) -> Logging | Type[Logging]:
         return obj
 
-    def create(self, obj: Logging | Type[Logging], add: bool = False) -> Logger | None:
+    def create(
+        self, obj: Logging | Type[Logging], name: str = "", add: bool = False, **_
+    ) -> Logger | None:
         if obj in self._repository:
             return self.get(obj)
 
@@ -32,12 +34,14 @@ class LoggingProvider(TypeProvider, priority="high"):
             logger = self._create_child_logger(obj)
 
         elif issubclass(obj, Logging):
-            logger = self._create_logger(obj)
+            logger = self._create_logger(obj, name)
 
         else:
             return None
 
-        self._repository[obj] = logger
+        if add:
+            self._repository[obj] = logger
+
         return logger
 
     def _create_child_logger(self, obj):
@@ -45,7 +49,7 @@ class LoggingProvider(TypeProvider, priority="high"):
         logger = parent_logger.getChild(f"{obj.name}")
         return logger
 
-    def _create_logger(self, obj):
+    def _create_logger(self, obj, name=None):
         handler = logging.StreamHandler()
         handler.setLevel(logging.DEBUG)
 
@@ -55,7 +59,7 @@ class LoggingProvider(TypeProvider, priority="high"):
         handler.setFormatter(formatter)
         handler.setStream(sys.stdout)
 
-        logger = logging.getLogger(obj.name)
+        logger = logging.getLogger(name or obj.name)
         logger.addHandler(handler)
         logger.setLevel(logging.DEBUG)
         return logger
