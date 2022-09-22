@@ -1,4 +1,4 @@
-from wordlette.smart_functions import call
+from wordlette.utilities.function_calls import call
 
 
 def test_calling_with_optional_params():

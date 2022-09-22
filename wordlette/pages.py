@@ -14,7 +14,7 @@ from wordlette.bevy_utils import bind_proxy
 from wordlette.exceptions import WordlettePageDoesntSupportForm
 from wordlette.forms import Form
 from wordlette.responses import Response
-from wordlette.smart_functions import call
+from wordlette.utilities.function_calls import call
 
 P = ParamSpec("P")
 T = TypeVar("T", bound=type)
