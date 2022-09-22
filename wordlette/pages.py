@@ -10,7 +10,7 @@ from starlette.responses import HTMLResponse
 from starlette.types import Receive, Scope, Send
 from typing import Any, Awaitable, Callable, ParamSpec, Type, TypeAlias, TypeVar
 
-from wordlette.bevy_utils import bind_proxy
+from wordlette.utilities.bevy_proxy import bind_proxy
 from wordlette.exceptions import WordlettePageDoesntSupportForm
 from wordlette.forms import Form
 from wordlette.responses import Response

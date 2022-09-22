@@ -2,7 +2,7 @@ import attrs
 from starlette.responses import Response as StarletteResponse, HTMLResponse
 from typing import Any, Type, TypeVar
 
-from wordlette.bevy_utils import UnboundBevyContext
+from wordlette.utilities.bevy_proxy import UnboundBevyContext
 
 ResponseType = TypeVar("ResponseType", bound=StarletteResponse)
 
