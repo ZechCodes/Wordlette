@@ -80,7 +80,7 @@ class ResponseContext:
                         exc_val,
                     )
 
-            self.app = app = HTMLResponse(
+            self.app = HTMLResponse(
                 f"<h1>Wordlette Enountered An Error</h1>{message}",
                 status_code=500,
             )
@@ -89,7 +89,7 @@ class ResponseContext:
             message = self._build_response_error_message(
                 "Wordlette could not find an application to build a response with."
             )
-            self.app = self.app = app = HTMLResponse(
+            self.app = HTMLResponse(
                 f"<h1>Wordlette Enountered A Problem</h1>{message}",
                 status_code=500,
             )
