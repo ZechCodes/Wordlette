@@ -38,7 +38,7 @@ class Plugin(Plugin):
         self.app = app
         log.info(f"CURRENT STATE {app.state_machine}")
 
-    @StateMachine.on(event="entered-state", state="ServingSite")
+    @StateMachine.on(event="new-state", state="ServingSite")
     @bevy_method
     async def register_pages(
         self, event, settings: TestConfigModel = Inject, log: Logging = Inject

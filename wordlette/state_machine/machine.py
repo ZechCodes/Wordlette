@@ -83,9 +83,7 @@ class StateMachine(Generic[S], Eventable):
                 transition_immediately = await self._current_state.enter_state()
 
             log.debug(f"Transitioning {old_state} to {self._current_state}")
-            await self._dispatch(
-                old_state, self._current_state, event="transitioned-to-state"
-            )
+            await self._dispatch(old_state, self._current_state, event="changed-state")
 
             if enter_context.transition_to:
                 await self._transition_to_state(enter_context.transition_to)
@@ -95,7 +93,7 @@ class StateMachine(Generic[S], Eventable):
 
         if self._transition_depth.count == 0:
             log.debug(f"Entered {self._current_state} from {old_state}")
-            await self._dispatch(old_state, self._current_state, event="entered-state")
+            await self._dispatch(old_state, self._current_state, event="new-state")
 
     def __repr__(self):
         return f"{type(self).__name__}(state={self.state})"
