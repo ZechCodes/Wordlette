@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from types import TracebackType
 from typing import Generic, Type, TypeVar
 
+from wordlette import Logging
 from wordlette.events import Eventable
 from wordlette.exceptions import WordletteStateMachineAlreadyStarted
 from .state import State
@@ -77,7 +78,7 @@ class StateMachine(Generic[S], Eventable):
         await self._transition_to_state(next_state_type)
 
     async def _transition_to_state(self, state_type: Type[S]):
-        old_state, self._current_state = self._current_state, self.bevy.create(
+        old_state, self._current_state = self._current_state, self._create_state(
             state_type
         )
         async with self._transition_depth:
@@ -99,6 +100,12 @@ class StateMachine(Generic[S], Eventable):
 
     def __repr__(self):
         return f"{type(self).__name__}(state={self.state})"
+
+    def _create_state(self, state_type: Type[State]) -> State:
+        logger = self.bevy.create(Logging[state_type.__name__], cache=False)
+        context = self.bevy.branch()
+        context.add(logger, use_as=Logging)
+        return context.create(state_type)
 
     async def _dispatch(self, event: str, old_state: State, new_state: State):
         payload = StateChangeEvent(event, old_state, new_state)
