@@ -1,11 +1,13 @@
 from collections import UserDict
-
-from bevy import Bevy, bevy_method, Inject
 from pathlib import Path
 from typing import Any, Type, TypeVar
 
+from bevy import Bevy, bevy_method, Inject
+
+from wordlette import Logging
 from wordlette.settings import Settings
 from .loaders import FileTypeLoader
+
 
 M = TypeVar("M")
 
@@ -54,9 +56,15 @@ class Config(Bevy):
         await self._load_config_file("site-config")
 
     @bevy_method
-    async def _load_config_file(self, file_name: str, settings: Settings = Inject):
+    async def _load_config_file(
+        self,
+        file_name: str,
+        settings: Settings = Inject,
+        log: Logging["config"] = Inject,
+    ):
         config_path: Path = settings.get("config_path", Path().resolve())
         file_loaders: list[Type[FileTypeLoader]] = settings.get("file_loaders", [])
         for file_loader in file_loaders:
             if (loader := file_loader(config_path, file_name)).exists():
                 self._config_files.append(ConfigFile(loader.file_path, loader.load()))
+                log.debug(f"Loaded {loader.file_path}")
