@@ -2,7 +2,6 @@ from html import escape
 
 import logging
 import uvicorn
-from copy import deepcopy
 from pathlib import Path
 from starlette.applications import Starlette
 from starlette.responses import HTMLResponse
@@ -130,9 +129,8 @@ class App(BaseApp):
         context.add_provider(ConfigProvider)
         context.add_provider(PolicyProvider)
         context.add_provider(LoggingProvider)
-        context.add(logging.getLogger("wordlette"), use_as=Logging)
         app = context.create(cls, cache=True)
-        uvicorn.run(app, host=host, port=port, log_config=cls._create_logging_config())
+        uvicorn.run(app, host=host, port=port)
 
     def load_app_extension(self, extension_info: ExtensionInfo):
         self._load_extension(extension_info, AppExtension)
@@ -207,31 +205,3 @@ class App(BaseApp):
             await self.state_machine.start(self._starting_state)
         except Exception as exception:
             logger.exception("ERROR ENCOUNTERED")
-
-    @staticmethod
-    def _create_logging_config():
-        log_config = deepcopy(uvicorn.config.LOGGING_CONFIG)
-
-        log_config["formatters"]["default"][
-            "fmt"
-        ] = f'  UVICORN.{log_config["formatters"]["default"]["fmt"]}'
-        log_config["formatters"]["access"][
-            "fmt"
-        ] = f'   ACCESS.{log_config["formatters"]["access"]["fmt"]}'
-
-        log_config["formatters"]["wordlette"] = {
-            "()": "uvicorn.logging.DefaultFormatter",
-            "fmt": "%(name)s.%(levelprefix)s %(message)s",
-            "use_colors": None,
-        }
-        log_config["handlers"]["wordlette"] = {
-            "formatter": "wordlette",
-            "class": "logging.StreamHandler",
-            "stream": "ext://sys.stderr",
-        }
-
-        log_config["loggers"]["wordlette"] = {
-            "handlers": ["wordlette"],
-            "level": "INFO",
-        }
-        return log_config

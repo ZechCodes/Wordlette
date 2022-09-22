@@ -1,11 +1,16 @@
 from logging import Logger
 
+import logging
+import sys
+import uvicorn.logging
 from typing import Type
 
 from bevy.providers import TypeProvider
 
 
 class Logging(Logger):
+    name = "wordlette"
+
     def __init__(self, name: str):
         self.name = name
 
@@ -19,14 +24,41 @@ class LoggingProvider(TypeProvider, priority="high"):
     ) -> Logging | Type[Logging]:
         return obj
 
-    def create(self, obj: Logging | Type[Logging], add: bool = False) -> Logger:
-        if obj not in self._repository and isinstance(obj, Logging):
-            parent_logger: Logger = self.get(Logging)
-            logger = parent_logger.getChild(f"{obj.name}")
-            logger.addHandler(parent_logger.handlers[0])
-            self._repository[obj] = logger
+    def create(self, obj: Logging | Type[Logging], add: bool = False) -> Logger | None:
+        if obj in self._repository:
+            return self.get(obj)
 
-        return self.get(obj)
+        if isinstance(obj, Logging):
+            logger = self._create_child_logger(obj)
+
+        elif issubclass(obj, Logging):
+            logger = self._create_logger(obj)
+
+        else:
+            return None
+
+        self._repository[obj] = logger
+        return logger
+
+    def _create_child_logger(self, obj):
+        parent_logger: Logger = self.get(Logging)
+        logger = parent_logger.getChild(f"{obj.name}")
+        return logger
+
+    def _create_logger(self, obj):
+        handler = logging.StreamHandler()
+        handler.setLevel(logging.DEBUG)
+
+        formatter = uvicorn.logging.DefaultFormatter(
+            "%(levelprefix)s<%(name)s: %(asctime)s> %(message)s"
+        )
+        handler.setFormatter(formatter)
+        handler.setStream(sys.stdout)
+
+        logger = logging.getLogger(obj.name)
+        logger.addHandler(handler)
+        logger.setLevel(logging.DEBUG)
+        return logger
 
     def get(
         self, obj: Logging | Type[Logging], default: Logger | None = None
