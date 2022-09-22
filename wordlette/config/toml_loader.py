@@ -5,11 +5,16 @@ from .loaders import FileTypeLoader
 
 try:
     import tomllib as toml
+
+    toml_installed = True
 except ImportError:
     try:
         import tomli as toml
+
+        toml_installed = True
     except ImportError:
         toml = False
+        toml_installed = False
 
 
 class TomlFileLoader(FileTypeLoader):

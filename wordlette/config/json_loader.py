@@ -4,6 +4,8 @@ from typing import Any
 
 from .loaders import FileTypeLoader
 
+json_installed = True
+
 
 class JsonFileLoader(FileTypeLoader):
     def __init__(self, config_path: Path, file_name: str):

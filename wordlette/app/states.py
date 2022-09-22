@@ -78,7 +78,11 @@ class LoadingConfig(BaseAppState):
                     toml_loader.TomlFileLoader,
                     json_loader.JsonFileLoader,
                 ],
-                [yaml_loader.yaml, toml_loader.toml, json_loader.json],
+                [
+                    yaml_loader.yaml_installed,
+                    toml_loader.toml_installed,
+                    json_loader.json_installed,
+                ],
             )
         )
         await config.load_config()

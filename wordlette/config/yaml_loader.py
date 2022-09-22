@@ -6,8 +6,11 @@ from .loaders import FileTypeLoader
 
 try:
     import yaml
+
+    yaml_installed = True
 except ImportError:
     yaml = False
+    yaml_installed = False
 
 
 class YamlFileLoader(FileTypeLoader):
