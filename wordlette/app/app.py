@@ -1,14 +1,14 @@
-from html import escape
-
 import logging
-import uvicorn
+from html import escape
 from pathlib import Path
+from typing import Any, Callable, Iterator, Type, TypeAlias
+
+import uvicorn
+from bevy import bevy_method, Context, Inject
 from starlette.applications import Starlette
 from starlette.responses import HTMLResponse
 from starlette.types import Receive, Scope, Send
-from typing import Any, Callable, Iterator, Type, TypeAlias
 
-from bevy import Context, bevy_method, Inject
 from wordlette.app.states import BaseAppState, Starting
 from wordlette.config import Config
 from wordlette.config.provider import ConfigProvider
@@ -16,13 +16,13 @@ from wordlette.exceptions import WordletteException, WordletteNoStarletteAppFoun
 from wordlette.extensions.auto_loader import ExtensionInfo
 from wordlette.extensions.extensions import AppExtension, Extension
 from wordlette.extensions.plugins import Plugin
-from wordlette.logger import LoggingProvider, Logging
+from wordlette.logger import Logging, LoggingProvider
 from wordlette.policies.provider import PolicyProvider
 from wordlette.settings import Settings
 from wordlette.state_machine import StateMachine
-from wordlette.state_machine.machine import StateChangeEvent
 from wordlette.templates import TemplateEngine
 from .base_app import BaseApp
+
 
 StateMachineConstructor: TypeAlias = (
     Type[StateMachine] | Callable[[BaseApp], StateMachine] | Callable[[], StateMachine]
@@ -185,20 +185,6 @@ class App(BaseApp):
             use_as=Logging,
         )
         return context.create(extension_type, extension_info.import_path, cache=True)
-
-    @StateMachine.on("transitioned-to-state")
-    @bevy_method
-    async def _log_state_transition_to(
-        self, event: StateChangeEvent, logger: Logging = Inject
-    ):
-        logger.debug(f"Transitioning {event.old_state} to {event.new_state}")
-
-    @StateMachine.on("entered-state")
-    @bevy_method
-    async def _log_state_entered(
-        self, event: StateChangeEvent, logger: Logging = Inject
-    ):
-        logger.debug(f"Entered {event.new_state} from {event.old_state}")
 
     @property
     def app(self) -> Starlette | None:
