@@ -73,7 +73,7 @@ class LoggingProvider(TypeProvider, priority="high"):
         if isinstance(obj, Logging):
             return self.create(obj)
 
-        return super().get(obj, default)
+        return self.create(obj, add=True)
 
     def supports(self, obj) -> bool:
         if isinstance(obj, Logging):
