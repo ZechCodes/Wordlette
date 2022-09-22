@@ -71,7 +71,8 @@ def _create_logger(name):
     handler.setLevel(logging.DEBUG)
 
     formatter = uvicorn.logging.DefaultFormatter(
-        "%(levelprefix)s %(asctime)s %(name)s  ::  %(message)s"
+        "%(asctime)s %(levelprefix)s %(name)s  ::  %(message)s",
+        datefmt="%Y%m%d %H:%M:%S",
     )
     handler.setFormatter(formatter)
     handler.setStream(sys.stdout)
