@@ -212,8 +212,12 @@ class App(BaseApp):
         return self._state_machine
 
     @bevy_method
-    async def _start(self, logger: Logging = Inject):
+    async def _start(self, log: Logging = Inject):
         try:
             await self.state_machine.start(self._starting_state)
         except Exception as exception:
+            logger = log
+            if self.state_machine.state:
+                logger = self.state_machine.state.bevy.find(Logging, default=log)
+
             logger.exception("ERROR ENCOUNTERED")
