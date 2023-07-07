@@ -1,5 +1,6 @@
 from typing import TypeAlias, Callable, Awaitable
 
+from bevy import get_repository
 from starlette.types import Receive, Scope, Send
 
 from wordlette.cms.states import BootstrapState
@@ -27,6 +28,8 @@ class CMSApp:
         self, scope: Scope, receive: Receive, send: Send
     ) -> None:
         self._state_machine = StateMachine(BootstrapState)
+        get_repository().set(StateMachine, self._state_machine)
+
         await self._state_machine.run()
 
         self.handle_request = self._forward_request
