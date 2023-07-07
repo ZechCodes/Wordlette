@@ -1,32 +1,20 @@
 [tool.poetry]
 name = "wordlette"
-version = "0.1.0-alpha.2"
-description = "Simple and easy content management system that anyone can use."
-authors = ["Zech Zimmerman <hi@zech.codes>"]
+version = "0.0.1.alpha1"
+description = "Simple and easy framework for building complex websites."
+authors = ["ZechCodes <hi@zech.codes>"]
 license = "MIT"
+readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "^3.10"
-starlette = "^0.20.4"
-bevy = "^1.3.12"
-Mako = "^1.2.1"
-click = "^8.1.3"
-python-multipart = "^0.0.5"
-uvicorn = "^0.18.3"
+bevy = "^2.0.0"
+starlette = "^0.28.0"
 
-[tool.poetry.dev-dependencies]
-pytest = "^7.1.2"
-requests = "^2.24.0"
-pytest-asyncio = "^0.19.0"
-httpx = "^0.23.0"
-
-[tool.poetry.extras]
-sqlite = ["sqlalchemy", "aiosqlite"]
-postgres = ["sqlalchemy", "asyncpg"]
-toml = ["tomli"]
-yaml = ["pyyaml"]
-
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.0"
+pytest-asyncio = "^0.21.0"
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

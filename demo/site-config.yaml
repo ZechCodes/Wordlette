@@ -1,5 +1,0 @@
-testing:
-  test: Yes, config injection works!
-
-db:
-  engine_import: wordlette.ext.db.sqlalchemy
