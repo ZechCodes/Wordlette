@@ -19,3 +19,6 @@ def create_cms_app() -> App:
         await machine.value(scope, receive, send)
 
     return forward_request
+
+
+app = create_cms_app()
