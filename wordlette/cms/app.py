@@ -9,8 +9,8 @@ App: TypeAlias = Callable[[Scope, Receive, Send], Awaitable[None]]
 
 
 class CMSApp:
-    def __init__(self, state_machine: StateMachine | None = None):
-        self._state_machine = state_machine
+    def __init__(self):
+        self._state_machine: StateMachine | None = None
         self.handle_request = self._create_state_machine_then_forward
 
     async def handle_lifespan(self, scope: Scope, receive: Receive, send: Send):
