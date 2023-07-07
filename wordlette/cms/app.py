@@ -26,7 +26,9 @@ class CMSApp:
     async def _create_state_machine_then_forward(
         self, scope: Scope, receive: Receive, send: Send
     ) -> None:
-        self._state_machine = await BootstrapState.start()
+        self._state_machine = StateMachine(BootstrapState)
+        await self._state_machine.run()
+
         self.handle_request = self._forward_request
 
         await self.handle_request(scope, receive, send)
