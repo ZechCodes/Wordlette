@@ -21,7 +21,7 @@ class StateMachine(Generic[T]):
     def state(self) -> State:
         return self._state
 
-    async def start(self):
+    async def run(self):
         transitions = Queue()
         await transitions.put(self._initial_state(self))
         await self._clear_transitions(transitions)
@@ -57,3 +57,9 @@ class StateMachine(Generic[T]):
         await transitions.put(await self._get_next_state())
         await self._clear_transitions(transitions)
         return self._state
+
+    @classmethod
+    async def start(cls, initial_state: Type[State]) -> "StateMachine[T]":
+        machine = cls(initial_state)
+        await machine.run()
+        return machine

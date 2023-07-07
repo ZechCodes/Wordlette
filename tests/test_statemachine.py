@@ -4,6 +4,7 @@ import pytest
 
 from wordlette.options import Option
 from wordlette.states import State
+from wordlette.states.machine import StateMachine
 
 
 @pytest.mark.asyncio
@@ -24,7 +25,7 @@ async def test_statemachine():
             nonlocal entered_b
             entered_b = True
 
-    machine = await StateA.start()
+    machine = await StateMachine.start(StateA)
     await machine.next()
     assert entered_a
     assert entered_b
@@ -43,7 +44,7 @@ async def test_state_value():
         async def enter_state(self):
             self.value = 2
 
-    machine = await StateA.start()
+    machine = await StateMachine.start(StateA)
     await machine.next()
     assert machine.value == 2
 
@@ -61,5 +62,5 @@ async def test_immediate_transition():
         async def enter_state(self):
             return
 
-    machine = await StateA.start()
+    machine = await StateMachine.start(StateA)
     assert isinstance(machine.state, StateB)
