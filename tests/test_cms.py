@@ -1,12 +1,12 @@
 import pytest
 from starlette.testclient import TestClient
 
+from wordlette.cms import CMSApp
+
 
 @pytest.fixture
 def client():
-    from wordlette.cms import create_cms_app
-
-    return TestClient(create_cms_app())
+    return TestClient(CMSApp())
 
 
 def test_cms_bootstrap_app(client):
