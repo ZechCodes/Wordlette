@@ -45,12 +45,6 @@ class State(Generic[T], ABC):
     async def next_state(self) -> "Option[Type[State]]":
         return Option.Null()
 
-    @classmethod
-    async def start(cls) -> StateMachine[T]:
-        machine = StateMachine(cls)
-        await machine.start()
-        return machine
-
     def _default_factory(self) -> T | None:
         return None
 
