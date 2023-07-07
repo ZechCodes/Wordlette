@@ -11,7 +11,7 @@ State: TypeAlias = "wordlette.states.State[T]"
 class StateMachine(Generic[T]):
     def __init__(self, state: Type[State]):
         self._initial_state = state
-        self._state = wordlette.states.states.NullState()
+        self._state = wordlette.states.states.NullState(self)
 
     @property
     def value(self) -> T:
@@ -23,7 +23,7 @@ class StateMachine(Generic[T]):
 
     async def start(self):
         transitions = Queue()
-        await transitions.put(self._initial_state())
+        await transitions.put(self._initial_state(self))
         await self._clear_transitions(transitions)
 
     async def _clear_transitions(self, transitions: Queue[State]):
@@ -39,10 +39,10 @@ class StateMachine(Generic[T]):
     async def _get_next_state(self) -> State:
         match await self._state.next_state():
             case Option.Value(constructor):
-                state = constructor()
+                state = wordlette.states.states.NullState(self)
 
             case Option.Null() | _:
-                state = wordlette.states.states.NullState()
+                state = constructor(self)
 
         return state
 

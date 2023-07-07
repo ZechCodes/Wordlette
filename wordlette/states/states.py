@@ -8,7 +8,8 @@ T = TypeVar("T")
 
 
 class State(Generic[T], ABC):
-    def __init__(self):
+    def __init__(self, state_machine: StateMachine[T]):
+        self._state_machine = state_machine
         self._value: Option[T] = Option.Null()
 
     @property
