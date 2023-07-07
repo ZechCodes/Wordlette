@@ -8,5 +8,5 @@ class BootstrapState(State):
         self.value = self._bootstrap_error_app
 
     async def _bootstrap_error_app(self, scope, receive, send):
-        response = PlainTextResponse("The Wordlette CMS is starting.", status_code=500)
+        response = PlainTextResponse("The Wordlette CMS is starting.", status_code=200)
         await response(scope, receive, send)

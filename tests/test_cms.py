@@ -10,5 +10,5 @@ def client():
 
 
 def test_cms_bootstrap_app(client):
-    assert client.get("/").status_code == 500
-    assert client.get("/testing").status_code == 500
+    assert client.get("/").status_code == 200
+    assert client.get("/testing").status_code == 200
