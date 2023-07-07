@@ -46,3 +46,20 @@ async def test_state_value():
     machine = await StateA.start()
     await machine.next()
     assert machine.value == 2
+
+
+@pytest.mark.asyncio
+async def test_immediate_transition():
+    class StateA(State[int]):
+        async def enter_state(self):
+            return True
+
+        async def next_state(self) -> "Option[Type[StateB]]":
+            return Option.Value(StateB)
+
+    class StateB(State[int]):
+        async def enter_state(self):
+            return
+
+    machine = await StateA.start()
+    assert isinstance(machine.state, StateB)
