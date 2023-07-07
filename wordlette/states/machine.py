@@ -38,10 +38,10 @@ class StateMachine(Generic[T]):
 
     async def _get_next_state(self) -> State:
         match await self._state.next_state():
-            case Option.Value(constructor):
+            case Option.Null():
                 state = wordlette.states.states.NullState(self)
 
-            case Option.Null() | _:
+            case Option.Value(constructor) | constructor:
                 state = constructor(self)
 
         return state
