@@ -2,20 +2,13 @@ from abc import ABC, abstractmethod
 from typing import Generic, Type, TypeVar, Coroutine
 
 from wordlette.options import Option
-from wordlette.states.predicates import always
+from wordlette.state_machines.predicates import always
 
 T = TypeVar("T")
 
 
 class RequestCycle:
-    __match_args__ = ("value",)
-
-    def __init__(self):
-        self.value = Option.Null()
-
-    def __rand__(self, value):
-        self.value = Option.Value(value)
-        return self
+    pass
 
 
 class State(Generic[T], ABC):
@@ -29,7 +22,7 @@ class State(Generic[T], ABC):
         return RequestCycle()
 
     @abstractmethod
-    async def enter_state(self) -> Option[T] | T | None:
+    async def enter_state(self) -> RequestCycle | None:
         ...
 
     async def exit_state(self):

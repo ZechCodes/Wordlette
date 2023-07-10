@@ -1,7 +1,7 @@
 import pytest
 
-from wordlette.states import State
-from wordlette.states.machine import StateMachine
+from wordlette.state_machines import State
+from wordlette.state_machines.machine import StateMachine
 
 
 @pytest.mark.asyncio
@@ -25,21 +25,6 @@ async def test_statemachine():
     await machine.cycle()
     assert entered_a
     assert entered_b
-
-
-@pytest.mark.asyncio
-async def test_state_value():
-    class StateA(State[int]):
-        async def enter_state(self):
-            return 1 & self.cycle()
-
-    class StateB(State[int]):
-        async def enter_state(self):
-            return 2
-
-    machine = StateMachine(StateA.goes_to(StateB))
-    await machine.cycle()
-    assert machine.value == 2
 
 
 @pytest.mark.asyncio

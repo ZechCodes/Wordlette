@@ -2,17 +2,20 @@ from asyncio import Queue
 from typing import Coroutine, Generic, Type, TypeVar
 
 from wordlette.options import Option
-from wordlette.states import State
-from wordlette.states.states import InitialState, RequestCycle
+from wordlette.state_machines.states import State, InitialState, RequestCycle
 
 T = TypeVar("T")
+
+
+class StoppedState(State[T]):
+    async def enter_state(self):
+        return
 
 
 class StateMachine(Generic[T]):
     def __init__(self, *states: Type[State[T]]):
         self._states = states
         self._current_state = InitialState(states[0])
-        self._value = None
         self._stopped = True
 
         self._transition_stack = Queue()
@@ -24,10 +27,6 @@ class StateMachine(Generic[T]):
     @property
     def stopped(self) -> bool:
         return self._stopped
-
-    @property
-    def value(self) -> T:
-        return self._value
 
     async def cycle(self):
         await self._queue_next_state()
@@ -41,25 +40,15 @@ class StateMachine(Generic[T]):
         match await self._current_state.get_next_state():
             case Option.Null():
                 self._stopped = True
-                self._current_state = None
+                self._current_state = StoppedState()
 
             case Option.Value(constructor) | constructor:
                 await self._transition_stack.put(constructor())
 
     async def _enter_state(self):
         match await self._current_state.enter_state():
-            case RequestCycle(value):
+            case RequestCycle():
                 await self._queue_next_state()
-
-            case value:
-                ...
-
-        match value:
-            case Option.Null() | None:
-                return
-
-            case Option.Value(value) | value:
-                self._value = value
 
     def _exit_state(self) -> Coroutine[None, None, None]:
         return self._current_state.exit_state()
