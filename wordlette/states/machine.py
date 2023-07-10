@@ -1,11 +1,11 @@
 from asyncio import Queue
-from typing import Coroutine, Generic, Type, TypeAlias, TypeVar
+from typing import Coroutine, Generic, Type, TypeVar
 
-import wordlette.states
 from wordlette.options import Option
+from wordlette.states import State
+from wordlette.states.states import InitialState, RequestCycle
 
 T = TypeVar("T")
-State: TypeAlias = "wordlette.states.State[T]"
 
 
 class StateMachine(Generic[T]):
@@ -19,15 +19,16 @@ class StateMachine(Generic[T]):
         return view
 
     def __init__(self, *states: Type[State]):
+    def __init__(self, *states: Type[State[T]]):
         self._states = states
-        self._current_state = wordlette.states.states.InitialState(states[0])
+        self._current_state = InitialState(states[0])
         self._value = None
         self._stopped = True
 
         self._transition_stack = Queue()
 
     @property
-    def state(self) -> State:
+    def state(self) -> State[T]:
         return self._current_state
 
     @property
@@ -52,7 +53,7 @@ class StateMachine(Generic[T]):
 
     async def _enter_state(self):
         match await self._current_state.enter_state():
-            case wordlette.states.states.RequestCycle(value):
+            case RequestCycle(value):
                 await self._queue_next_state()
 
             case value:
