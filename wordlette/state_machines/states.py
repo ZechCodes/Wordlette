@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
 import logging
+from abc import ABCMeta, abstractmethod
 from typing import Generic, Type, TypeVar, ParamSpec, Callable, Awaitable
 
 from wordlette.options import Option
@@ -49,6 +49,14 @@ class State(Generic[_T], metaclass=StateABCMeta):
                 return Option.Value(state)
 
         return Option.Null()
+
+    def __repr__(self):
+        transitions = (
+            ", ".join(sorted(repr(transition) for transition in self.transitions))
+            if self.transitions
+            else ""
+        )
+        return f"<State:{self.__class__.__name__} [{transitions}]>"
 
     @classmethod
     def goes_to(
