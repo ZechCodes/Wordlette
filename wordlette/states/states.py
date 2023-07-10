@@ -1,57 +1,69 @@
 from abc import ABC, abstractmethod
-from typing import Generic, Type, TypeVar
+from typing import Generic, Type, TypeVar, Coroutine
 
 from wordlette.options import Option
-from wordlette.states.machine import StateMachine
+from wordlette.states.predicates import always
 
 T = TypeVar("T")
 
 
+class RequestCycle:
+    __match_args__ = ("value",)
+
+    def __init__(self):
+        self.value = Option.Null()
+
+    def __rand__(self, value):
+        self.value = Option.Value(value)
+        return self
+
+
 class State(Generic[T], ABC):
-    def __init__(self, state_machine: StateMachine[T]):
-        self._state_machine = state_machine
-        self._value: Option[T] = Option.Null()
+    transitions = {}
 
-    @property
-    def value(self) -> T | None:
-        match self._value:
-            case Option.Value(value):
-                return value
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        cls.transitions = cls.transitions.copy()
 
-            case Option.Null():
-                self.value = value = self._default_factory()
-                return value
-
-    @value.setter
-    def value(self, new_value: T | Option[T]):
-        match new_value:
-            case Option() as value:
-                self._value = value
-
-            case value:
-                self._value = Option.Value(value)
-
-    @property
-    def optional_value(self) -> Option[T]:
-        return self._value
+    def cycle(self) -> RequestCycle:
+        return RequestCycle()
 
     @abstractmethod
-    async def enter_state(self):
+    async def enter_state(self) -> Option[T] | T | None:
         ...
 
     async def exit_state(self):
         return
 
-    async def next_state(self) -> "Option[Type[State]]":
+    async def get_next_state(self) -> "Option[Type[State]]":
+        for state, predicate in self.transitions.items():
+            if await predicate():
+                return Option.Value(state)
+
         return Option.Null()
 
-    def _default_factory(self) -> T | None:
+    @classmethod
+    def goes_to(cls, state: "Type[State]", when: Coroutine[None, None, bool] = always):
+        state_cls = cls
+        if not cls.transitions:
+            state_cls = type(cls.__name__, (cls,), {})
+
+        state_cls.transitions[state] = when
+        return state_cls
+
+
+class NullState(State[T]):
+    async def enter_state(self) -> None:
         return None
 
-
-class NullState(State):
-    async def enter_state(self):
-        ...
-
-    async def next_state(self) -> "Option[Type[State]]":
+    async def get_next_state(self) -> "Option[Type[State[T]]]":
         return Option.Null()
+
+
+class InitialState(NullState[T]):
+    def __init__(self, state: Type[State[T]]):
+        super().__init__()
+        self._state = state
+
+    async def get_next_state(self) -> "Option[Type[State[T]]]":
+        return Option.Value(self._state)

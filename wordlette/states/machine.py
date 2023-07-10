@@ -9,57 +9,71 @@ State: TypeAlias = "wordlette.states.State[T]"
 
 
 class StateMachine(Generic[T]):
-    def __init__(self, state: Type[State]):
-        self._initial_state = state
-        self._state = wordlette.states.states.NullState(self)
+    def __new__(cls, *states):
+        machine = super().__new__(cls)
+        machine.__init__(*states)
+        machine.__state_machine = machine
 
-    @property
-    def value(self) -> T:
-        return self._state.value
+        view = object.__new__(StateMachineView)
+        view.__dict__ = machine.__dict__
+        return view
+
+    def __init__(self, *states: Type[State]):
+        self._states = states
+        self._current_state = wordlette.states.states.InitialState(states[0])
+        self._value = None
+        self._stopped = True
+
+        self._transition_stack = Queue()
 
     @property
     def state(self) -> State:
-        return self._state
+        return self._current_state
 
-    async def run(self):
-        transitions = Queue()
-        await transitions.put(self._initial_state(self))
-        await self._clear_transitions(transitions)
+    @property
+    def stopped(self) -> bool:
+        return self._stopped
 
-    async def _clear_transitions(self, transitions: Queue[State]):
-        while not transitions.empty():
-            state = await transitions.get()
-            await self._exit_current_state()
-            transition = await self._enter_new_state(state)
-            self._state = state
+    @property
+    def value(self) -> T:
+        return self._value
 
-            if transition:
-                await transitions.put(await self._get_next_state())
+    def cycle(self) -> Coroutine[None, None, None]:
+        return self._queue_next_state()
 
-    async def _get_next_state(self) -> State:
-        match await self._state.next_state():
+    async def _queue_next_state(self):
+        match await self._current_state.get_next_state():
             case Option.Null():
-                state = wordlette.states.states.NullState(self)
+                self._stopped = True
+                self._current_state = None
 
             case Option.Value(constructor) | constructor:
-                state = constructor(self)
+                await self._transition_stack.put(constructor())
 
-        return state
+    async def _enter_state(self):
+        match await self._current_state.enter_state():
+            case wordlette.states.states.RequestCycle(value):
+                await self._queue_next_state()
 
-    async def _enter_new_state(self, state: State) -> bool:
-        return await state.enter_state()
+            case value:
+                ...
 
-    def _exit_current_state(self) -> Coroutine[None, None, None]:
-        return self._state.exit_state()
+        match value:
+            case Option.Null() | None:
+                return
 
-    async def next(self) -> State:
-        transitions = Queue()
-        await transitions.put(await self._get_next_state())
-        await self._clear_transitions(transitions)
-        return self._state
+            case Option.Value(value) | value:
+                self._value = value
 
-    @classmethod
-    async def start(cls, initial_state: Type[State]) -> "StateMachine[T]":
-        machine = cls(initial_state)
-        await machine.run()
-        return machine
+    def _exit_state(self) -> Coroutine[None, None, None]:
+        return self._current_state.exit_state()
+
+
+class StateMachineView(StateMachine[T]):
+    async def cycle(self):
+        await self._queue_next_state()
+        self._stopped = False
+        while not self._transition_stack.empty():
+            await self._exit_state()
+            self._current_state = await self._transition_stack.get()
+            await self._enter_state()
