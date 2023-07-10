@@ -1,8 +1,12 @@
+import logging
 from asyncio import Queue
 from typing import Coroutine, Generic, Type, TypeVar
 
 from wordlette.options import Option
 from wordlette.state_machines.states import State, InitialState, RequestCycle
+
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("StateMachine")
 
 T = TypeVar("T")
 
@@ -33,7 +37,9 @@ class StateMachine(Generic[T]):
         self._stopped = False
         while not self._transition_stack.empty():
             await self._exit_state()
+            old_state = self._current_state
             self._current_state = await self._transition_stack.get()
+            logger.debug(f"Transitioning from {old_state} to {self._current_state}")
             await self._enter_state()
 
     async def _queue_next_state(self):
