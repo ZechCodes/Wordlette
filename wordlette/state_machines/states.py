@@ -2,7 +2,6 @@ import logging
 from abc import ABCMeta, abstractmethod
 from typing import Generic, Type, TypeVar, ParamSpec, Callable, Awaitable
 
-from wordlette.options import Option
 from wordlette.state_machines.predicates import always
 
 logger = logging.getLogger("StateMachine")
@@ -15,14 +14,21 @@ class RequestCycle:
     pass
 
 
+class Transition:
+    def __init__(
+        self,
+        state: "Type[State[_T]]",
+        to_state: "Type[State[T]]",
+        predicate: Callable[[], Awaitable[bool]],
+    ):
+        self.state = state
+        self.to_state = to_state
+        self.predicate = predicate
+
+
 class StateABCMeta(ABCMeta):
     def __repr__(cls):
-        transitions = (
-            ", ".join(sorted(repr(transition) for transition in cls.transitions))
-            if cls.transitions
-            else ""
-        )
-        return f"<Class:State:{cls.__name__} [{transitions}]>"
+        return f"<Class:State:{cls.__name__}>"
 
 
 class State(Generic[_T], metaclass=StateABCMeta):
@@ -42,47 +48,20 @@ class State(Generic[_T], metaclass=StateABCMeta):
     async def exit_state(self):
         return
 
-    async def get_next_state(self) -> "Option[Type[State[_T]]]":
-        for state, predicate in self.transitions.items():
-            logger.debug(f"Checking {state} with {predicate}")
-            if await predicate():
-                return Option.Value(state)
-
-        return Option.Null()
-
     def __repr__(self):
-        transitions = (
-            ", ".join(sorted(repr(transition) for transition in self.transitions))
-            if self.transitions
-            else ""
-        )
-        return f"<State:{self.__class__.__name__} [{transitions}]>"
+        return f"<State:{self.__class__.__name__}>"
 
     @classmethod
     def goes_to(
         cls, state: "Type[State[_T]]", when: Callable[_P, Awaitable[bool]] = always
-    ):
-        state_cls = cls
-        if not cls.transitions:
-            logger.debug(f"CREATING TRANSITION DICT FOR {cls} {id(cls)}")
-            state_cls = type(cls.__name__, (cls,), {})
-
-        state_cls.transitions[state] = when
-        return state_cls
+    ) -> Transition:
+        return Transition(cls, state, when)
 
 
 class NullState(State[_T]):
     async def enter_state(self) -> None:
         return None
 
-    async def get_next_state(self) -> "Option[Type[State[_T]]]":
-        return Option.Null()
-
 
 class InitialState(NullState[_T]):
-    def __init__(self, state: Type[State[_T]]):
-        super().__init__()
-        self._state = state
-
-    async def get_next_state(self) -> "Option[Type[State[_T]]]":
-        return Option.Value(self._state)
+    pass
