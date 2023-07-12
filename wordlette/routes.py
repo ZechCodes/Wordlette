@@ -26,7 +26,7 @@ class ExceptionHandlerContext:
         self.route = route
         self.handler = None
 
-    def __await__(self):
+    def __await__(self) -> Callable[[Scope, Receive, Send], Awaitable[None]]:
         return (yield from self.handler.__await__())
 
     def __bool__(self):
