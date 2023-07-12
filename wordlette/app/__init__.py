@@ -7,7 +7,7 @@ def app(*args, **kwargs) -> WordletteApp:
         BootstrappingApp,
         CreatingConfig,
         ConnectingDB,
-        StateServingApp,
+        ServingApp,
     )
 
     return WordletteApp(
@@ -19,6 +19,6 @@ def app(*args, **kwargs) -> WordletteApp:
                 ConnectingDB, when=BootstrappingApp.has_database_config
             ),
             CreatingConfig.goes_to(ConnectingDB, when=CreatingConfig.has_config),
-            ConnectingDB.goes_to(StateServingApp),
+            ConnectingDB.goes_to(ServingApp),
         )
     )
