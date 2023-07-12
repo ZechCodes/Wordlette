@@ -21,6 +21,10 @@ RequestType = TypeVar("RequestType", bound=Request)
 ExceptionType = TypeVar("ExceptionType", bound=Exception)
 
 
+class MissingRoutePath(Exception):
+    """Raised when a route is missing a path."""
+
+
 class ExceptionHandlerContext:
     """When an exception occurs in a route, the exception handler context finds a matching handler on the route. If no
     handler is found the exception will be allowed to propagate. Calling the context object after it has found a handler
@@ -86,7 +90,12 @@ class Route(Generic[RequestType]):
     ]
 
     def __init_subclass__(cls, **kwargs):
-        """Scan the subclass for request and error handlers."""
+        """Scan the subclass for request and error handlers. Also verify that the subclass has a path attribute."""
+        if not hasattr(cls, "path"):
+            raise MissingRoutePath(
+                f"Route subclass {cls.__qualname__} is missing a path attribute."
+            )
+
         cls.request_handlers = {}
         cls.error_handlers = {}
         for function in cls._get_functions():
