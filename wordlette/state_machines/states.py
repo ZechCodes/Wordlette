@@ -15,6 +15,8 @@ class RequestCycle:
 
 
 class Transition:
+    __match_args__ = ("state", "to_state", "predicate")
+
     def __init__(
         self,
         state: "Type[State[_T]]",
