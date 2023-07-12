@@ -6,10 +6,12 @@ from wordlette.requests import Request
 from wordlette.routes import Route, MissingRoutePath
 
 
-def test_route_exception_handler_detection():
-    class TestRoute(Route):
-        path = "/"
+class DefaultPathRoute(Route):
+    path = "/"
 
+
+def test_route_exception_handler_detection():
+    class TestRoute(DefaultPathRoute):
         async def handle_exception(self, error: Exception):
             pass
 
@@ -23,9 +25,7 @@ def test_route_exception_handler_detection():
 
 
 def test_route_request_type_handler_detection():
-    class TestRoute(Route):
-        path = "/"
-
+    class TestRoute(DefaultPathRoute):
         async def handle_get_request(self, request: Request.Get):
             pass
 
@@ -39,9 +39,7 @@ def test_route_request_type_handler_detection():
 
 
 def test_route_union_type_handler_detection():
-    class TestRoute(Route):
-        path = "/"
-
+    class TestRoute(DefaultPathRoute):
         async def handle_request(self, request: Request.Get | Request.Post):
             pass
 
@@ -52,9 +50,7 @@ def test_route_union_type_handler_detection():
 
 
 def test_route_handling():
-    class TestRoute(Route):
-        path = "/"
-
+    class TestRoute(DefaultPathRoute):
         async def handle_get_request(self, _: Request.Get):
             return PlainTextResponse("testing")
 
@@ -65,9 +61,7 @@ def test_route_handling():
 
 
 def test_route_handling_with_multiple_methods():
-    class TestRoute(Route):
-        path = "/"
-
+    class TestRoute(DefaultPathRoute):
         async def handle_get_request(self, _: Request.Get):
             return PlainTextResponse("testing get")
 
@@ -80,9 +74,7 @@ def test_route_handling_with_multiple_methods():
 
 
 def test_route_handling_with_union_methods():
-    class TestRoute(Route):
-        path = "/"
-
+    class TestRoute(DefaultPathRoute):
         async def handle_request(self, request: Request.Get | Request.Post):
             return PlainTextResponse(f"testing {request.method}")
 
@@ -92,9 +84,7 @@ def test_route_handling_with_union_methods():
 
 
 def test_route_exception_handling():
-    class TestRoute(Route):
-        path = "/"
-
+    class TestRoute(DefaultPathRoute):
         async def handle_get_request(self, request: Request.Get):
             raise ValueError("testing value error")
 
@@ -108,9 +98,7 @@ def test_route_exception_handling():
 
 
 def test_route_exception_handling_super_types():
-    class TestRoute(Route):
-        path = "/"
-
+    class TestRoute(DefaultPathRoute):
         async def handle_get_request(self, request: Request.Get):
             raise ValueError("testing value error")
 
@@ -124,9 +112,7 @@ def test_route_exception_handling_super_types():
 
 
 def test_route_exception_handling_sub_types():
-    class TestRoute(Route):
-        path = "/"
-
+    class TestRoute(DefaultPathRoute):
         async def handle_get_request(self, request: Request.Get):
             raise Exception("testing value error")
 
