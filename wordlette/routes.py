@@ -26,6 +26,8 @@ class ExceptionHandlerContext:
     handler is found the exception will be allowed to propagate. Calling the context object after it has found a handler
     runs the handler and its response, sending the response to the client."""
 
+    path: str  # The path that the route should be mounted at.
+
     def __init__(self, route: "Route"):
         self.route = route
         self.exception = None
