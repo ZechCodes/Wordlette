@@ -55,6 +55,27 @@ class ExceptionHandlerContext:
 
 
 class Route(Generic[RequestType]):
+    """The route type handles all the magic that allows routes to be defined without any decorator boilerplate. It
+    provides the instrumentation necessary for simple request handling by method type using type annotations. It also
+    provides a simple exception handling mechanism using the same approach.
+
+    To declare a request handler create an async method with whatever name you think is appropriate. Then all you have
+    to do is set the type annotion of the first parameter to the request type your handler should handle. For example:
+    ```python
+    class MyRoute(Route):
+        async def index(self, request: Request.Get):
+            return PlainTextResponse("Hello World!")
+    ```
+    Handling errors is just as simple and follows the exact same process. The exception type will match all exceptions
+    that pass a subclass check, so it should function the same as an equivalent try/except. For example:
+    ```python
+    class MyRoute(Route):
+        ...
+        async def handle_exception(self, error: Exception):
+            return PlainTextResponse("An error occurred!")
+    ```
+    """
+
     request_handlers: dict[
         Type[RequestType], Callable[[Any, RequestType], Awaitable[Response]]
     ]
@@ -63,6 +84,7 @@ class Route(Generic[RequestType]):
     ]
 
     def __init_subclass__(cls, **kwargs):
+        """Scan the subclass for request and error handlers."""
         cls.request_handlers = {}
         cls.error_handlers = {}
         for function in cls._get_functions():
@@ -76,6 +98,7 @@ class Route(Generic[RequestType]):
                     cls._register_handlers(function, *get_args(handler_type))
 
     async def __call__(self, scope, receive, send):
+        """Handle a request, calling the appropriate handler function and capturing any handleable exceptions."""
         async with ExceptionHandlerContext(self) as error_handler:
             await self._handle(scope, receive, send)
 
