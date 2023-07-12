@@ -22,26 +22,31 @@ ExceptionType = TypeVar("ExceptionType", bound=Exception)
 
 
 class ExceptionHandlerContext:
+    """When an exception occurs in a route, the exception handler context finds a matching handler on the route. If no
+    handler is found the exception will be allowed to propagate. Calling the context object after it has found a handler
+    runs the handler and its response, sending the response to the client."""
+
     def __init__(self, route: "Route"):
         self.route = route
+        self.exception = None
         self.handler = None
-
-    def __await__(self) -> Callable[[Scope, Receive, Send], Awaitable[None]]:
-        return (yield from self.handler.__await__())
-
-    def __bool__(self):
-        return self.handler is not None
 
     async def __aenter__(self):
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        handler = self._find_error_handler(exc_type)
-        if handler:
-            exc = exc_type(exc_val)
-            exc.with_traceback(exc_tb)
-            self.handler = handler(self.route, exc)
+        self.handler = self._find_error_handler(exc_type)
+        if self.handler:
+            self.exception = exc_type(exc_val)
+            self.exception.with_traceback(exc_tb)
             return True
+
+    def __bool__(self):
+        return self.exception is not None
+
+    async def __call__(self, scope, receive, send):
+        response = await self.handler(self.route, self.exception)
+        await response(scope, receive, send)
 
     def _find_error_handler(self, exception_type: Type[Exception]):
         for error_type, handler in self.route.error_handlers.items():
@@ -75,8 +80,7 @@ class Route(Generic[RequestType]):
             await self._handle(scope, receive, send)
 
         if error_handler:
-            response = await error_handler
-            await response(scope, receive, send)
+            await error_handler(scope, receive, send)
 
     async def _handle(self, scope: Scope, receive: Receive, send: Send):
         request = Request.factory(scope)
