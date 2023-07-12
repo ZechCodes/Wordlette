@@ -34,6 +34,10 @@ class WordletteApp:
                     await send({"type": "lifespan.shutdown.complete"})
                     break
 
+    @property
+    def state_machine(self) -> StateMachine:
+        return self._state_machine
+
     def set_router(self, router: _App):
         self._router = router
 
