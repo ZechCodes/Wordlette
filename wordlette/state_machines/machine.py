@@ -1,6 +1,7 @@
 import logging
 from asyncio import Queue
-from typing import Coroutine, Generic, Type, TypeVar, Sequence
+from collections import defaultdict
+from typing import Coroutine, Generic, Type, TypeVar
 
 from wordlette.state_machines.predicates import always
 from wordlette.state_machines.states import (
@@ -22,9 +23,9 @@ class StoppedState(State[T]):
 
 
 class StateMachine(Generic[T]):
-    def __init__(self, *states: Transition):
+    def __init__(self, *states: Type[State] | Transition):
         self._states = self._build_state_graph(
-            (Transition(InitialState, states[0].state, always), *states)
+            self._create_initial_state_transition(states[0]), *states
         )
         self._current_state = InitialState()
         self._stopped = True
@@ -66,12 +67,16 @@ class StateMachine(Generic[T]):
         return self._current_state.exit_state()
 
     def _build_state_graph(
-        self, states: Sequence[Transition]
+        self, *states: Type[State] | Transition
     ) -> dict[Type[State[T]], dict]:
-        graph = {}
+        graph = defaultdict(dict)
         for transition in states:
-            graph.setdefault(transition.state, {})
-            graph[transition.state][transition.to_state] = transition.predicate
+            match transition:
+                case Transition(state, to_state, predicate):
+                    graph[state][to_state] = predicate
+
+                case type() as state if issubclass(state, State):
+                    graph[state][StoppedState] = always
 
         return graph
 
@@ -85,3 +90,13 @@ class StateMachine(Generic[T]):
                 return next_state
 
         return
+
+    def _create_initial_state_transition(
+        self, state: Type[State[T]] | Transition
+    ) -> Transition:
+        match state:
+            case Transition(state, _, _):
+                return Transition(InitialState, state, always)
+
+            case type() as state if issubclass(state, State):
+                return Transition(InitialState, state, always)
