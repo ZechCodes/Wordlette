@@ -21,6 +21,34 @@ RequestType = TypeVar("RequestType", bound=Request)
 ExceptionType = TypeVar("ExceptionType", bound=Exception)
 
 
+class ExceptionHandlerContext:
+    def __init__(self, route: "Route"):
+        self.route = route
+        self.handler = None
+
+    def __await__(self):
+        return (yield from self.handler.__await__())
+
+    def __bool__(self):
+        return self.handler is not None
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        handler = self._find_error_handler(exc_type)
+        if handler:
+            exc = exc_type(exc_val)
+            exc.with_traceback(exc_tb)
+            self.handler = handler(self.route, exc)
+            return True
+
+    def _find_error_handler(self, exception_type: Type[Exception]):
+        for error_type, handler in self.route.error_handlers.items():
+            if exception_type is error_type or issubclass(exception_type, error_type):
+                return handler
+
+
 class Route(Generic[RequestType]):
     request_handlers: dict[
         Type[RequestType], Callable[[Any, RequestType], Awaitable[Response]]
@@ -43,11 +71,12 @@ class Route(Generic[RequestType]):
                     cls._register_handlers(function, *get_args(handler_type))
 
     async def __call__(self, scope, receive, send):
-        try:
+        async with ExceptionHandlerContext(self) as error_handler:
             await self._handle(scope, receive, send)
 
-        except Exception as error:
-            await self._handle_error(error, scope, receive, send)
+        if error_handler:
+            response = await error_handler
+            await response(scope, receive, send)
 
     async def _handle(self, scope: Scope, receive: Receive, send: Send):
         request = Request.factory(scope)
@@ -58,27 +87,6 @@ class Route(Generic[RequestType]):
 
         response = await self.request_handlers[type(request)](self, request)
         await response(scope, receive, send)
-
-    async def _handle_error(
-        self,
-        exception: Exception,
-        scope: Scope,
-        receive: Receive,
-        send: Send,
-    ):
-        handler = self._find_error_handler(type(exception))
-        if not handler:
-            raise Exception(
-                f"Exception type {type(exception)} not handled by {self.__class__.__qualname__}"
-            ) from exception
-
-        response = await handler(self, exception)
-        await response(scope, receive, send)
-
-    def _find_error_handler(self, exception_type: Type[Exception]):
-        for error_type, handler in self.error_handlers.items():
-            if exception_type is error_type or issubclass(exception_type, error_type):
-                return handler
 
     @classmethod
     def _get_functions(cls):
