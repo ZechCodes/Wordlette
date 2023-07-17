@@ -11,11 +11,6 @@ T = TypeVar("T")
 _App: TypeAlias = Callable[[Scope, Receive, Send], Awaitable[None]]
 
 
-class NullRouter:
-    def __call__(self, scope: Scope, receive: Receive, send: Send):
-        return PlainTextResponse("No router is mounted.")
-
-
 class WordletteApp:
     app_settings = {
         "config_file": Path("config.yml"),
@@ -23,7 +18,7 @@ class WordletteApp:
 
     def __init__(self, state_machine: StateMachine[T]):
         self._state_machine: StateMachine = state_machine
-        self._router = NullRouter()
+        self._router = PlainTextResponse("No router is mounted.", status_code=500)
 
         self.handle_request = self._create_state_machine_then_forward
 
