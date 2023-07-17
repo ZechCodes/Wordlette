@@ -76,7 +76,7 @@ def test_route_handling_with_multiple_methods():
 def test_route_handling_with_union_methods():
     class TestRoute(DefaultPathRoute):
         async def handle_request(self, request: Request.Get | Request.Post):
-            return PlainTextResponse(f"testing {request.method}")
+            return PlainTextResponse(f"testing {request.name}")
 
     client = TestClient(TestRoute())
     assert client.get("/").text == "testing GET"

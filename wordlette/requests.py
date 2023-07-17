@@ -13,7 +13,7 @@ class Request:
         self._scope = scope
 
     @property
-    def method(self):
+    def name(self):
         return self._scope["method"].upper()
 
     @property
