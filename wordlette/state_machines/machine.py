@@ -3,6 +3,7 @@ from asyncio import Queue
 from collections import defaultdict
 from typing import Coroutine, Generic, Type, TypeVar
 
+from wordlette.options import Option
 from wordlette.state_machines.predicates import always
 from wordlette.state_machines.states import (
     State,
@@ -51,11 +52,11 @@ class StateMachine(Generic[T]):
 
     async def _queue_next_state(self):
         match await self._get_next_state():
-            case None:
+            case Option.Null():
                 self._stopped = True
                 self._current_state = StoppedState()
 
-            case constructor:
+            case Option.Value(constructor):
                 await self._transition_stack.put(constructor())
 
     async def _enter_state(self):
@@ -80,16 +81,16 @@ class StateMachine(Generic[T]):
 
         return graph
 
-    async def _get_next_state(self) -> Type[State[T]] | None:
+    async def _get_next_state(self) -> Option[Type[State[T]]]:
         logger.debug(f"Finding next state from {self._current_state}")
         for next_state, predicate in self._states[type(self._current_state)].items():
             logger.debug(
                 f"....Checking {next_state} when <{type(predicate).__name__}:{predicate.__name__}>"
             )
             if await predicate():
-                return next_state
+                return Option.Value(next_state)
 
-        return
+        return Option.Null()
 
     def _create_initial_state_transition(
         self, state: Type[State[T]] | Transition
