@@ -2,6 +2,7 @@ from types import UnionType
 from typing import Callable, get_args, Type
 
 from starlette.applications import Starlette
+from starlette.types import Scope, Receive, Send
 
 from wordlette.requests import Request
 
@@ -10,8 +11,8 @@ class Router:
     def __init__(self):
         self.app = Starlette()
 
-    async def __call__(self, *args, **kwargs):
-        return await self.app(*args, **kwargs)
+    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+        return await self.app(scope, receive, send)
 
     def add_route(
         self,
