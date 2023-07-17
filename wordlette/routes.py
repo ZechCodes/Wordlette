@@ -14,6 +14,7 @@ from typing import (
 from starlette.responses import Response
 from starlette.types import Scope, Receive, Send
 
+from wordlette.options import Option
 from wordlette.requests import Request
 
 P = ParamSpec("P")
@@ -99,14 +100,13 @@ class Route(Generic[RequestType]):
         cls.request_handlers = {}
         cls.error_handlers = {}
         for function in cls._get_functions():
-            annotations = inspect.get_annotations(function)
-            handler_type = annotations.popitem()[1] if annotations else None
+            handler_type = cls.get_handler_type(function)
             match handler_type:
-                case type() if issubclass(handler_type, (Request, Exception)):
-                    cls._register_handlers(function, handler_type)
+                case Option.Value(type() as ht) if issubclass(ht, (Request, Exception)):
+                    cls._register_handlers(function, ht)
 
-                case UnionType():
-                    cls._register_handlers(function, *get_args(handler_type))
+                case Option.Value(UnionType() as ht):
+                    cls._register_handlers(function, *get_args(ht))
 
     async def __call__(self, scope, receive, send):
         """Handle a request, calling the appropriate handler function and capturing any handleable exceptions."""
@@ -148,3 +148,9 @@ class Route(Generic[RequestType]):
     def _add_handlers(cls, function, handler_types, container):
         for handler_type in handler_types:
             container[handler_type] = function
+
+    @staticmethod
+    def get_handler_type(function):
+        arg_spec = inspect.getfullargspec(function)
+        arg_type = arg_spec.annotations.get(arg_spec.args[1])
+        return Option.Value(arg_type) if arg_type else Option.Null()
