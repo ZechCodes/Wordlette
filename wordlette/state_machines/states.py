@@ -20,7 +20,7 @@ class Transition:
     def __init__(
         self,
         state: "Type[State[_T]]",
-        to_state: "Type[State[T]]",
+        to_state: "Type[State[_T]]",
         predicate: Callable[[], Awaitable[bool]],
     ):
         self.state = state
