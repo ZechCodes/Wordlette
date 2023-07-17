@@ -2,12 +2,18 @@ from pathlib import Path
 from typing import TypeVar, TypeAlias, Callable, Awaitable
 
 from bevy import get_repository
+from starlette.responses import PlainTextResponse
 from starlette.types import Receive, Send, Scope
 
 from wordlette.state_machines import StateMachine
 
 T = TypeVar("T")
 _App: TypeAlias = Callable[[Scope, Receive, Send], Awaitable[None]]
+
+
+class NullRouter:
+    def __call__(self, scope: Scope, receive: Receive, send: Send):
+        return PlainTextResponse("No router is mounted.")
 
 
 class WordletteApp:
@@ -17,7 +23,7 @@ class WordletteApp:
 
     def __init__(self, state_machine: StateMachine[T]):
         self._state_machine: StateMachine = state_machine
-        self._router = None
+        self._router = NullRouter()
 
         self.handle_request = self._create_state_machine_then_forward
 
