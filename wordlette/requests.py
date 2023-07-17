@@ -2,12 +2,12 @@ from typing import Type
 
 
 class Request:
-    Delete: "Type[DeleteRequest]"
-    Get: "Type[GetRequest]"
-    Head: "Type[HeadRequest]"
-    Patch: "Type[PatchRequest]"
-    Post: "Type[PostRequest]"
-    Put: "Type[PutRequest]"
+    Delete: "Type[Delete]"
+    Get: "Type[Get]"
+    Head: "Type[Head]"
+    Patch: "Type[Patch]"
+    Post: "Type[Post]"
+    Put: "Type[Put]"
 
     def __init__(self, scope):
         self._scope = scope
@@ -45,33 +45,33 @@ class Request:
                 return Request(scope)
 
 
-class DeleteRequest(Request):
+class Delete(Request):
     ...
 
 
-class GetRequest(Request):
+class Get(Request):
     ...
 
 
-class HeadRequest(Request):
+class Head(Request):
     ...
 
 
-class PatchRequest(Request):
+class Patch(Request):
     ...
 
 
-class PostRequest(Request):
+class Post(Request):
     ...
 
 
-class PutRequest(Request):
+class Put(Request):
     ...
 
 
-Delete = Request.Delete = DeleteRequest
-Get = Request.Get = GetRequest
-Head = Request.Head = HeadRequest
-Patch = Request.Patch = PatchRequest
-Post = Request.Post = PostRequest
-Put = Request.Put = PutRequest
+Request.Delete = Delete
+Request.Get = Get
+Request.Head = Head
+Request.Patch = Patch
+Request.Post = Post
+Request.Put = Put
