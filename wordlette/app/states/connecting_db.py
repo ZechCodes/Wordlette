@@ -2,6 +2,7 @@ from bevy import inject, dependency
 from starlette.responses import PlainTextResponse
 
 from wordlette.app import WordletteApp
+from wordlette.configs.managers import ConfigManager
 from wordlette.state_machines import State
 
 
@@ -12,5 +13,9 @@ class ConnectingDB(State):
         return self.cycle()
 
     @staticmethod
-    async def has_database_config() -> bool:
-        return True
+    @inject
+    async def has_database_config(config: ConfigManager = dependency()) -> bool:
+        try:
+            return bool(config.get("database"))
+        except KeyError:
+            return False
