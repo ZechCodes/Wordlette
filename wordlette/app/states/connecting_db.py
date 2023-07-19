@@ -10,3 +10,7 @@ class ConnectingDB(State):
     async def enter_state(self, app: WordletteApp = dependency()):
         app.set_router(PlainTextResponse("Connecting to Database", status_code=200))
         return self.cycle()
+
+    @staticmethod
+    async def has_database_config() -> bool:
+        return True

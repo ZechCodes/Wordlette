@@ -7,18 +7,20 @@ def app(*args, **kwargs) -> WordletteApp:
         BootstrappingApp,
         CreatingConfig,
         ConnectingDB,
+        LoadCoreExtensions,
         ServingApp,
     )
 
     return WordletteApp(
         StateMachine(
-            BootstrappingApp.goes_to(
-                CreatingConfig, when=BootstrappingApp.no_config_found
+            BootstrappingApp.goes_to(LoadCoreExtensions),
+            LoadCoreExtensions.goes_to(
+                CreatingConfig, when=CreatingConfig.no_config_found
             ),
-            BootstrappingApp.goes_to(
-                ConnectingDB, when=BootstrappingApp.has_database_config
+            LoadCoreExtensions.goes_to(
+                ConnectingDB, when=ConnectingDB.has_database_config
             ),
-            CreatingConfig.goes_to(ConnectingDB, when=CreatingConfig.has_config),
+            CreatingConfig.goes_to(ConnectingDB),
             ConnectingDB.goes_to(ServingApp),
         )
     )
