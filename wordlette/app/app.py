@@ -22,6 +22,8 @@ class WordletteApp:
         self._state_machine: StateMachine = state_machine
         self._router = PlainTextResponse("No router is mounted.", status_code=500)
         self._extensions = {}
+        self._router = PlainTextResponse("No router is mounted.", status_code=500)
+        self._state_machine: StateMachine = state_machine
 
         self.handle_request = self._create_state_machine_then_forward
 
