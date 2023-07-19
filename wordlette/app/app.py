@@ -25,8 +25,7 @@ class WordletteApp:
 
         self.handle_request = self._create_state_machine_then_forward
 
-        get_repository().set(WordletteApp, self)
-        get_repository().set(StateMachine, self._state_machine)
+        self._update_repository()
 
     def add_extension(self, name: str, extension_module: ModuleType):
         self._extensions[name] = extension_module
@@ -74,3 +73,7 @@ class WordletteApp:
 
             case _:
                 await self.handle_request(scope, receive, send)
+
+    def _update_repository(self):
+        get_repository().set(StateMachine, self._state_machine)
+        get_repository().set(WordletteApp, self)
