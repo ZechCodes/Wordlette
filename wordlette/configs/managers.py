@@ -35,6 +35,18 @@ class ConfigManager:
                 with file.open("rb") as open_file:
                     self._config = Config(file, handler.load(open_file))
 
+    def write_config_file(self, name: str, directory: Path, data: T):
+        if path := self.find_config_file(name, directory):
+            handler = self._handlers[path.suffix[1:].casefold()]
+        else:
+            extension = list(self._handlers)[0]
+            handler = self._handlers[extension]
+            path = directory / f"{name}.{extension}"
+
+        self._config = Config(path, data)
+        with path.open("wb") as open_file:
+            handler.write(data, open_file)
+
     def add_handler(self, handler: Type[ConfigHandler]):
         for extension in handler.extensions:
             self._handlers[extension.casefold()] = handler()
