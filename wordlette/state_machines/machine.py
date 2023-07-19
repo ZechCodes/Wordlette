@@ -54,7 +54,7 @@ class StateMachine(Generic[T]):
         match await self._get_next_state():
             case Option.Null():
                 self._stopped = True
-                self._current_state = StoppedState()
+                await self._transition_stack.put(StoppedState())
 
             case Option.Value(constructor):
                 await self._transition_stack.put(constructor())
