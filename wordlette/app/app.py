@@ -17,7 +17,7 @@ _App: TypeAlias = Callable[[Scope, Receive, Send], Awaitable[None]]
 
 class WordletteApp:
     app_settings = {
-        "config_file": Path("config.yml"),
+        "config_name": "wordlette-config",
         "extensions_dir": Path("extensions"),
     }
 
