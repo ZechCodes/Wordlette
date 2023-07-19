@@ -7,6 +7,7 @@ from bevy import get_repository
 from starlette.responses import PlainTextResponse
 from starlette.types import Receive, Send, Scope
 
+from wordlette.configs.managers import ConfigManager
 from wordlette.state_machines import StateMachine
 
 logger = getLogger(__name__)
@@ -21,9 +22,13 @@ class WordletteApp:
         "extensions_dir": Path("extensions"),
     }
 
-    def __init__(self, state_machine: StateMachine[T]):
-        self._state_machine: StateMachine = state_machine
-        self._router = PlainTextResponse("No router is mounted.", status_code=500)
+    def __init__(
+        self,
+        state_machine: StateMachine[T],
+        *,
+        config_manager: ConfigManager | None = None,
+    ):
+        self._config_manager = config_manager or ConfigManager()
         self._extensions = {}
         self._router = PlainTextResponse("No router is mounted.", status_code=500)
         self._state_machine: StateMachine = state_machine
@@ -80,5 +85,6 @@ class WordletteApp:
                 await self.handle_request(scope, receive, send)
 
     def _update_repository(self):
+        get_repository().set(ConfigManager, self._config_manager)
         get_repository().set(StateMachine, self._state_machine)
         get_repository().set(WordletteApp, self)
