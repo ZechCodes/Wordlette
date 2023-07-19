@@ -33,8 +33,6 @@ class WordletteApp:
         self._router = PlainTextResponse("No router is mounted.", status_code=500)
         self._state_machine: StateMachine = state_machine
 
-        self.handle_request = self._create_state_machine_then_forward
-
         self._update_repository()
 
     def add_extension(self, name: str, extension_module: ModuleType):
@@ -44,6 +42,7 @@ class WordletteApp:
         while True:
             match await receive():
                 case {"type": "lifespan.startup"}:
+                    await self._startup()
                     await send({"type": "lifespan.startup.complete"})
 
                 case {"type": "lifespan.shutdown"}:
@@ -62,18 +61,10 @@ class WordletteApp:
 
         return StateMachine(BootstrapState.goes_to(ConfigState))
 
-    async def _create_state_machine_then_forward(
-        self, scope: Scope, receive: Receive, send: Send
-    ) -> None:
+    async def _startup(self):
         await self._state_machine.cycle()
 
-        self.handle_request = self._forward_request
-
-        await self.handle_request(scope, receive, send)
-
-    async def _forward_request(
-        self, scope: Scope, receive: Receive, send: Send
-    ) -> None:
+    async def handle_request(self, scope: Scope, receive: Receive, send: Send) -> None:
         await self._router(scope, receive, send)
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
