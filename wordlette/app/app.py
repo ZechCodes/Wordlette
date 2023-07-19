@@ -1,3 +1,4 @@
+from logging import getLogger
 from pathlib import Path
 from types import ModuleType
 from typing import TypeVar, TypeAlias, Callable, Awaitable
@@ -7,6 +8,8 @@ from starlette.responses import PlainTextResponse
 from starlette.types import Receive, Send, Scope
 
 from wordlette.state_machines import StateMachine
+
+logger = getLogger(__name__)
 
 T = TypeVar("T")
 _App: TypeAlias = Callable[[Scope, Receive, Send], Awaitable[None]]
