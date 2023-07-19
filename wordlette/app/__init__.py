@@ -18,9 +18,7 @@ def app(*args, **kwargs) -> WordletteApp:
             BootstrappingApp.goes_to(LoadCoreExtensions),
             LoadCoreExtensions.goes_to(LoadingConfig),
             LoadingConfig.goes_to(ConnectingDB, when=ConnectingDB.has_database_config),
-            LoadingConfig.goes_to(
-                CreatingConfig, when=CreatingConfig.has_no_config_file
-            ),
+            LoadingConfig.goes_to(CreatingConfig),
             CreatingConfig.goes_to(ConnectingDB),
             ConnectingDB.goes_to(ServingApp),
         ),
