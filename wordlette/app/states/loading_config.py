@@ -14,14 +14,6 @@ class LoadingConfig(State):
     ):
         if await self.config_found():
             config.load_config_file(app.app_settings["config_name"], Path())
-            print(
-                "Config:",
-                config.get("hi", list),
-            )
-            print(
-                "Config file",
-                config.find_config_file(app.app_settings["config_name"], Path()),
-            )
 
         return self.cycle()
 
