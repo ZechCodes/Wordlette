@@ -19,6 +19,15 @@ class ConfigManager:
 
         self._register_handlers(handlers)
 
+    def get(
+        self, key: str = "", constructor: Callable[[dict[str, Any]], T] | None = None
+    ) -> T | Any:
+        value = self._config.data[key] if key else self._config.data
+        if constructor:
+            value = constructor(value)
+
+        return value
+
     def find_config_file(self, name: str, directory: Path) -> Path | None:
         if self._config is not None:
             return self._config.path
