@@ -1,4 +1,5 @@
 from pathlib import Path
+from types import ModuleType
 from typing import TypeVar, TypeAlias, Callable, Awaitable
 
 from bevy import get_repository
@@ -14,16 +15,21 @@ _App: TypeAlias = Callable[[Scope, Receive, Send], Awaitable[None]]
 class WordletteApp:
     app_settings = {
         "config_file": Path("config.yml"),
+        "extensions_dir": Path("extensions"),
     }
 
     def __init__(self, state_machine: StateMachine[T]):
         self._state_machine: StateMachine = state_machine
         self._router = PlainTextResponse("No router is mounted.", status_code=500)
+        self._extensions = {}
 
         self.handle_request = self._create_state_machine_then_forward
 
         get_repository().set(WordletteApp, self)
         get_repository().set(StateMachine, self._state_machine)
+
+    def add_extension(self, name: str, extension_module: ModuleType):
+        self._extensions[name] = extension_module
 
     async def handle_lifespan(self, _, receive: Receive, send: Send):
         while True:
