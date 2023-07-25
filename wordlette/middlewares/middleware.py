@@ -9,6 +9,7 @@ from wordlette.requests import Request
 
 class Middleware:
     def __init__(self, call_next: Callable[[Scope, Request, Send], Awaitable[None]]):
+        super().__init__()
         self.call_next = call_next
 
     async def next(self):
