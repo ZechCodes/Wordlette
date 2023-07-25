@@ -117,5 +117,9 @@ class Observer:
     @staticmethod
     def get_handler_type(function):
         arg_spec = inspect.getfullargspec(function)
-        arg_type = arg_spec.annotations.get(arg_spec.args[1])
+        arg_type = (
+            arg_spec.annotations.get(arg_spec.args[1])
+            if len(arg_spec.args) > 1
+            else None
+        )
         return Option.Value(arg_type) if arg_type else Option.Null()
