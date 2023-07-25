@@ -4,15 +4,24 @@ from operator import call
 from types import ModuleType
 from typing import TypeAlias, Callable, Awaitable, Sequence, Type
 
-from bevy import get_repository
+from bevy import get_repository, dependency
 from starlette.types import Receive, Send, Scope, Message, ASGIApp
 
+from wordlette.events import EventManager, Event
 from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
 
 logger = getLogger(__name__)
 
 _MiddlewareConstructor: TypeAlias = Callable[[ASGIApp], Middleware] | Type[Middleware]
+
+
+class StartupEvent(Event):
+    ...
+
+
+class ShutdownEvent(Event):
+    ...
 
 
 class Sender:
@@ -26,6 +35,8 @@ class Sender:
 
 
 class WordletteApp:
+    events: EventManager = dependency()
+
     def __init__(
         self,
         extensions: Sequence[Callable[[], Extension]] = (),
@@ -43,9 +54,11 @@ class WordletteApp:
         while True:
             match await receive():
                 case {"type": "lifespan.startup"}:
+                    await self.events.emit(StartupEvent())
                     await send({"type": "lifespan.startup.complete"})
 
                 case {"type": "lifespan.shutdown"}:
+                    await self.events.emit(ShutdownEvent())
                     await send({"type": "lifespan.shutdown.complete"})
                     break
 
