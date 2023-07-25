@@ -1,8 +1,9 @@
+from
 from functools import reduce
 from logging import getLogger
 from operator import call
 from types import ModuleType
-from typing import TypeAlias, Callable, Awaitable, Sequence, Type
+from typing import TypeAlias, Callable, Awaitable, Sequence, Type, cast
 
 from bevy import get_repository, dependency
 from starlette.types import Receive, Send, Scope, Message, ASGIApp
@@ -87,11 +88,14 @@ class WordletteApp:
             name: extension for name, extension in map(call, extension_constructors)
         }
 
-    def _build_middleware_stack(self, middleware_constructors):
+    def _build_middleware_stack(self, middleware_constructors) -> ASGIApp:
+        def middleware_factory(previous, current) -> ASGIApp:
+            return current(previous)
+
         return reduce(
-            lambda previous, current: current(previous),
+            middleware_factory,
             middleware_constructors,
-            self._500_response,
+            cast(ASGIApp, self._500_response)
         )
 
     def _update_repository(self):
