@@ -11,6 +11,9 @@ class Extension:
     def load_extension(self):
         return import_module(self.import_path)
 
+    def __iter__(self):
+        yield from (self.name, self)
+
 
 def scan_directory_for_public_modules(directory: Path) -> set[Path]:
     return {
