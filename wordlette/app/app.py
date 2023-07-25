@@ -1,4 +1,3 @@
-from
 from functools import reduce
 from logging import getLogger
 from operator import call
@@ -95,7 +94,7 @@ class WordletteApp:
         return reduce(
             middleware_factory,
             middleware_constructors,
-            cast(ASGIApp, self._500_response)
+            cast(ASGIApp, self._500_response),
         )
 
     def _update_repository(self):
