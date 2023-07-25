@@ -5,15 +5,14 @@ from types import ModuleType
 from typing import TypeAlias, Callable, Awaitable, Sequence, Type
 
 from bevy import get_repository
-from starlette.types import Receive, Send, Scope, Message
+from starlette.types import Receive, Send, Scope, Message, ASGIApp
 
 from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
 
 logger = getLogger(__name__)
 
-_ASGIApp: TypeAlias = Callable[[Scope, Receive, Send], Awaitable[None]]
-_MiddlewareConstructor: TypeAlias = Callable[[_ASGIApp], Middleware] | Type[Middleware]
+_MiddlewareConstructor: TypeAlias = Callable[[ASGIApp], Middleware] | Type[Middleware]
 
 
 class Sender:
@@ -35,7 +34,7 @@ class WordletteApp:
         self._update_repository()
 
         self._extensions = self._build_extensions(extensions)
-        self._middleware_stack: _ASGIApp = self._build_middleware_stack(middleware)
+        self._middleware_stack: ASGIApp = self._build_middleware_stack(middleware)
 
     def add_extension(self, name: str, extension_module: ModuleType):
         self._extensions[name] = extension_module
