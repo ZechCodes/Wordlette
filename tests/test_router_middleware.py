@@ -17,7 +17,7 @@ async def test_router_is_set():
 
     class TestState(State):
         async def enter_state(self):
-            router.router = PlainTextResponse("Test", status_code=200)
+            router.router.add_route("/", PlainTextResponse("Test", status_code=200))
 
     async def dummy(*args, **kwargs):
         ...
@@ -37,11 +37,12 @@ async def test_router_cycle():
 
     class TestStateA(State):
         async def enter_state(self):
-            router.router = PlainTextResponse("TestA", status_code=200)
+            router.router.add_route("/", PlainTextResponse("TestA", status_code=200))
 
     class TestStateB(State):
         async def enter_state(self):
-            router.router = PlainTextResponse("TestB", status_code=200)
+            router.create_router()
+            router.router.add_route("/", PlainTextResponse("TestB", status_code=200))
 
     async def dummy(*args, **kwargs):
         ...
