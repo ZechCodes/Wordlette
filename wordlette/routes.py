@@ -83,6 +83,7 @@ class Route(Generic[RequestType]):
     ```
     """
 
+    methods: set[str]
     request_handlers: dict[
         Type[RequestType], Callable[[Any, RequestType], Awaitable[Response]]
     ]
@@ -107,6 +108,10 @@ class Route(Generic[RequestType]):
 
                 case Option.Value(UnionType() as ht):
                     cls._register_handlers(function, *get_args(ht))
+
+        cls.methods = set()
+        for handler in cls.request_handlers:
+            cls.methods.update(handler.name)
 
     async def __call__(self, scope, receive, send):
         """Handle a request, calling the appropriate handler function and capturing any handleable exceptions."""
