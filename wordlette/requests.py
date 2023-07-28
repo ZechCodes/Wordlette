@@ -9,12 +9,13 @@ class Request:
     Post: "Type[Post]"
     Put: "Type[Put]"
 
+    name: str
+
+    def __init_subclass__(cls, **kwargs):
+        cls.name = cls.__name__.upper()
+
     def __init__(self, scope):
         self._scope = scope
-
-    @property
-    def name(self):
-        return self._scope["method"].upper()
 
     @property
     def scope(self):
