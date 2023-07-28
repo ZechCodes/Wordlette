@@ -27,10 +27,19 @@ class StateRouterMiddleware(Middleware, Observer):
         super().__init__(*args)
         self.statemachine = statemachine
         self.route_manager = get_repository().get(RouteManager)
+        self.run = self._startup_run
 
     def on_startup(self, _: StartupEvent):
+        return self._startup()
+
+    def _startup(self):
+        self.run = self._run
         return self.statemachine.cycle()
 
-    async def run(self, scope: Scope, receive: Receive, send: Send):
+    async def _startup_run(self, scope: Scope, receive: Receive, send: Send):
+        await self._startup()
+        await self.run(scope, receive, send)
+
+    async def _run(self, scope: Scope, receive: Receive, send: Send):
         await self.route_manager.router(scope, receive, send)
         await self.next()
