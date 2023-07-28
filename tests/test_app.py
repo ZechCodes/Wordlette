@@ -17,7 +17,7 @@ def test_empty_app():
     assert response.status_code == 500
 
 
-def test_custom_middleware_extension():
+def test_custom_middleware():
     class TestMiddleware(Middleware):
         async def run(self, scope, receive, send):
             await send({"type": "http.response.start", "status": 200})
