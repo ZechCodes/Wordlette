@@ -84,6 +84,7 @@ class Route(Generic[RequestType]):
     """
 
     methods: set[str]
+    path: str
     request_handlers: dict[
         Type[RequestType], Callable[[Any, RequestType], Awaitable[Response]]
     ]
