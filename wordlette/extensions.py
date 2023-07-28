@@ -1,18 +1,30 @@
-from dataclasses import dataclass
 from importlib import import_module
 from pathlib import Path
 
 
-@dataclass
 class Extension:
-    name: str
-    import_path: str
+    __match_args__ = ("name",)
 
-    def load_extension(self):
-        return import_module(self.import_path)
+    name: str
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if not hasattr(cls, "name"):
+            cls.name = cls.__name__
 
     def __iter__(self):
         yield from (self.name, self)
+
+
+class PackageExtension(Extension):
+    __slots__ = ("name", "package_import")
+
+    def __init__(self, name: str, package_import: str):
+        self.name = name
+        self.package_import = package_import
+
+    def load_extension(self):
+        return import_module(self.package_import)
 
 
 def scan_directory_for_public_modules(directory: Path) -> set[Path]:
