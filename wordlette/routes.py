@@ -87,7 +87,7 @@ class Route(Generic[RequestType]):
     ```
     """
 
-    methods: set[str]
+    methods: tuple[str]
     path: str
     request_handlers: dict[
         Type[RequestType], Callable[[Any, RequestType], Awaitable[Response]]
@@ -114,10 +114,7 @@ class Route(Generic[RequestType]):
                 case Option.Value(UnionType() as ht):
                     cls._register_handlers(function, *get_args(ht))
 
-        cls.methods = set()
-        for handler in cls.request_handlers:
-            cls.methods.update(handler.name)
-
+        cls.methods = tuple(handler.name for handler in cls.request_handlers)
         if not cls.methods:
             raise NoRouteHandlersFound(
                 f"Route subclass {cls.__qualname__} has no request handlers."
