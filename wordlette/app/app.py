@@ -1,6 +1,5 @@
 from functools import reduce
 from logging import getLogger
-from operator import call
 from types import ModuleType
 from typing import TypeAlias, Callable, Awaitable, Sequence, Type, cast
 
@@ -83,8 +82,18 @@ class WordletteApp:
         )
 
     def _build_extensions(self, extension_constructors):
+        def create(extension_constructor):
+            match extension_constructor:
+                case type():
+                    return get_repository().get(extension_constructor)
+
+                case _:
+                    extension = extension_constructor()
+                    get_repository().set(type(extension), extension)
+                    return extension
+
         return {
-            name: extension for name, extension in map(call, extension_constructors)
+            name: extension for name, extension in map(create, extension_constructors)
         }
 
     def _build_middleware_stack(self, middleware_constructors) -> ASGIApp:
