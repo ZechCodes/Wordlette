@@ -26,6 +26,10 @@ class MissingRoutePath(Exception):
     """Raised when a route is missing a path."""
 
 
+class NoRouteHandlersFound(Exception):
+    """Raised when a route has no registered method handlers."""
+
+
 class ExceptionHandlerContext:
     """When an exception occurs in a route, the exception handler context finds a matching handler on the route. If no
     handler is found the exception will be allowed to propagate. Calling the context object after it has found a handler
@@ -113,6 +117,11 @@ class Route(Generic[RequestType]):
         cls.methods = set()
         for handler in cls.request_handlers:
             cls.methods.update(handler.name)
+
+        if not cls.methods:
+            raise NoRouteHandlersFound(
+                f"Route subclass {cls.__qualname__} has no request handlers."
+            )
 
     async def __call__(self, scope, receive, send):
         """Handle a request, calling the appropriate handler function and capturing any handleable exceptions."""

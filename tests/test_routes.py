@@ -3,15 +3,21 @@ from starlette.responses import PlainTextResponse
 from starlette.testclient import TestClient
 
 from wordlette.requests import Request
-from wordlette.routes import Route, MissingRoutePath
+from wordlette.routes import Route, MissingRoutePath, NoRouteHandlersFound
 
 
 class DefaultPathRoute(Route):
     path = "/"
 
+    async def get(self, _: Request.Get):
+        ...
+
 
 def test_route_exception_handler_detection():
     class TestRoute(DefaultPathRoute):
+        async def get(self, _: Request.Get):
+            ...
+
         async def handle_exception(self, error: Exception):
             pass
 
@@ -129,3 +135,10 @@ def test_missing_route_path():
 
         class TestRoute(Route):
             ...
+
+
+def test_no_route_handlers():
+    with raises(NoRouteHandlersFound):
+
+        class TestRoute(Route):
+            path = "/"
