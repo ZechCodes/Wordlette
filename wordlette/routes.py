@@ -88,6 +88,7 @@ class Route(Generic[RequestType]):
     """
 
     methods: tuple[str]
+    name: str
     path: str
     request_handlers: dict[
         Type[RequestType], Callable[[Any, RequestType], Awaitable[Response]]
@@ -119,6 +120,9 @@ class Route(Generic[RequestType]):
             raise NoRouteHandlersFound(
                 f"Route subclass {cls.__qualname__} has no request handlers."
             )
+
+        if not hasattr(cls, "name"):
+            cls.name = cls.__qualname__.casefold()
 
     async def __call__(self, scope, receive, send):
         """Handle a request, calling the appropriate handler function and capturing any handleable exceptions."""
