@@ -1,9 +1,10 @@
 import pytest
-from bevy import dependency, inject
+from bevy import dependency, inject, get_repository
 from starlette.responses import PlainTextResponse
 from starlette.testclient import TestClient
 
 from wordlette.app import WordletteApp
+from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
 from wordlette.middlewares.state_router import StateRouterMiddleware, RouteManager
 from wordlette.requests import Request
@@ -28,6 +29,15 @@ def test_custom_middleware():
     response = TestClient(app).get("/")
     assert response.status_code == 200
     assert response.text == "Hello, world!"
+
+
+def test_custom_extension():
+    class TestExtension(Extension):
+        def __init__(self):
+            self.test = "test"
+
+    _ = WordletteApp(extensions=[TestExtension])
+    assert get_repository().find(TestExtension).value.test == "test"
 
 
 def test_app_with_state_router_and_routes():
