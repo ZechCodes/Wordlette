@@ -1,3 +1,4 @@
+import pytest
 from bevy import dependency, inject
 from starlette.responses import PlainTextResponse
 from starlette.testclient import TestClient
@@ -67,3 +68,52 @@ def test_app_with_state_router_and_routes():
     response = TestClient(app).post("/test")
     assert response.status_code == 200
     assert response.text == "Test page post"
+
+
+@pytest.mark.asyncio
+async def test_app_router_states_cycle():
+    class RouteA(Route):
+        path = "/a"
+
+        async def get(self, _: Request.Get):
+            return PlainTextResponse("RouteA")
+
+    class RouteB(Route):
+        path = "/b"
+
+        async def get(self, _: Request.Get):
+            return PlainTextResponse("RouteB")
+
+    class RouterStateA(State):
+        @inject
+        async def enter_state(self, route_manager: RouteManager = dependency()):
+            route_manager.create_router(RouteA)
+
+    class RouterStateB(State):
+        @inject
+        async def enter_state(self, route_manager: RouteManager = dependency()):
+            route_manager.create_router(RouteB)
+
+    statemachine = StateMachine(RouterStateA.goes_to(RouterStateB))
+
+    def create_router_middleware(call_next):
+        return StateRouterMiddleware(call_next, statemachine=statemachine)
+
+    app = WordletteApp(middleware=[create_router_middleware])
+    response = TestClient(app).get("/a")
+    assert response.status_code == 200
+    assert response.text == "RouteA"
+
+    response = TestClient(app).get("/b")
+    assert response.status_code == 404
+    assert response.text == "Not Found"
+
+    await statemachine.cycle()
+
+    response = TestClient(app).get("/a")
+    assert response.status_code == 404
+    assert response.text == "Not Found"
+
+    response = TestClient(app).get("/b")
+    assert response.status_code == 200
+    assert response.text == "RouteB"
