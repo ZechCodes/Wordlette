@@ -167,10 +167,17 @@ class Route(Generic[RequestType]):
 
     @classmethod
     def get_handler_type(cls, function):
-        arg_spec = inspect.getfullargspec(function)
+        arg_spec = inspect.getfullargspec(cls._unwrap(function))
         arg_type = (
             arg_spec.annotations.get(arg_spec.args[1])
             if len(arg_spec.args) > 1
             else None
         )
         return Option.Value(arg_type) if arg_type else Option.Null()
+
+    @staticmethod
+    def _unwrap(function):
+        while hasattr(function, "__wrapped__"):
+            function = function.__wrapped__
+
+        return function
