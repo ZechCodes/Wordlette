@@ -19,6 +19,10 @@ class ConfigManager:
 
         self._register_handlers(handlers)
 
+    @property
+    def valid_extensions(self) -> set[str]:
+        return set(self._handlers.keys())
+
     def get(
         self, key: str = "", constructor: Callable[[dict[str, Any]], T] | None = None
     ) -> T | Any:
