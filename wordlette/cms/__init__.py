@@ -1,4 +1,4 @@
-from wordlette.cms.app import CMSApp
+from wordlette.cms.app import create_cms_app
 
 
-app = CMSApp()
+app = create_cms_app()
