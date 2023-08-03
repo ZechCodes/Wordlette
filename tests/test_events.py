@@ -1,150 +1,74 @@
+from asyncio import TaskGroup
 from dataclasses import dataclass
 
 import pytest
-from bevy import get_repository
 
-from wordlette.events import Event, EventManager, Observer, Observable
-
-
-@pytest.mark.asyncio
-async def test_events():
-    get_repository().set(EventManager, EventManager())
-
-    @dataclass
-    class TestEvent(Event):
-        test: str
-
-    class TestObserver(Observer):
-        def __init__(self):
-            super().__init__()
-            self.value = ""
-
-        async def on_test_event(self, event: TestEvent):
-            self.value = event.test
-
-    observer = TestObserver()
-    await get_repository().get(EventManager).emit(TestEvent("test"))
-    assert observer.value == "test"
+from wordlette.events import Observable, EventStream
+from wordlette.events.events import Event
 
 
 @pytest.mark.asyncio
-async def test_event_references_are_deleted():
-    manager = EventManager()
-    get_repository().set(EventManager, manager)
+async def test_event_observable_weak_reference():
+    deleted = False
 
-    @dataclass
-    class TestEvent(Event):
-        test: str
+    class TestObservable(Observable):
+        def __del__(self):
+            nonlocal deleted
+            deleted = True
+            super().__del__()
 
-    class TestObserver(Observer):
-        async def on_test_event(self, event: TestEvent):
+    async def observer(event_stream: EventStream):
+        async for event in event_stream:
             ...
 
-    observer = TestObserver()
-    assert len(manager._observers[TestEvent]) == 1
-    del observer
-    assert len(manager._observers[TestEvent]) == 0
+    async with TaskGroup() as tasks:
+        observable = TestObservable()
+        tasks.create_task(observer(observable.event_stream))
+        del observable
+
+    assert deleted
 
 
 @pytest.mark.asyncio
-async def test_event_listener_stop():
-    manager = EventManager()
-    get_repository().set(EventManager, manager)
+async def test_event_stream_iterator_references():
+    async def observer(event_stream: EventStream[Event]):
+        async for event in event_stream:
+            break
 
-    @dataclass
-    class TestEvent(Event):
-        test: str
+    async def emit_events(observable: Observable):
+        observable.emit(Event())
 
-    ran = False
+    async with TaskGroup() as tasks:
+        observable = Observable()
+        tasks.create_task(observer(observable.event_stream))
+        tasks.create_task(emit_events(observable))
 
-    async def observer(event: TestEvent):
-        nonlocal ran
-        ran = True
-
-    manager.listen(TestEvent, observer).stop()
-    await manager.emit(TestEvent("test"))
-    assert ran is False
+    assert len(observable.event_stream.iterators) == 0
 
 
 @pytest.mark.asyncio
-async def test_object_event_emit():
-    got = ""
+async def test_event_observable_emits():
+    events = []
 
     @dataclass
     class TestEvent(Event):
-        test: str
+        value: str
 
-    class TestType(Observable):
-        ...
+    async def observer(event_stream: EventStream[TestEvent]):
+        async for event in event_stream:
+            events.append(event.value)
 
-    async def observer(event: TestEvent):
-        nonlocal got
-        got = event.test
+    async def emit_events(observable: Observable):
+        observable.emit(TestEvent("Hello"))
+        observable.emit(TestEvent("World"))
+        observable.emit(TestEvent("How"))
+        observable.emit(TestEvent("Are"))
+        observable.emit(TestEvent("You"))
 
-    obj = TestType()
-    obj.listen(TestEvent, observer)
-    await obj.emit(TestEvent("test"))
-    assert got == "test"
+    async with TaskGroup() as tasks:
+        observable = Observable()
+        tasks.create_task(observer(observable.event_stream))
+        tasks.create_task(emit_events(observable))
+        del observable
 
-
-@pytest.mark.asyncio
-async def test_type_event_emit():
-    got = ""
-
-    @dataclass
-    class TestEvent(Event):
-        test: str
-
-    class TestType(Observable):
-        ...
-
-    async def observer(event: TestEvent):
-        nonlocal got
-        got = event.test
-
-    TestType.listen(TestEvent, observer)
-    await TestType.emit(TestEvent("test"))
-    assert got == "test"
-
-
-@pytest.mark.asyncio
-async def test_object_type_event_propagation():
-    got = ""
-
-    @dataclass
-    class TestEvent(Event):
-        test: str
-
-    class TestType(Observable):
-        ...
-
-    async def observer(event: TestEvent):
-        nonlocal got
-        got = event.test
-
-    obj = TestType()
-    TestType.listen(TestEvent, observer)
-    await obj.emit(TestEvent("test"))
-    assert got == "test"
-
-
-@pytest.mark.asyncio
-async def test_global_event_propagation():
-    got = ""
-    events = get_repository().get(EventManager)
-
-    @dataclass
-    class TestEvent(Event):
-        test: str
-
-    class TestType(Observable):
-        ...
-
-    async def observer(event: TestEvent):
-        nonlocal got
-        got = event.test
-
-    obj = TestType()
-    events.listen(TestEvent, observer)
-    await obj.emit(TestEvent("test"))
-    assert got == "test"
+    assert events == ["Hello", "World", "How", "Are", "You"]
