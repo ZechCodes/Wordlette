@@ -3,7 +3,7 @@ from dataclasses import dataclass
 import pytest
 from bevy import get_repository
 
-from wordlette.events import Event, EventManager, Observer
+from wordlette.events import Event, EventManager, Observer, Observable
 
 
 @pytest.mark.asyncio
@@ -64,3 +64,87 @@ async def test_event_listener_stop():
     manager.listen(TestEvent, observer).stop()
     await manager.emit(TestEvent("test"))
     assert ran is False
+
+
+@pytest.mark.asyncio
+async def test_object_event_emit():
+    got = ""
+
+    @dataclass
+    class TestEvent(Event):
+        test: str
+
+    class TestType(Observable):
+        ...
+
+    async def observer(event: TestEvent):
+        nonlocal got
+        got = event.test
+
+    obj = TestType()
+    obj.listen(TestEvent, observer)
+    await obj.emit(TestEvent("test"))
+    assert got == "test"
+
+
+@pytest.mark.asyncio
+async def test_type_event_emit():
+    got = ""
+
+    @dataclass
+    class TestEvent(Event):
+        test: str
+
+    class TestType(Observable):
+        ...
+
+    async def observer(event: TestEvent):
+        nonlocal got
+        got = event.test
+
+    TestType.listen(TestEvent, observer)
+    await TestType.emit(TestEvent("test"))
+    assert got == "test"
+
+
+@pytest.mark.asyncio
+async def test_object_type_event_propagation():
+    got = ""
+
+    @dataclass
+    class TestEvent(Event):
+        test: str
+
+    class TestType(Observable):
+        ...
+
+    async def observer(event: TestEvent):
+        nonlocal got
+        got = event.test
+
+    obj = TestType()
+    TestType.listen(TestEvent, observer)
+    await obj.emit(TestEvent("test"))
+    assert got == "test"
+
+
+@pytest.mark.asyncio
+async def test_global_event_propagation():
+    got = ""
+    events = get_repository().get(EventManager)
+
+    @dataclass
+    class TestEvent(Event):
+        test: str
+
+    class TestType(Observable):
+        ...
+
+    async def observer(event: TestEvent):
+        nonlocal got
+        got = event.test
+
+    obj = TestType()
+    events.listen(TestEvent, observer)
+    await obj.emit(TestEvent("test"))
+    assert got == "test"
