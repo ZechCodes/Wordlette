@@ -21,10 +21,11 @@ async def test_event_observable_weak_reference():
         async for event in event_stream:
             ...
 
+    def create_observable():
+        return TestObservable()
+
     async with TaskGroup() as tasks:
-        observable = TestObservable()
-        tasks.create_task(observer(observable.event_stream))
-        del observable
+        tasks.create_task(observer(create_observable().event_stream))
 
     assert deleted
 
