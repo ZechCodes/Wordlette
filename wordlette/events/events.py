@@ -11,4 +11,4 @@ class Event:
         return instance
 
     def __repr__(self):
-        return f"<{Event.__name__}:{self.__class__.__name__} {self.__event_id__}>"
+        return f"<{Event.__name__}:{self.__class__.__name__} {self.__event_count__}>"
