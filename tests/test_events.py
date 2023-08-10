@@ -1,75 +1,68 @@
-from asyncio import TaskGroup
-from dataclasses import dataclass
+import unittest.mock as mock
 
 import pytest
 
-from wordlette.events import Observable, EventStream
-from wordlette.events.events import Event
+from wordlette.events.dispatch import EventDispatch
 
 
 @pytest.mark.asyncio
-async def test_event_observable_weak_reference():
-    deleted = False
+async def test_event_dispatch():
+    mock_event, mock_listener = mock.Mock(), mock.AsyncMock()
 
-    class TestObservable(Observable):
-        def __del__(self):
-            nonlocal deleted
-            deleted = True
-            super().__del__()
+    events = EventDispatch()
+    events.listen(type(mock_event), mock_listener)
 
-    async def observer(event_stream: EventStream):
-        async for event in event_stream:
-            ...
+    mock_listener.reset_mock()
+    await events.emit(mock_event)
 
-    def create_observable():
-        return TestObservable()
-
-    async with TaskGroup() as tasks:
-        tasks.create_task(observer(create_observable().event_stream))
-
-    assert deleted
+    assert mock_listener.call_args.args[0] == mock_event
 
 
 @pytest.mark.asyncio
-async def test_event_stream_iterator_references():
-    async def observer(event_stream: EventStream[Event]):
-        async for event in event_stream:
-            break
+async def test_event_dispatch_after():
+    mock_obj, mock_event = mock.Mock(), mock.Mock()
+    mock_obj.listener, mock_obj.after = mock.AsyncMock(), mock.AsyncMock()
 
-    async def emit_events(observable: Observable):
-        observable.emit(Event())
+    events = EventDispatch()
+    events.listen(type(mock_event), mock_obj.listener)
+    events.after(type(mock_event), mock_obj.after)
 
-    async with TaskGroup() as tasks:
-        observable = Observable()
-        tasks.create_task(observer(observable.event_stream))
-        tasks.create_task(emit_events(observable))
+    mock_obj.reset_mock()
+    await events.emit(mock_event)
 
-    assert len(observable.event_stream.iterators) == 0
+    assert mock_obj.mock_calls == [
+        mock.call.listener(mock_event),
+        mock.call.after(mock_event),
+    ]
 
 
 @pytest.mark.asyncio
-async def test_event_observable_emits():
-    events = []
+async def test_event_dispatch_before():
+    mock_obj, mock_event = mock.Mock(), mock.Mock()
+    mock_obj.listener, mock_obj.before = mock.AsyncMock(), mock.AsyncMock()
 
-    @dataclass
-    class TestEvent(Event):
-        value: str
+    events = EventDispatch()
+    events.listen(type(mock_event), mock_obj.listener)
+    events.before(type(mock_event), mock_obj.before)
 
-    async def observer(event_stream: EventStream[TestEvent]):
-        async for event in event_stream:
-            events.append(event.value)
+    mock_obj.reset_mock()
+    await events.emit(mock_event)
 
-    async def emit_events(observable: Observable):
-        observable.emit(TestEvent("Hello"))
-        observable.emit(TestEvent("World"))
-        observable.emit(TestEvent("How"))
-        observable.emit(TestEvent("Are"))
-        observable.emit(TestEvent("You"))
+    assert mock_obj.mock_calls == [
+        mock.call.before(mock_event),
+        mock.call.listener(mock_event),
+    ]
 
-    async with TaskGroup() as tasks:
-        observable = Observable()
-        tasks.create_task(observer(observable.event_stream))
-        tasks.create_task(emit_events(observable))
-        del observable
 
-    assert events == ["Hello", "World", "How", "Are", "You"]
+@pytest.mark.asyncio
+async def test_event_listener_stop():
+    mock_event, mock_listener = mock.Mock(), mock.AsyncMock()
+
+    events = EventDispatch()
+    events.listen(type(mock_event), mock_listener)
+    events.stop(type(mock_event), mock_listener)
+
+    mock_listener.reset_mock()
+    await events.emit(mock_event)
+
+    assert mock_listener.called is False
