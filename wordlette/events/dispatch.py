@@ -68,11 +68,15 @@ class EventDispatch:
         )
 
     async def emit(self, event: Event):
-        for listeners in (self.before_listeners, self.listeners, self.after_listeners):
-            await self._run_handlers(listeners[type(event)], event)
-
-        for observer in self.observers:
-            await observer(event)
+        event_type = type(event)
+        listener_registries = (
+            self.before_listeners[event_type],
+            self.listeners[event_type],
+            self.after_listeners[event_type],
+            self.observers,
+        )
+        for listeners in listener_registries:
+            await self._run_handlers(listeners, event)
 
     def listen(self, event: Type[Event], callback: Callback) -> Listener:
         return self._register_listener(event, callback, self.listeners, self.stop)
