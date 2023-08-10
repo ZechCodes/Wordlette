@@ -37,7 +37,7 @@ class Listener:
         return self._callback()
 
     def stop(self):
-        self._stop(self.callback)
+        self._stop(self)
 
     def _setup_callback(self, callback) -> ref[Callback]:
         weak_type = WeakMethod if isinstance(callback, MethodType) else ref
