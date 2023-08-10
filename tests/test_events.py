@@ -2,7 +2,9 @@ import unittest.mock as mock
 
 import pytest
 
+from wordlette.events import Observable, Observer
 from wordlette.events.dispatch import EventDispatch
+from wordlette.events.events import Event
 
 
 @pytest.mark.asyncio
@@ -90,4 +92,32 @@ async def test_observable():
     observable.on(type(mock_event), mock_listener)
     await observable.emit(mock_event)
 
+    assert mock_listener.called is True
+
+
+@pytest.mark.asyncio
+async def test_observer_event_detection():
+    class ObserverType(Observer):
+        async def listener(self, event: Event):
+            ...
+
+    assert Event in ObserverType.__event_listeners__
+
+
+@pytest.mark.asyncio
+async def test_observer_listener():
+    class ObservableType(Observable):
+        pass
+
+    class ObserverType(Observer):
+        ...
+
+    mock_event, mock_listener = mock.Mock(), mock.AsyncMock()
+    ObserverType.__event_listeners__[type(mock_event)] = mock_listener
+
+    observable = ObservableType()
+    observer = ObserverType()
+    observer.observe(observable)
+
+    await observable.emit(mock_event)
     assert mock_listener.called is True
