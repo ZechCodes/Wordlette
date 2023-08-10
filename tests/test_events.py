@@ -66,3 +66,17 @@ async def test_event_listener_stop():
     await events.emit(mock_event)
 
     assert mock_listener.called is False
+
+
+@pytest.mark.asyncio
+async def test_observable():
+    mock_event, mock_listener = mock.Mock(), mock.AsyncMock()
+
+    class ObservableType(Observable):
+        pass
+
+    observable = ObservableType()
+    observable.on(type(mock_event), mock_listener)
+    await observable.emit(mock_event)
+
+    assert mock_listener.called is True
