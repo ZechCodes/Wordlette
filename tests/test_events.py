@@ -1,4 +1,5 @@
 import unittest.mock as mock
+from typing import cast
 
 import pytest
 
@@ -89,7 +90,7 @@ async def test_observable():
         pass
 
     observable = ObservableType()
-    observable.on(type(mock_event), mock_listener)
+    observable.on(cast(Event, type(mock_event)), mock_listener)
     await observable.emit(mock_event)
 
     assert mock_listener.called is True
