@@ -52,6 +52,10 @@ class EventDispatch:
         self.after_listeners: Registry = defaultdict(set)
         self.before_listeners: Registry = defaultdict(set)
         self.listeners: Registry = defaultdict(set)
+        self.observers: set[Callback] = set()
+
+    def observe(self, callback: Callback):
+        self.observers.add(callback)
 
     def after(self, event: Type[Event], callback: Callback) -> Listener:
         return self._register_listener(
@@ -66,6 +70,9 @@ class EventDispatch:
     async def emit(self, event: Event):
         for listeners in (self.before_listeners, self.listeners, self.after_listeners):
             await self._run_handlers(listeners[type(event)], event)
+
+        for observer in self.observers:
+            await observer(event)
 
     def listen(self, event: Type[Event], callback: Callback) -> Listener:
         return self._register_listener(event, callback, self.listeners, self.stop)

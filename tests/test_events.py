@@ -69,6 +69,17 @@ async def test_event_listener_stop():
 
 
 @pytest.mark.asyncio
+async def test_disptach_observers():
+    mock_event, mock_observer = mock.Mock(), mock.AsyncMock()
+
+    events = EventDispatch()
+    events.observe(mock_observer)
+    await events.emit(mock_event)
+
+    assert mock_observer.call_args.args[0] == mock_event
+
+
+@pytest.mark.asyncio
 async def test_observable():
     mock_event, mock_listener = mock.Mock(), mock.AsyncMock()
 
