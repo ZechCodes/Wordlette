@@ -150,7 +150,6 @@ class WordletteApp(Observable):
 
     def _update_repository(self):
         repo = get_repository()
-        repo.set(ConfigManager, self._config_manager)
         repo.set(WordletteApp, self)
 
     def _add_extension(self, name: str, extension: Extension):
