@@ -1,7 +1,16 @@
 import logging
 from functools import reduce
-from types import ModuleType
-from typing import TypeAlias, Callable, Awaitable, Sequence, Type, cast
+from typing import (
+    TypeAlias,
+    Callable,
+    Awaitable,
+    Sequence,
+    Type,
+    cast,
+    overload,
+    runtime_checkable,
+    Protocol,
+)
 
 from bevy import get_repository, dependency
 from starlette.responses import PlainTextResponse
