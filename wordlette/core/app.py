@@ -156,5 +156,4 @@ class WordletteApp(Observable):
         self._extensions[name] = extension
         get_repository().set(type(extension), extension)
         if isinstance(extension, Observer):
-            logger.debug(f"Added extension {name} of type {type(extension).__name__}")
             extension.observe(self)
