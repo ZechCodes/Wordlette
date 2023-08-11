@@ -40,9 +40,7 @@ class CallableProtocol(Protocol):
 
 
 def _create_config_manager():
-    from wordlette.configs.json_handlers import JsonHandler
-    from wordlette.configs.toml_handlers import TomlHandler
-    from wordlette.configs.yaml_handlers import YamlHandler
+    from wordlette.configs import JsonHandler, TomlHandler, YamlHandler
 
     manager = ConfigManager([JsonHandler])
     for handler in [TomlHandler, YamlHandler]:
