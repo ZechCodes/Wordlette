@@ -15,6 +15,9 @@ class Extension:
     def __iter__(self):
         yield from (self.name, self)
 
+    def __repr__(self):
+        return f"<Extension:{self.name}>"
+
 
 class PackageExtension(Extension):
     __slots__ = ("name", "package_import")
