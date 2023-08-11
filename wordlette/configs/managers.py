@@ -2,6 +2,7 @@ from pathlib import Path
 from typing import Type, Sequence, TypeVar, Any, Callable
 
 from wordlette.configs.handlers import ConfigHandler
+from wordlette.core.exceptions import ConfigFileNotFound
 
 T = TypeVar("T")
 
@@ -34,6 +35,11 @@ class ConfigManager:
 
     def load_config_file(self, name: str, directory: Path):
         path = self.find_config_file(name, directory)
+        if not path:
+            raise ConfigFileNotFound(
+                f"Could not find any config files that matched the naming scheme '{name}.*' in '{directory}'."
+            )
+
         handler = self._handlers[path.suffix[1:].casefold()]
         with path.open("rb") as open_file:
             self._config = handler.load(open_file)
