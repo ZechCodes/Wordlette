@@ -3,6 +3,7 @@ from asyncio import Queue
 from collections import defaultdict
 from typing import Coroutine, Generic, Type, TypeVar
 
+from wordlette.events import Observable
 from wordlette.maybe_awaitable import maybe_awaitable
 from wordlette.options import Option
 from wordlette.state_machines.predicates import always
@@ -24,7 +25,7 @@ class StoppedState(State[T]):
         return
 
 
-class StateMachine(Generic[T]):
+class StateMachine(Generic[T], Observable):
     def __init__(self, *states: Type[State] | Transition):
         self._states = self._build_state_graph(
             self._create_initial_state_transition(states[0]), *states
@@ -62,12 +63,19 @@ class StateMachine(Generic[T]):
                 await self._transition_stack.put(StoppedState())
 
             case Option.Value(constructor):
-                await self._transition_stack.put(constructor())
+                await self._transition_stack.put(self._construct_state(constructor))
 
     async def _enter_state(self):
         match await maybe_awaitable(self._current_state.enter_state()):
             case RequestCycle():
                 await self._queue_next_state()
+
+    def _construct_state(self, constructor: Type[State[T]]) -> State[T]:
+        state = constructor()
+        if isinstance(state, Observable):
+            state.__event_dispatch__.propagate_to(self.emit)
+
+        return state
 
     def _exit_state(self) -> Coroutine[None, None, None]:
         return self._current_state.exit_state()
