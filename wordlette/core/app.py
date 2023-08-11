@@ -118,7 +118,8 @@ class WordletteApp:
         get_repository().set(type(extension), extension)
 
     async def handle_lifespan(self, scope: Scope, receive: Receive, send: Send):
-        while True:
+        running = True
+        while running:
             match await receive():
                 case {"type": "lifespan.startup"}:
                     await self.events.emit(LifespanStartupEvent(scope))
@@ -127,7 +128,7 @@ class WordletteApp:
                 case {"type": "lifespan.shutdown"}:
                     await self.events.emit(LifespanShutdownEvent(scope))
                     await send({"type": "lifespan.shutdown.complete"})
-                    break
+                    running = False
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if not self._state_machine.started:
