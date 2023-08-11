@@ -120,7 +120,7 @@ class WordletteApp:
                     await send({"type": "lifespan.shutdown.complete"})
                     break
 
-    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+    async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if not self._state_machine.started:
             await self._state_machine.cycle()
 
