@@ -5,9 +5,12 @@ class EventMCS(type):
 
 class Event(metaclass=EventMCS):
     __event_count__: int
+    __event_name__: str
 
     def __init_subclass__(cls, **kwargs):
         cls.__event_count__ = 0
+        if not hasattr(cls, "__event_name__"):
+            cls.__event_name__ = cls.__name__
 
     def __new__(cls, *args, **kwargs):
         event_id, cls.__event_count__ = cls.__event_count__, cls.__event_count__ + 1
@@ -16,4 +19,4 @@ class Event(metaclass=EventMCS):
         return instance
 
     def __repr__(self):
-        return f"<{Event.__name__}:{self.__class__.__name__} {self.__event_count__}>"
+        return f"<Event:{self.__event_name__} {self.__event_count__}>"
