@@ -54,9 +54,6 @@ class EventDispatch:
         self.listeners: Registry = defaultdict(set)
         self.observers: set[Callback] = set()
 
-    def observe(self, callback: Callback):
-        self.observers.add(callback)
-
     def after(self, event: Type[Event], callback: Callback) -> Listener:
         return self._register_listener(
             event, callback, self.after_listeners, self.stop_after
@@ -80,6 +77,9 @@ class EventDispatch:
 
     def listen(self, event: Type[Event], callback: Callback) -> Listener:
         return self._register_listener(event, callback, self.listeners, self.stop)
+
+    def observe(self, callback: Callback):
+        self.observers.add(callback)
 
     def stop(self, event: Type[Event], callback: Callback):
         self._stop_listener(event, callback, self.listeners)
