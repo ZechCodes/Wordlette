@@ -61,6 +61,9 @@ class WordletteApp(Observable):
         self._middleware_stack: ASGIApp = self._build_middleware_stack(middleware)
         self._state_machine = state_machine
 
+        self._state_machine.__event_dispatch__.propagate_to(
+            self.__event_dispatch__.emit
+        )
         self._build_extensions(extensions)
 
     @overload
