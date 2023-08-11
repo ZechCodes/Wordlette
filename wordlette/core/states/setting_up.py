@@ -12,5 +12,6 @@ class SettingUp(State):
     ) -> RequestCycle | None:
         ...
 
-    async def needs_setup(self) -> bool:
+    @classmethod
+    async def needs_setup(cls) -> bool:
         return False
