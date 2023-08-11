@@ -13,6 +13,7 @@ from wordlette.core.events import (
     LifespanStartupEvent,
     LifespanShutdownEvent,
 )
+from wordlette.core.exceptions import InvalidExtensionOrConstructor
 from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
 from wordlette.state_machines import StateMachine
@@ -20,6 +21,12 @@ from wordlette.state_machines import StateMachine
 logger = getLogger(__name__)
 
 _MiddlewareConstructor: TypeAlias = Callable[[ASGIApp], Middleware] | Type[Middleware]
+
+
+@runtime_checkable
+class CallableProtocol(Protocol):
+    def __call__(self, *args, **kwargs):
+        ...
 
 
 def _create_config_manager():
@@ -61,8 +68,44 @@ class WordletteApp:
         self._middleware_stack: ASGIApp = self._build_middleware_stack(middleware)
         self._state_machine = state_machine
 
-    def add_extension(self, name: str, extension_module: ModuleType):
-        self._extensions[name] = extension_module
+    @overload
+    def add_extension(self, name: str, extension: Extension):
+        ...
+
+    @overload
+    def add_extension(self, name: str, extension_constructor: Callable[[], Extension]):
+        ...
+
+    @overload
+    def add_extension(self, extension_constructor: Callable[[], Extension]):
+        ...
+
+    @overload
+    def add_extension(self, extension: Extension):
+        ...
+
+    def add_extension(self, *args):
+        match args:
+            case (str() as name, Extension() as extension):
+                self._extensions[name] = extension
+
+            case (str() as name, CallableProtocol() as extension_constructor):
+                self._extensions[name] = extension = extension_constructor()
+
+            case (Extension(name) as extension,):
+                self._extensions[name] = extension
+
+            case (CallableProtocol() as extension_constructor,):
+                extension = extension_constructor()
+                self._extensions[extension.name] = extension
+
+            case _:
+                raise InvalidExtensionOrConstructor(
+                    "You must pass an extension or an extension constructor, got {args}. A valid constructor can be "
+                    "any type or callable that returns an extension object."
+                )
+
+        get_repository().set(type(extension), extension)
 
     async def handle_lifespan(self, _, receive: Receive, send: Send):
         while True:

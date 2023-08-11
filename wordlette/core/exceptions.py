@@ -4,3 +4,7 @@ class BaseWordletteException(Exception):
     pass
 
 
+class InvalidExtensionOrConstructor(BaseWordletteException):
+    """Raised when an invalid extension or constructor is given."""
+
+    pass
