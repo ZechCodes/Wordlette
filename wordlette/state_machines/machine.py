@@ -38,6 +38,10 @@ class StateMachine(Generic[T]):
         return self._current_state
 
     @property
+    def started(self) -> bool:
+        return not isinstance(self._current_state, InitialState)
+
+    @property
     def stopped(self) -> bool:
         return self._stopped
 
