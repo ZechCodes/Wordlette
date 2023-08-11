@@ -1,28 +1,18 @@
 from wordlette.app.app import WordletteApp
 from wordlette.configs.managers import ConfigManager
+from wordlette.middlewares.router_middleware import RouterMiddleware
 
 
 def app(*args, **kwargs) -> WordletteApp:
     from wordlette.state_machines import StateMachine
-    from wordlette.app.states import (
-        BootstrappingApp,
-        CreatingConfig,
-        ConnectingDB,
-        LoadCoreExtensions,
-        LoadingConfig,
-        ServingApp,
-    )
+    from wordlette.app.states import Starting, SettingUp, Serving
 
     return WordletteApp(
-        StateMachine(
-            BootstrappingApp.goes_to(LoadCoreExtensions),
-            LoadCoreExtensions.goes_to(LoadingConfig),
-            LoadingConfig.goes_to(ConnectingDB, when=ConnectingDB.has_database_config),
-            LoadingConfig.goes_to(CreatingConfig),
-            CreatingConfig.goes_to(ConnectingDB),
-            ConnectingDB.goes_to(ServingApp),
+        middleware=[RouterMiddleware],
+        state_machine=StateMachine(
+            Starting.goes_to(SettingUp, when=SettingUp.needs_setup),
+            Starting.goes_to(Serving),
         ),
-        config_manager=_create_config_manager(),
     )
 
 
