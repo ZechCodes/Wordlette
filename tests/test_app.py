@@ -3,8 +3,8 @@ from bevy import dependency, inject, get_repository
 from starlette.responses import PlainTextResponse
 from starlette.testclient import TestClient
 
-from wordlette.app import WordletteApp
-from wordlette.app.states import Starting
+from wordlette.core import WordletteApp
+from wordlette.core.states import Starting
 from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
 from wordlette.middlewares.router_middleware import RouteManager, RouterMiddleware
