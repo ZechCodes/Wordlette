@@ -8,12 +8,12 @@ from starlette.responses import PlainTextResponse
 from starlette.types import Receive, Send, Scope, Message, ASGIApp
 
 from wordlette.configs.managers import ConfigManager
-from wordlette.events import Event, EventDispatch
 from wordlette.core.events import (
     LifespanStartupEvent,
     LifespanShutdownEvent,
 )
 from wordlette.core.exceptions import InvalidExtensionOrConstructor
+from wordlette.events import EventDispatch
 from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
 from wordlette.state_machines import StateMachine
