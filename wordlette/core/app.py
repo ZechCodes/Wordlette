@@ -12,11 +12,10 @@ from typing import (
     Protocol,
 )
 
-from bevy import get_repository, dependency
+from bevy import get_repository
 from starlette.responses import PlainTextResponse
 from starlette.types import Receive, Send, Scope, Message, ASGIApp
 
-from wordlette.configs.managers import ConfigManager
 from wordlette.core.events import (
     LifespanStartupEvent,
     LifespanShutdownEvent,
@@ -39,17 +38,6 @@ class CallableProtocol(Protocol):
         ...
 
 
-def _create_config_manager():
-    from wordlette.configs import JsonHandler, TomlHandler, YamlHandler
-
-    manager = ConfigManager([JsonHandler])
-    for handler in [TomlHandler, YamlHandler]:
-        if handler.supported():
-            manager.add_handler(handler)
-
-    return manager
-
-
 class Sender:
     def __init__(self, send: Send):
         self.sent = False
@@ -61,18 +49,14 @@ class Sender:
 
 
 class WordletteApp:
-    events: EventDispatch = dependency()
-
     def __init__(
         self,
         *,
         extensions: Sequence[Callable[[], Extension]] = (),
         middleware: Sequence[_MiddlewareConstructor],
         state_machine: StateMachine,
-        config_manager: ConfigManager | None = None,
     ):
         self._update_repository()
-        self._config_manager = config_manager or _create_config_manager()
         self._extensions = self._build_extensions(extensions)
         self._middleware_stack: ASGIApp = self._build_middleware_stack(middleware)
         self._state_machine = state_machine
