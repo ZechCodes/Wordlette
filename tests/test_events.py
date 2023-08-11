@@ -122,3 +122,78 @@ async def test_observer_listener():
 
     await observable.emit(mock_event)
     assert mock_listener.called is True
+
+
+@pytest.mark.asyncio
+async def test_instance_to_type_emit_propagation():
+    class ObservableType(Observable):
+        pass
+
+    mock_listener, mock_event = mock.AsyncMock(), mock.Mock()
+    observable = ObservableType()
+
+    ObservableType.listen(type(mock_event), mock_listener)
+    await observable.emit(mock_event)
+
+    assert mock_listener.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_instance_to_super_type_emit_propagation():
+    class SuperObservableType(Observable):
+        pass
+
+    class ObservableType(SuperObservableType):
+        pass
+
+    mock_listener, mock_event = mock.AsyncMock(), mock.Mock()
+    observable = ObservableType()
+
+    SuperObservableType.listen(type(mock_event), mock_listener)
+    await observable.emit(mock_event)
+
+    assert mock_listener.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_type_to_instance_emit_propagation():
+    class ObservableType(Observable):
+        pass
+
+    mock_listener, mock_event = mock.AsyncMock(), mock.Mock()
+    observable = ObservableType()
+
+    observable.listen(type(mock_event), mock_listener)
+    await ObservableType.emit(mock_event)
+
+    assert mock_listener.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_super_type_to_instance_emit_propagation():
+    class SuperObservableType(Observable):
+        pass
+
+    class ObservableType(SuperObservableType):
+        pass
+
+    mock_listener, mock_event = mock.AsyncMock(), mock.Mock()
+    observable = ObservableType()
+
+    observable.listen(type(mock_event), mock_listener)
+    await SuperObservableType.emit(mock_event)
+
+    assert mock_listener.call_count == 1
+
+
+@pytest.mark.asyncio
+async def test_type_emit_listening():
+    class ObservableType(Observable):
+        pass
+
+    mock_listener, mock_event = mock.AsyncMock(), mock.Mock()
+
+    ObservableType.listen(type(mock_event), mock_listener)
+    await ObservableType.emit(mock_event)
+
+    assert mock_listener.call_count == 1
