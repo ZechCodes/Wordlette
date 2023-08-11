@@ -1,6 +1,6 @@
 from bevy import inject, dependency
 
-from wordlette.app import WordletteApp
+from wordlette.core import WordletteApp
 from wordlette.state_machines import State
 from wordlette.state_machines.states import RequestCycle
 
