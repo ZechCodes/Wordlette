@@ -72,6 +72,7 @@ class WordletteApp:
         config_manager: ConfigManager | None = None,
     ):
         self._update_repository()
+        self._config_manager = config_manager or _create_config_manager()
         self._extensions = self._build_extensions(extensions)
         self._middleware_stack: ASGIApp = self._build_middleware_stack(middleware)
         self._state_machine = state_machine
@@ -173,4 +174,6 @@ class WordletteApp:
         )
 
     def _update_repository(self):
-        get_repository().set(WordletteApp, self)
+        repo = get_repository()
+        repo.set(ConfigManager, self._config_manager)
+        repo.set(WordletteApp, self)
