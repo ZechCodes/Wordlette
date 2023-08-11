@@ -7,6 +7,7 @@ from bevy import get_repository, dependency
 from starlette.responses import PlainTextResponse
 from starlette.types import Receive, Send, Scope, Message, ASGIApp
 
+from wordlette.configs.managers import ConfigManager
 from wordlette.events import Event, EventDispatch
 from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
@@ -15,6 +16,19 @@ from wordlette.state_machines import StateMachine
 logger = getLogger(__name__)
 
 _MiddlewareConstructor: TypeAlias = Callable[[ASGIApp], Middleware] | Type[Middleware]
+
+
+def _create_config_manager():
+    from wordlette.configs.json_handlers import JsonHandler
+    from wordlette.configs.toml_handlers import TomlHandler
+    from wordlette.configs.yaml_handlers import YamlHandler
+
+    manager = ConfigManager([JsonHandler])
+    for handler in [TomlHandler, YamlHandler]:
+        if handler.supported():
+            manager.add_handler(handler)
+
+    return manager
 
 
 class StartupEvent(Event):
@@ -44,6 +58,7 @@ class WordletteApp:
         extensions: Sequence[Callable[[], Extension]] = (),
         middleware: Sequence[_MiddlewareConstructor],
         state_machine: StateMachine,
+        config_manager: ConfigManager | None = None,
     ):
         self._update_repository()
         self._extensions = self._build_extensions(extensions)
