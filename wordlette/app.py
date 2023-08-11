@@ -1,3 +1,4 @@
+from wordlette.configs.extensions import Config
 from wordlette.core import WordletteApp
 from wordlette.core.states import SettingUp, Starting, Serving
 from wordlette.middlewares.router_middleware import RouterMiddleware
@@ -9,4 +10,5 @@ app = WordletteApp(
         Starting.goes_to(SettingUp, when=SettingUp.needs_setup),
         Starting.goes_to(Serving),
     ),
+    extensions=[Config],
 )
