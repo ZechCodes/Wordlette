@@ -107,11 +107,11 @@ class WordletteApp(Observable):
         while running:
             match await receive():
                 case {"type": "lifespan.startup"}:
-                    await self.events.emit(LifespanStartupEvent(scope))
+                    await self.emit(LifespanStartupEvent(scope))
                     await send({"type": "lifespan.startup.complete"})
 
                 case {"type": "lifespan.shutdown"}:
-                    await self.events.emit(LifespanShutdownEvent(scope))
+                    await self.emit(LifespanShutdownEvent(scope))
                     await send({"type": "lifespan.shutdown.complete"})
                     running = False
 
