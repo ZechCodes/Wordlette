@@ -9,6 +9,10 @@ from starlette.types import Receive, Send, Scope, Message, ASGIApp
 
 from wordlette.configs.managers import ConfigManager
 from wordlette.events import Event, EventDispatch
+from wordlette.core.events import (
+    LifespanStartupEvent,
+    LifespanShutdownEvent,
+)
 from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
 from wordlette.state_machines import StateMachine
@@ -29,14 +33,6 @@ def _create_config_manager():
             manager.add_handler(handler)
 
     return manager
-
-
-class StartupEvent(Event):
-    ...
-
-
-class ShutdownEvent(Event):
-    ...
 
 
 class Sender:
@@ -72,11 +68,11 @@ class WordletteApp:
         while True:
             match await receive():
                 case {"type": "lifespan.startup"}:
-                    await self.events.emit(StartupEvent())
+                    await self.events.emit(LifespanStartupEvent(scope))
                     await send({"type": "lifespan.startup.complete"})
 
                 case {"type": "lifespan.shutdown"}:
-                    await self.events.emit(ShutdownEvent())
+                    await self.events.emit(LifespanShutdownEvent(scope))
                     await send({"type": "lifespan.shutdown.complete"})
                     break
 
