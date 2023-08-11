@@ -90,7 +90,7 @@ async def test_observable():
         pass
 
     observable = ObservableType()
-    observable.on(cast(Event, type(mock_event)), mock_listener)
+    observable.listen(cast(Event, type(mock_event)), mock_listener)
     await observable.emit(mock_event)
 
     assert mock_listener.called is True
