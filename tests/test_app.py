@@ -4,16 +4,27 @@ from starlette.responses import PlainTextResponse
 from starlette.testclient import TestClient
 
 from wordlette.app import WordletteApp
+from wordlette.app.states import Starting
 from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
-from wordlette.middlewares.state_router import StateRouterMiddleware, RouteManager
+from wordlette.middlewares.router_middleware import RouteManager, RouterMiddleware
 from wordlette.requests import Request
 from wordlette.routes import Route
 from wordlette.state_machines import State, StateMachine
 
 
 def test_empty_app():
-    app = WordletteApp()
+    class TestMiddleware(Middleware):
+        def run(self, scope, receive, send):
+            return self.next()
+
+    class TestState(State):
+        async def enter_state(self):
+            return
+
+    app = WordletteApp(
+        middleware=[TestMiddleware], state_machine=StateMachine(TestState)
+    )
     response = TestClient(app).get("/")
     assert response.status_code == 500
 
@@ -21,11 +32,12 @@ def test_empty_app():
 def test_custom_middleware():
     class TestMiddleware(Middleware):
         async def run(self, scope, receive, send):
-            await send({"type": "http.response.start", "status": 200})
-            await send({"type": "http.response.body", "body": b"Hello, world!"})
+            await PlainTextResponse("Hello, world!")(scope, receive, send)
             await self.next()
 
-    app = WordletteApp(middleware=[TestMiddleware])
+    app = WordletteApp(
+        middleware=[TestMiddleware], state_machine=StateMachine(Starting)
+    )
     response = TestClient(app).get("/")
     assert response.status_code == 200
     assert response.text == "Hello, world!"
@@ -36,11 +48,13 @@ def test_custom_extension():
         def __init__(self):
             self.test = "test"
 
-    _ = WordletteApp(extensions=[TestExtension])
+    _ = WordletteApp(
+        extensions=[TestExtension], middleware=[], state_machine=StateMachine(Starting)
+    )
     assert get_repository().find(TestExtension).value.test == "test"
 
 
-def test_app_with_state_router_and_routes():
+def test_app_with_router_and_routes():
     class Index(Route):
         path = "/"
 
@@ -56,17 +70,11 @@ def test_app_with_state_router_and_routes():
         async def post(self, _: Request.Post):
             return PlainTextResponse("Test page post")
 
-    class SetupRouterState(State):
-        @inject
-        async def enter_state(self, route_manager: RouteManager = dependency()):
-            route_manager.create_router(Index, TestPage)
+    app = WordletteApp(
+        middleware=[RouterMiddleware], state_machine=StateMachine(Starting)
+    )
+    get_repository().get(RouteManager).create_router(Index, TestPage)
 
-    def create_router_middleware(call_next):
-        return StateRouterMiddleware(
-            call_next, statemachine=StateMachine(SetupRouterState)
-        )
-
-    app = WordletteApp(middleware=[create_router_middleware])
     response = TestClient(app).get("/")
     assert response.status_code == 200
     assert response.text == "Hello, world!"
@@ -81,7 +89,7 @@ def test_app_with_state_router_and_routes():
 
 
 @pytest.mark.asyncio
-async def test_app_router_states_cycle():
+async def test_app_states_cycle():
     class RouteA(Route):
         path = "/a"
 
@@ -94,22 +102,19 @@ async def test_app_router_states_cycle():
         async def get(self, _: Request.Get):
             return PlainTextResponse("RouteB")
 
-    class RouterStateA(State):
+    class StateA(State):
         @inject
         async def enter_state(self, route_manager: RouteManager = dependency()):
             route_manager.create_router(RouteA)
 
-    class RouterStateB(State):
+    class StateB(State):
         @inject
         async def enter_state(self, route_manager: RouteManager = dependency()):
             route_manager.create_router(RouteB)
 
-    statemachine = StateMachine(RouterStateA.goes_to(RouterStateB))
+    statemachine = StateMachine(StateA.goes_to(StateB))
 
-    def create_router_middleware(call_next):
-        return StateRouterMiddleware(call_next, statemachine=statemachine)
-
-    app = WordletteApp(middleware=[create_router_middleware])
+    app = WordletteApp(middleware=[RouterMiddleware], state_machine=statemachine)
     response = TestClient(app).get("/a")
     assert response.status_code == 200
     assert response.text == "RouteA"
