@@ -30,7 +30,7 @@ class Transition:
 
 class StateABCMeta(ABCMeta):
     def __repr__(cls):
-        return f"<Class:State:{cls.__name__}>"
+        return f"<class State:{cls.__name__}>"
 
 
 class State(Generic[_T], metaclass=StateABCMeta):
