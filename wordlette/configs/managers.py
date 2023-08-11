@@ -1,9 +1,12 @@
+import logging
 from pathlib import Path
 from typing import Type, Sequence, TypeVar, Any, Callable
 
 from wordlette.configs.handlers import ConfigHandler
 from wordlette.core.exceptions import ConfigFileNotFound
 
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("Config")
 T = TypeVar("T")
 
 
@@ -43,6 +46,8 @@ class ConfigManager:
         handler = self._handlers[path.suffix[1:].casefold()]
         with path.open("rb") as open_file:
             self._config = handler.load(open_file)
+
+        logger.debug(f"Loaded config file '{path}'.")
 
     def write_config_file(self, name: str, directory: Path, data: T):
         if path := self.find_config_file(name, directory):
