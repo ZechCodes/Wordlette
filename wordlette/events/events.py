@@ -1,4 +1,9 @@
-class Event:
+class EventMCS(type):
+    def __repr__(self):
+        return f"<class Event:{self.__name__}>"
+
+
+class Event(metaclass=EventMCS):
     __event_count__: int
 
     def __init_subclass__(cls, **kwargs):
