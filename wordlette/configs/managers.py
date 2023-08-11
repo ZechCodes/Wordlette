@@ -6,16 +6,10 @@ from wordlette.configs.handlers import ConfigHandler
 T = TypeVar("T")
 
 
-class Config:
-    def __init__(self, path: Path, data: dict[str, Any]):
-        self.path = path
-        self.data = data
-
-
 class ConfigManager:
     def __init__(self, handlers: Sequence[Type[ConfigHandler]] = ()):
         self._handlers: dict[str, ConfigHandler] = {}
-        self._config: Config | None = None
+        self._config: dict[str, Any] = {}
 
         self._register_handlers(handlers)
 
@@ -26,16 +20,13 @@ class ConfigManager:
     def get(
         self, key: str = "", constructor: Callable[[dict[str, Any]], T] | None = None
     ) -> T | Any:
-        value = self._config.data[key] if key else self._config.data
+        value = self._config[key] if key else self._config
         if constructor:
-            value = constructor(value)
+            value = constructor(**value)
 
         return value
 
     def find_config_file(self, name: str, directory: Path) -> Path | None:
-        if self._config is not None:
-            return self._config.path
-
         for extension in self._handlers:
             path = directory / f"{name}.{extension}"
             if path.exists():
@@ -46,7 +37,7 @@ class ConfigManager:
             file = directory / f"{name}.{extension}"
             if file.exists():
                 with file.open("rb") as open_file:
-                    self._config = Config(file, handler.load(open_file))
+                    self._config = handler.load(open_file)
 
     def write_config_file(self, name: str, directory: Path, data: T):
         if path := self.find_config_file(name, directory):
@@ -56,7 +47,7 @@ class ConfigManager:
             handler = self._handlers[extension]
             path = directory / f"{name}.{extension}"
 
-        self._config = Config(path, data)
+        self._config = data
         with path.open("wb") as open_file:
             handler.write(data, open_file)
 
