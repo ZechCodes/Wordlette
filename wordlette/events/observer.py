@@ -1,5 +1,5 @@
 from types import MethodType
-from typing import Type
+from typing import Type, get_origin, get_args, Union, Any
 
 from wordlette.events import Observable
 from wordlette.events.dispatch import Callback
@@ -14,18 +14,21 @@ def _unwrap(func):
     return func
 
 
-def _get_first_arg_type(func):
+def _get_first_arg_types(func) -> tuple[Type[Any], ...]:
     if not hasattr(func, "__annotations__"):
-        return None
+        return ()
 
     if isinstance(func, MethodType):
-        return None
+        return ()
 
     annotations = list(func.__annotations__.values())
     if len(annotations) < 1:
-        return None
+        return ()
 
-    return annotations[0]
+    if get_origin(annotations[0]) is Union:
+        return get_args(annotations[0])
+
+    return (annotations[0],)
 
 
 class Observer(Dispatchable):
@@ -47,9 +50,10 @@ class Observer(Dispatchable):
         for name in dir(cls):
             if not name.startswith("_"):
                 func = getattr(cls, name)
-                arg_type = _get_first_arg_type(_unwrap(func))
-                if arg_type and issubclass(arg_type, Event):
-                    cls.__event_listeners__[arg_type] = func
+                arg_types = _get_first_arg_types(_unwrap(func))
+                for arg_type in arg_types:
+                    if isinstance(arg_type, type) and issubclass(arg_type, Event):
+                        cls.__event_listeners__[arg_type] = func
 
-    def observe(self, observable: Observable):
+    def observe(self, observable: Observable | Type[Observable]):
         observable.__event_dispatch__.observe(self.__event_dispatch__.emit)
