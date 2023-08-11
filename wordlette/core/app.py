@@ -120,7 +120,11 @@ class WordletteApp(Observable):
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
         if not self._state_machine.started:
-            await self._state_machine.cycle()
+            try:
+                await self._state_machine.cycle()
+            except Exception as e:
+                logger.exception("Error while starting state machine", exc_info=True)
+                raise e
 
         match scope:
             case {"type": "lifespan"}:
