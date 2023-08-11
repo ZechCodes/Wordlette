@@ -57,9 +57,11 @@ class WordletteApp(Observable):
         state_machine: StateMachine,
     ):
         self._update_repository()
-        self._extensions = self._build_extensions(extensions)
+        self._extensions: dict[str, Extension] = {}
         self._middleware_stack: ASGIApp = self._build_middleware_stack(middleware)
         self._state_machine = state_machine
+
+        self._build_extensions(extensions)
 
     @overload
     def add_extension(self, name: str, extension: Extension):
@@ -80,17 +82,17 @@ class WordletteApp(Observable):
     def add_extension(self, *args):
         match args:
             case (str() as name, Extension() as extension):
-                self._extensions[name] = extension
+                pass
 
             case (str() as name, CallableProtocol() as extension_constructor):
-                self._extensions[name] = extension = extension_constructor()
+                extension = extension_constructor()
 
             case (Extension(name) as extension,):
-                self._extensions[name] = extension
+                pass
 
             case (CallableProtocol() as extension_constructor,):
                 extension = extension_constructor()
-                self._extensions[extension.name] = extension
+                name = extension.name
 
             case _:
                 raise InvalidExtensionOrConstructor(
@@ -98,7 +100,7 @@ class WordletteApp(Observable):
                     "any type or callable that returns an extension object."
                 )
 
-        get_repository().set(type(extension), extension)
+        self._add_extension(name, extension)
 
     async def handle_lifespan(self, scope: Scope, receive: Receive, send: Send):
         running = True
@@ -133,19 +135,8 @@ class WordletteApp(Observable):
         )
 
     def _build_extensions(self, extension_constructors):
-        def create(extension_constructor):
-            match extension_constructor:
-                case type():
-                    return get_repository().get(extension_constructor)
-
-                case _:
-                    extension = extension_constructor()
-                    get_repository().set(type(extension), extension)
-                    return extension
-
-        return {
-            name: extension for name, extension in map(create, extension_constructors)
-        }
+        for extension_constructor in extension_constructors:
+            self.add_extension(extension_constructor)
 
     def _build_middleware_stack(self, middleware_constructors) -> ASGIApp:
         def middleware_factory(previous, current) -> ASGIApp:
@@ -161,3 +152,10 @@ class WordletteApp(Observable):
         repo = get_repository()
         repo.set(ConfigManager, self._config_manager)
         repo.set(WordletteApp, self)
+
+    def _add_extension(self, name: str, extension: Extension):
+        self._extensions[name] = extension
+        get_repository().set(type(extension), extension)
+        if isinstance(extension, Observer):
+            logger.debug(f"Added extension {name} of type {type(extension).__name__}")
+            extension.observe(self)
