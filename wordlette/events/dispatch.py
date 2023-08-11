@@ -48,6 +48,9 @@ class Listener:
 
 
 class EventDispatch:
+    """Dispatches events to listeners by type. All events can also be forwarded to an observer. There is support for
+    applying listeners that run before or after the standard event listeners."""
+
     def __init__(self):
         self.after_listeners: Registry = defaultdict(set)
         self.before_listeners: Registry = defaultdict(set)
@@ -55,16 +58,19 @@ class EventDispatch:
         self.observers: set[Callback] = set()
 
     def after(self, event: Type[Event], callback: Callback) -> Listener:
+        """Registers an event listener that runs after the standard event listeners."""
         return self._register_listener(
             event, callback, self.after_listeners, self.stop_after
         )
 
     def before(self, event: Type[Event], callback: Callback) -> Listener:
+        """Registers an event listener that runs before the standard event listeners."""
         return self._register_listener(
             event, callback, self.before_listeners, self.stop_before
         )
 
     async def emit(self, event: Event):
+        """Emits an event to all listeners and observers."""
         event_type = type(event)
         listener_registries = (
             self.before_listeners[event_type],
@@ -76,18 +82,23 @@ class EventDispatch:
             await self._run_handlers(listeners, event)
 
     def listen(self, event: Type[Event], callback: Callback) -> Listener:
+        """Registers an event listener."""
         return self._register_listener(event, callback, self.listeners, self.stop)
 
     def observe(self, callback: Callback):
+        """Adds an observer that will receive all events."""
         self.observers.add(callback)
 
     def stop(self, event: Type[Event], callback: Callback):
+        """Stops an event listener."""
         self._stop_listener(event, callback, self.listeners)
 
     def stop_after(self, event: Type[Event], callback: Callback):
+        """Stops an event listener that runs after the standard event listeners."""
         self._stop_listener(event, callback, self.after_listeners)
 
     def stop_before(self, event: Type[Event], callback: Callback):
+        """Stops an event listener that runs before the standard event listeners."""
         self._stop_listener(event, callback, self.before_listeners)
 
     def _register_listener(
