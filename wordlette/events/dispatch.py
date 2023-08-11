@@ -85,7 +85,7 @@ class EventDispatch:
         """Registers an event listener."""
         return self._register_listener(event, callback, self.listeners, self.stop)
 
-    def observe(self, callback: Callback):
+    def propagate_to(self, callback: Callback):
         """Adds an observer that will receive all events."""
         self.observers.add(callback)
 

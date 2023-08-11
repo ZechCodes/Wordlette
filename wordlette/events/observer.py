@@ -56,4 +56,4 @@ class Observer(Dispatchable):
                         cls.__event_listeners__[arg_type] = func
 
     def observe(self, observable: Observable | Type[Observable]):
-        observable.__event_dispatch__.observe(self.__event_dispatch__.emit)
+        observable.__event_dispatch__.propagate_to(self.__event_dispatch__.emit)
