@@ -33,11 +33,10 @@ class ConfigManager:
                 return path
 
     def load_config_file(self, name: str, directory: Path):
-        for extension, handler in self._handlers.items():
-            file = directory / f"{name}.{extension}"
-            if file.exists():
-                with file.open("rb") as open_file:
-                    self._config = handler.load(open_file)
+        path = self.find_config_file(name, directory)
+        handler = self._handlers[path.suffix[1:].casefold()]
+        with path.open("rb") as open_file:
+            self._config = handler.load(open_file)
 
     def write_config_file(self, name: str, directory: Path, data: T):
         if path := self.find_config_file(name, directory):
