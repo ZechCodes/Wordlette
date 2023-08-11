@@ -21,7 +21,7 @@ from wordlette.core.events import (
     LifespanShutdownEvent,
 )
 from wordlette.core.exceptions import InvalidExtensionOrConstructor
-from wordlette.events import EventDispatch
+from wordlette.events import Observer, Observable
 from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
 from wordlette.state_machines import StateMachine
@@ -48,7 +48,7 @@ class Sender:
         return self.send(message)
 
 
-class WordletteApp:
+class WordletteApp(Observable):
     def __init__(
         self,
         *,
