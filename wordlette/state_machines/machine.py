@@ -3,6 +3,7 @@ from asyncio import Queue
 from collections import defaultdict
 from typing import Coroutine, Generic, Type, TypeVar
 
+from wordlette.maybe_awaitable import maybe_awaitable
 from wordlette.options import Option
 from wordlette.state_machines.predicates import always
 from wordlette.state_machines.states import (
@@ -64,7 +65,7 @@ class StateMachine(Generic[T]):
                 await self._transition_stack.put(constructor())
 
     async def _enter_state(self):
-        match await self._current_state.enter_state():
+        match await maybe_awaitable(self._current_state.enter_state()):
             case RequestCycle():
                 await self._queue_next_state()
 
