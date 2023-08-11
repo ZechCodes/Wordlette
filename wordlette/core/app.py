@@ -131,7 +131,11 @@ class WordletteApp(Observable):
                 await self.handle_lifespan(scope, receive, send)
 
             case _:
-                await self._middleware_stack(scope, receive, Sender(send))
+                try:
+                    await self._middleware_stack(scope, receive, Sender(send))
+                except Exception as e:
+                    logger.exception("Error in middleware stack", exc_info=True)
+                    raise e
 
     async def _500_response(self, scope: Scope, receive: Receive, send: Sender):
         if send.sent:
