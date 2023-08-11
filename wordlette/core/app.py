@@ -1,5 +1,5 @@
+import logging
 from functools import reduce
-from logging import getLogger
 from types import ModuleType
 from typing import TypeAlias, Callable, Awaitable, Sequence, Type, cast
 
@@ -18,7 +18,8 @@ from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
 from wordlette.state_machines import StateMachine
 
-logger = getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger("App")
 
 _MiddlewareConstructor: TypeAlias = Callable[[ASGIApp], Middleware] | Type[Middleware]
 
