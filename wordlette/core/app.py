@@ -108,7 +108,7 @@ class WordletteApp:
 
         get_repository().set(type(extension), extension)
 
-    async def handle_lifespan(self, _, receive: Receive, send: Send):
+    async def handle_lifespan(self, scope: Scope, receive: Receive, send: Send):
         while True:
             match await receive():
                 case {"type": "lifespan.startup"}:
