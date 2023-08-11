@@ -3,59 +3,42 @@ from bevy import get_repository
 from starlette.responses import PlainTextResponse
 from starlette.testclient import TestClient
 
-from wordlette.app.app import StartupEvent
-from wordlette.events import EventManager
-from wordlette.middlewares.state_router import StateRouterMiddleware, RouteManager
-from wordlette.state_machines import StateMachine, State
+from wordlette.middlewares.router_middleware import RouteManager, RouterMiddleware
+from wordlette.requests import Request
+from wordlette.routes import Route
 
 
 @pytest.mark.asyncio
-async def test_router_is_set():
+async def test_router():
     repo = get_repository()
     repo.set(RouteManager, router := RouteManager())
-    repo.set(EventManager, events := EventManager())
-
-    class TestState(State):
-        async def enter_state(self):
-            router.router.add_route("/", PlainTextResponse("Test", status_code=200))
 
     async def dummy(*args, **kwargs):
         ...
 
-    app = StateRouterMiddleware(dummy, statemachine=StateMachine(TestState))
-    await events.emit(StartupEvent())
+    app = RouterMiddleware(dummy)
+    router.router.add_route("/", PlainTextResponse("Test", status_code=200))
     response = TestClient(app).get("/")
     assert response.status_code == 200
     assert response.text == "Test"
 
 
 @pytest.mark.asyncio
-async def test_router_cycle():
+async def test_router_with_route():
     repo = get_repository()
     repo.set(RouteManager, router := RouteManager())
-    repo.set(EventManager, events := EventManager())
-
-    class TestStateA(State):
-        async def enter_state(self):
-            router.router.add_route("/", PlainTextResponse("TestA", status_code=200))
-
-    class TestStateB(State):
-        async def enter_state(self):
-            router.create_router()
-            router.router.add_route("/", PlainTextResponse("TestB", status_code=200))
 
     async def dummy(*args, **kwargs):
         ...
 
-    app = StateRouterMiddleware(
-        dummy, statemachine=StateMachine(TestStateA.goes_to(TestStateB))
-    )
-    await events.emit(StartupEvent())
+    class TestRoute(Route):
+        path = "/"
 
+        async def index_get(self, request: Request.Get):
+            return PlainTextResponse("Test", status_code=200)
+
+    app = RouterMiddleware(dummy)
+    router.create_router(TestRoute)
     response = TestClient(app).get("/")
-    assert response.text == "TestA"
-
-    await app.statemachine.cycle()
-
-    response = TestClient(app).get("/")
-    assert response.text == "TestB"
+    assert response.status_code == 200
+    assert response.text == "Test"
