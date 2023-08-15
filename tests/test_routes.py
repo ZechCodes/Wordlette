@@ -24,7 +24,7 @@ def test_route_exception_handler_detection():
         async def handle_value_error(self, error: ValueError):
             pass
 
-    assert TestRoute.error_handlers == {
+    assert TestRoute.__route_meta__["error_handlers"] == {
         Exception: TestRoute.handle_exception,
         ValueError: TestRoute.handle_value_error,
     }
@@ -38,7 +38,7 @@ def test_route_request_type_handler_detection():
         async def handle_post_request(self, request: Request.Post):
             pass
 
-    assert TestRoute.request_handlers == {
+    assert TestRoute.__route_meta__["request_handlers"] == {
         Request.Get: TestRoute.handle_get_request,
         Request.Post: TestRoute.handle_post_request,
     }
@@ -49,7 +49,7 @@ def test_route_union_type_handler_detection():
         async def handle_request(self, request: Request.Get | Request.Post):
             pass
 
-    assert TestRoute.request_handlers == {
+    assert TestRoute.__route_meta__["request_handlers"] == {
         Request.Get: TestRoute.handle_request,
         Request.Post: TestRoute.handle_request,
     }
@@ -127,7 +127,7 @@ def test_route_exception_handling_sub_types():
 
     client = TestClient(TestRoute())
     with raises(Exception):
-        response = client.get("/")
+        _ = client.get("/")
 
 
 def test_missing_route_path():
