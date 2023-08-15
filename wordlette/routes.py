@@ -103,7 +103,8 @@ class Route(Generic[RequestType]):
     path: str
 
     def __init_subclass__(cls, **kwargs):
-        """Scan the subclass for request and error handlers. Also verify that the subclass has a path attribute."""
+        """Setup the route class building the route meta, scanning for request & error handlers, and ensuring that
+        concrete routes have a path and route handlers."""
         meta = cls._build_route_meta(kwargs)
 
         meta.setdefault("request_handlers", {})
