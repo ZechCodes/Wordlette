@@ -48,8 +48,8 @@ class ExceptionHandlerContext:
         return self
 
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        self.handler = self._find_error_handler(exc_type)
-        if self.handler:
+        if handler := self._find_error_handler(exc_type):
+            self.handler = handler
             self.exception = exc_type(exc_val)
             self.exception.with_traceback(exc_tb)
             return True
