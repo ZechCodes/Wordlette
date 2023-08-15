@@ -198,15 +198,15 @@ class Route(Generic[RequestType]):
     @classmethod
     def _build_route_meta(cls, meta_params: dict[str, Any]) -> ChainMap[str, Any]:
         pipeline = Pipeline[ChainMap[str, Any]](
-            cls._setup_meta_route_object,
-            Pipeline.with_params(cls._load_meta_route_params, meta_params),
             ChainMap.new_child,
+            cls._setup_route_meta_object,
+            Pipeline.with_params(cls._load_route_meta_params, meta_params),
         )
         cls.__route_meta__ = pipeline.run(cls.__route_meta__)
         return cls.__route_meta__
 
     @classmethod
-    def _setup_meta_route_object(
+    def _setup_route_meta_object(
         cls, route_meta: ChainMap[str, Any]
     ) -> ChainMap[str, Any]:
         if not hasattr(cls.RouteMeta, "__route__"):
@@ -221,7 +221,7 @@ class Route(Generic[RequestType]):
         return route_meta.new_child(cast(MutableMapping, ObjectProxyMap(cls.RouteMeta)))
 
     @classmethod
-    def _load_meta_route_params(
+    def _load_route_meta_params(
         cls, route_meta: ChainMap[str, Any], meta_params: dict[str, Any]
     ) -> ChainMap[str, Any]:
         return route_meta.new_child(meta_params)
