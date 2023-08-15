@@ -1,5 +1,4 @@
 import inspect
-from collections import ChainMap
 from types import MethodType, UnionType
 from typing import (
     Type,
@@ -8,15 +7,13 @@ from typing import (
     Generic,
     Any,
     cast,
-    MutableMapping,
     get_args,
+    Callable,
 )
 
 from starlette.types import Scope, Receive, Send
 
-from wordlette.object_proxy_map import ObjectProxyMap
 from wordlette.options import Option
-from wordlette.pipeline import Pipeline
 from wordlette.requests import Request
 
 P = ParamSpec("P")
@@ -36,8 +33,6 @@ class ExceptionHandlerContext:
     """When an exception occurs in a route, the exception handler context finds a matching handler on the route. If no
     handler is found the exception will be allowed to propagate. Calling the context object after it has found a handler
     runs the handler and its response, sending the response to the client."""
-
-    path: str  # The path that the route should be mounted at.
 
     def __init__(self, route: "Route"):
         self.route = route
@@ -62,9 +57,16 @@ class ExceptionHandlerContext:
         await response(scope, receive, send)
 
     def _find_error_handler(self, exception_type: Type[Exception]):
-        for error_type, handler in self.route.__route_meta__["error_handlers"].items():
+        for error_type, handler in self.route.__metadata__.error_handlers.items():
             if exception_type is error_type or issubclass(exception_type, error_type):
                 return handler
+
+
+class RouteMetadata:
+    abstract: bool
+    registry: "set[Type[Route]]"
+    error_handlers: dict[Type[Exception], Callable[[Exception], Any]]
+    request_handlers: dict[Type[Request], Callable[[Request], Any]]
 
 
 class Route(Generic[RequestType]):
@@ -89,47 +91,22 @@ class Route(Generic[RequestType]):
     ```
     """
 
-    class RouteMeta:
-        abstract: True
-        registry: "set[Type[Route]]" = set()
-        __route__ = None
+    class __metadata__(RouteMetadata):
+        abstract = True
+        registry = set()
 
-    __route_meta__: ChainMap[str, Any] = ChainMap(
-        cast(MutableMapping, ObjectProxyMap(RouteMeta))
-    )
     methods: tuple[str]
     name: str
-
     path: str
 
     def __init_subclass__(cls, **kwargs):
         """Setup the route class building the route meta, scanning for request & error handlers, and ensuring that
         concrete routes have a path and route handlers."""
-        meta = cls.__route_meta__ = cls._build_route_meta(kwargs)
-
-        if not cls.__route_meta__["abstract"]:
-            cls._find_and_register_handlers()
-
-            cls.__route_meta__["registry"].add(cls)
-
-            if not hasattr(cls, "name"):
-                cls.name = cls.__qualname__.casefold()
-
-            cls.methods = cast(
-                tuple[str],
-                tuple(
-                    handler.name for handler in cls.__route_meta__["request_handlers"]
-                ),
-            )
-            if not hasattr(cls, "path"):
-                raise MissingRoutePath(
-                    f"Route subclass {cls.__qualname__} is missing a path attribute."
-                )
-
-            if not cls.methods:
-                raise NoRouteHandlersFound(
-                    f"Route subclass {cls.__qualname__} has no request handlers."
-                )
+        cls._setup_metadata()
+        cls._setup_route()
+        cls._scan_for_handlers()
+        cls._validate_route_object()
+        cls._register_route()
 
     async def __call__(self, scope, receive, send):
         """Handle a request, calling the appropriate handler function and capturing any handleable exceptions."""
@@ -141,37 +118,15 @@ class Route(Generic[RequestType]):
 
     async def _handle(self, scope: Scope, receive: Receive, send: Send):
         request = Request.factory(scope)
-        if type(request) not in self.__route_meta__["request_handlers"]:
+        if type(request) not in self.__metadata__.request_handlers:
             raise Exception(
                 f"Request type {type(request)} not handled by {self.__class__.__qualname__}"
             )
 
-        response = await self.__route_meta__["request_handlers"][type(request)](
+        response = await self.__metadata__.request_handlers[type(request)](
             self, request
         )
         await response(scope, receive, send)
-
-    @classmethod
-    def _get_functions(cls):
-        for name, attr in vars(cls).items():
-            if (
-                callable(attr)
-                and not isinstance(attr, MethodType)
-                and not name.startswith("_")
-            ):
-                yield attr
-
-    @classmethod
-    def _register_handlers(cls, function, *handler_types):
-        if all(issubclass(handler, Request) for handler in handler_types):
-            cls._add_handlers(
-                function, handler_types, cls.__route_meta__["request_handlers"]
-            )
-
-        elif all(issubclass(handler, Exception) for handler in handler_types):
-            cls._add_handlers(
-                function, handler_types, cls.__route_meta__["error_handlers"]
-            )
 
     @classmethod
     def _add_handlers(cls, function, handler_types, container):
@@ -179,76 +134,131 @@ class Route(Generic[RequestType]):
             container[handler_type] = function
 
     @classmethod
-    def get_handler_type(cls, function):
-        arg_spec = inspect.getfullargspec(cls._unwrap(function))
-        arg_type = (
-            arg_spec.annotations.get(arg_spec.args[1])
-            if len(arg_spec.args) > 1
-            else None
-        )
-        return Option.Value(arg_type) if arg_type else Option.Null()
-
-    @staticmethod
-    def _unwrap(function):
-        while hasattr(function, "__wrapped__"):
-            function = function.__wrapped__
-
-        return function
+    def _create_new_metadata_object(cls):
+        super_route = get_super_route(cls)
+        cls.__metadata__ = create_metadata_type(super_route.__metadata__)
+        cls.__metadata__.abstract = False
+        cls.__metadata__.request_handlers = {}
+        cls.__metadata__.error_handlers = {}
 
     @classmethod
-    def _build_route_meta(cls, meta_params: dict[str, Any]) -> ChainMap[str, Any]:
-        pipeline = Pipeline[ChainMap[str, Any]](
-            cls._setup_route_meta_object,
-            Pipeline.with_params(cls._load_route_meta_params, meta_params),
-            Pipeline.with_params(cls._setup_route_meta, meta_params),
-        )
-        return pipeline.run(cls.__route_meta__)
+    def _register_handlers(cls, function, *handler_types):
+        if all(issubclass(handler, Request) for handler in handler_types):
+            cls._add_handlers(
+                function, handler_types, cls.__metadata__.request_handlers
+            )
+
+        elif all(issubclass(handler, Exception) for handler in handler_types):
+            cls._add_handlers(function, handler_types, cls.__metadata__.error_handlers)
 
     @classmethod
-    def _setup_route_meta(
-        cls, route_meta: ChainMap[str, Any], meta_params: dict[str, Any]
-    ) -> ChainMap[str, Any]:
-        meta = route_meta.new_child()
-        if "request_handlers" not in meta_params and not hasattr(
-            cls.RouteMeta, "request_handlers"
-        ):
-            meta["request_handlers"] = {}
+    def _register_route(cls):
+        if cls.__metadata__.abstract:
+            return
 
-        if "error_handlers" not in meta_params and not hasattr(
-            cls.RouteMeta, "error_handlers"
-        ):
-            meta["error_handlers"] = {}
-
-        return meta
+        cls.__metadata__.registry.add(cls)
 
     @classmethod
-    def _setup_route_meta_object(
-        cls, route_meta: ChainMap[str, Any]
-    ) -> ChainMap[str, Any]:
-        if not hasattr(cls.RouteMeta, "__route__"):
-            cls.RouteMeta.__route__ = cls
-
-        elif cls.RouteMeta.__route__ is not cls:
-            cls.RouteMeta = type("RouteMeta", (), {"__route__": cls})
-
-        if not hasattr(cls.RouteMeta, "abstract"):
-            cls.RouteMeta.abstract = False
-
-        return route_meta.new_child(cast(MutableMapping, ObjectProxyMap(cls.RouteMeta)))
-
-    @classmethod
-    def _load_route_meta_params(
-        cls, route_meta: ChainMap[str, Any], meta_params: dict[str, Any]
-    ) -> ChainMap[str, Any]:
-        return route_meta.new_child(meta_params)
-
-    @classmethod
-    def _find_and_register_handlers(cls):
-        for function in cls._get_functions():
-            handler_type = cls.get_handler_type(function)
+    def _scan_for_handlers(cls):
+        for function in get_functions(cls):
+            handler_type = get_handler_type(function)
             match handler_type:
                 case Option.Value(type() as ht) if issubclass(ht, (Request, Exception)):
                     cls._register_handlers(function, ht)
 
                 case Option.Value(UnionType() as ht):
                     cls._register_handlers(function, *get_args(ht))
+
+        cls.methods = cast(
+            tuple[str],
+            tuple(handler.name for handler in cls.__metadata__.request_handlers),
+        )
+
+    @classmethod
+    def _setup_metadata(cls):
+        if cls.__metadata__ is get_super_route(cls).__metadata__:
+            cls._create_new_metadata_object()
+
+        elif not issubclass(cls.__metadata__, RouteMetadata):
+            cls._transform_metadata_to_metadata_type()
+
+    @classmethod
+    def _setup_route(cls):
+        if cls.__metadata__.abstract:
+            return
+
+        if not hasattr(cls, "name"):
+            cls.name = cls.__qualname__.casefold()
+
+    @classmethod
+    def _transform_metadata_to_metadata_type(cls):
+        super_route = get_super_route(cls)
+
+        if not hasattr(cls.__metadata__, "request_handlers"):
+            cls.__metadata__.request_handlers = {}
+
+        if not hasattr(cls.__metadata__, "error_handlers"):
+            cls.__metadata__.error_handlers = {}
+
+        cls.__metadata__ = create_metadata_type(
+            cls.__metadata__, super_route.__metadata__
+        )
+
+    @classmethod
+    def _validate_route_object(cls):
+        if cls.__metadata__.abstract:
+            return
+
+        if not hasattr(cls, "path"):
+            raise MissingRoutePath(
+                f"Route subclass {cls.__qualname__} is missing a path attribute."
+            )
+
+        if not cls.methods:
+            raise NoRouteHandlersFound(
+                f"Route subclass {cls.__qualname__} has no request handlers."
+            )
+
+
+def get_super_route(cls):
+    for base in cls.__bases__:
+        if base is Route or issubclass(base, Route):
+            return base
+
+
+def create_metadata_type(
+    *bases: Type[RouteMetadata] | Type,
+) -> Type[RouteMetadata]:
+    return cast(
+        Type[RouteMetadata],
+        type(
+            "__metadata__",
+            bases,
+            {},
+        ),
+    )
+
+
+def get_functions(cls):
+    for name, attr in vars(cls).items():
+        if (
+            callable(attr)
+            and not isinstance(attr, MethodType)
+            and not name.startswith("_")
+        ):
+            yield attr
+
+
+def get_handler_type(function):
+    arg_spec = inspect.getfullargspec(unwrap(function))
+    arg_type = (
+        arg_spec.annotations.get(arg_spec.args[1]) if len(arg_spec.args) > 1 else None
+    )
+    return Option.Value(arg_type) if arg_type else Option.Null()
+
+
+def unwrap(function):
+    while hasattr(function, "__wrapped__"):
+        function = function.__wrapped__
+
+    return function
