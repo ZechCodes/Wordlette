@@ -1,7 +1,4 @@
-class BaseWordletteException(Exception):
-    """Base exception for all wordlette exceptions."""
-
-    pass
+from wordlette.base_exception import BaseWordletteException
 
 
 class InvalidExtensionOrConstructor(BaseWordletteException):
