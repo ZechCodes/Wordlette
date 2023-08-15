@@ -126,9 +126,9 @@ class Route(Generic[RequestType]):
                 f"Request type {type(request)} not handled by {self.__class__.__qualname__}"
             )
 
-        response = await self.__metadata__.request_handlers[type(request)](
-            self, request
-        )
+        handler_registry = self.__metadata__.request_handlers
+        request_type = type(request)
+        response = await handler_registry[request_type](self, request)
         await response(scope, receive, send)
 
     @classmethod
