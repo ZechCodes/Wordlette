@@ -142,3 +142,20 @@ def test_no_route_handlers():
 
         class TestRoute(Route):
             path = "/"
+
+
+def test_route_registry():
+    route_registry = set()
+
+    class TestRouteAbstract(Route):
+        class RouteMeta:
+            abstract = True
+            registry = route_registry
+
+    class TestRoute(TestRouteAbstract):
+        path = "/"
+
+        async def get(self, _: Request.Get):
+            ...
+
+    assert TestRoute in route_registry

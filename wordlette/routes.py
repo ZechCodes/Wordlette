@@ -94,6 +94,7 @@ class Route(Generic[RequestType]):
 
     class RouteMeta:
         abstract: True
+        registry: "set[Type[Route]]" = set()
         __route__ = None
 
     __route_meta__: ChainMap[str, Any] = ChainMap(
@@ -120,6 +121,7 @@ class Route(Generic[RequestType]):
             cls.name = cls.__qualname__.casefold()
 
         if not cls.__route_meta__["abstract"]:
+            cls.__route_meta__["registry"].add(cls)
 
             cls.methods = cast(
                 tuple[str],
