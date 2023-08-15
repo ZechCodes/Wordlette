@@ -198,12 +198,28 @@ class Route(Generic[RequestType]):
     @classmethod
     def _build_route_meta(cls, meta_params: dict[str, Any]) -> ChainMap[str, Any]:
         pipeline = Pipeline[ChainMap[str, Any]](
-            ChainMap.new_child,
             cls._setup_route_meta_object,
             Pipeline.with_params(cls._load_route_meta_params, meta_params),
+            Pipeline.with_params(cls._setup_route_meta, meta_params),
         )
-        cls.__route_meta__ = pipeline.run(cls.__route_meta__)
-        return cls.__route_meta__
+        return pipeline.run(cls.__route_meta__)
+
+    @classmethod
+    def _setup_route_meta(
+        cls, route_meta: ChainMap[str, Any], meta_params: dict[str, Any]
+    ) -> ChainMap[str, Any]:
+        meta = route_meta.new_child()
+        if "request_handlers" not in meta_params and not hasattr(
+            cls.RouteMeta, "request_handlers"
+        ):
+            meta["request_handlers"] = {}
+
+        if "error_handlers" not in meta_params and not hasattr(
+            cls.RouteMeta, "error_handlers"
+        ):
+            meta["error_handlers"] = {}
+
+        return meta
 
     @classmethod
     def _setup_route_meta_object(
