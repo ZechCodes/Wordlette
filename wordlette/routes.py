@@ -1,14 +1,14 @@
 import inspect
 from types import MethodType, UnionType
 from typing import (
-    Type,
-    ParamSpec,
-    TypeVar,
-    Generic,
     Any,
+    Callable,
+    Generic,
+    ParamSpec,
+    Type,
+    TypeVar,
     cast,
     get_args,
-    Callable,
 )
 
 from starlette.types import Scope, Receive, Send
