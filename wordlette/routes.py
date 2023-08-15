@@ -10,11 +10,8 @@ from typing import (
     cast,
     MutableMapping,
     get_args,
-    Callable,
-    Awaitable,
 )
 
-from starlette.responses import Response
 from starlette.types import Scope, Receive, Send
 
 from wordlette.object_proxy_map import ObjectProxyMap
@@ -109,12 +106,8 @@ class Route(Generic[RequestType]):
         """Scan the subclass for request and error handlers. Also verify that the subclass has a path attribute."""
         meta = cls._build_route_meta(kwargs)
 
-        meta["request_handlers"]: dict[
-            Type[RequestType], Callable[[Any, RequestType], Awaitable[Response]]
-        ] = {}
-        meta["error_handlers"]: dict[
-            Type[ExceptionType], Callable[[Any, ExceptionType], Awaitable[Response]]
-        ] = {}
+        meta.setdefault("request_handlers", {})
+        meta.setdefault("error_handlers", {})
         cls._find_and_register_handlers()
 
         if not hasattr(cls, "name"):
