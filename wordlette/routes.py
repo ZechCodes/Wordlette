@@ -111,11 +111,11 @@ class Route(Generic[RequestType]):
         meta.setdefault("error_handlers", {})
         cls._find_and_register_handlers()
 
-        if not hasattr(cls, "name"):
-            cls.name = cls.__qualname__.casefold()
-
         if not cls.__route_meta__["abstract"]:
             cls.__route_meta__["registry"].add(cls)
+
+            if not hasattr(cls, "name"):
+                cls.name = cls.__qualname__.casefold()
 
             cls.methods = cast(
                 tuple[str],
