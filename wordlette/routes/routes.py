@@ -15,8 +15,10 @@ from typing import (
 
 from starlette.types import Scope, Receive, Send
 
+from wordlette.apply import apply
 from wordlette.options import Option
 from wordlette.requests import Request
+from wordlette.routers import Router
 from wordlette.routes.exception_contexts import ExceptionHandlerContext
 from wordlette.routes.exceptions import MissingRoutePath, NoRouteHandlersFound
 
@@ -153,6 +155,11 @@ class Route(Generic[RequestType], _RouteMetadata):
         request_type = type(request)
         response = await handler_registry[request_type](self, request)
         await response(scope, receive, send)
+
+    @classmethod
+    def register_routes(cls, router: Router):
+        """Register all routes in the route registry with the given router."""
+        apply(cls.__metadata__.registry, router.add_route)
 
     @classmethod
     def _add_handlers(cls, function, handler_types, container):
