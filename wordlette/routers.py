@@ -1,9 +1,10 @@
 from types import UnionType
-from typing import Callable, get_args, Type
+from typing import Callable, get_args, Type, overload
 
 from starlette.applications import Starlette
 from starlette.types import Scope, Receive, Send
 
+import wordlette.routes
 from wordlette.requests import Request
 
 
@@ -14,6 +15,15 @@ class Router:
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         return await self.app(scope, receive, send)
 
+    @overload
+    def add_route(
+        self,
+        route: "wordlette.routes.Route",
+        include_in_schema: bool = True,
+    ):
+        ...
+
+    @overload
     def add_route(
         self,
         path: str,
@@ -21,6 +31,35 @@ class Router:
         methods: list[Type[Request]] | Type[Request] | UnionType = Request.Get,
         name: str = "",
         include_in_schema: bool = True,
+    ):
+        ...
+
+    def add_route(self, path: "str | wordlette.routes.Route", **kwargs):
+        match path:
+            case str():
+                self._add_new_route(
+                    path,
+                    kwargs["route"],
+                    kwargs.get("methods", Request.Get),
+                    kwargs.get("name", ""),
+                    kwargs.get("include_in_schema", True),
+                )
+
+            case wordlette.routes.Route as route:
+                self._add_route(route, kwargs.get("include_in_schema", True))
+
+    def _add_route(self, route: "wordlette.routes.Route", include_in_schema: bool):
+        self._add_new_route(
+            route.path, route, route.methods.names, route.name, include_in_schema
+        )
+
+    def _add_new_route(
+        self,
+        path: str,
+        route: Callable,
+        methods: list[Type[Request]] | Type[Request] | UnionType,
+        name: str,
+        include_in_schema: bool,
     ):
         self.app.add_route(
             path,

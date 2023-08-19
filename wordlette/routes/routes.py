@@ -29,6 +29,10 @@ class MethodsCollection(Set[Type[Request]]):
     def __init__(self, *methods: Type[Request]):
         self._methods = set(methods)
 
+    @property
+    def names(self):
+        return [method.name for method in self]
+
     def __contains__(self, request: Request | Type[Request]) -> bool:
         request_type = type(request) if isinstance(request, Request) else request
         return request_type in self._methods
