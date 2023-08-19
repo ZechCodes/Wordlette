@@ -1,6 +1,17 @@
 import inspect
+from collections.abc import Set
 from types import MethodType, UnionType
-from typing import Type, cast, Callable, Any, Generic, ParamSpec, TypeVar, get_args
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    Iterator,
+    ParamSpec,
+    Type,
+    TypeVar,
+    cast,
+    get_args,
+)
 
 from starlette.types import Scope, Receive, Send
 
@@ -12,6 +23,24 @@ from wordlette.routes.exceptions import MissingRoutePath, NoRouteHandlersFound
 P = ParamSpec("P")
 RequestType = TypeVar("RequestType", bound=Request)
 ExceptionType = TypeVar("ExceptionType", bound=Exception)
+
+
+class MethodsCollection(Set[Type[Request]]):
+    def __init__(self, *methods: Type[Request]):
+        self._methods = set(methods)
+
+    def __contains__(self, request: Request | Type[Request]) -> bool:
+        request_type = type(request) if isinstance(request, Request) else request
+        return request_type in self._methods
+
+    def __iter__(self) -> Iterator[Type[Request]]:
+        return iter(self._methods)
+
+    def __len__(self) -> int:
+        return len(self._methods)
+
+    def __repr__(self):
+        return f"<{type(self).__name__} {{{', '.join(sorted(method.name for method in self))}}}>"
 
 
 class RouteMetadata:
@@ -47,7 +76,7 @@ class Route(Generic[RequestType]):
         abstract = True
         registry = set()
 
-    methods: tuple[str]
+    methods: MethodsCollection
     name: str
     path: str
 
@@ -133,6 +162,7 @@ class Route(Generic[RequestType]):
 
         elif not issubclass(cls.__metadata__, RouteMetadata):
             cls._transform_metadata_to_metadata_type()
+        cls.methods = MethodsCollection(*cls.__metadata__.request_handlers)
 
     @classmethod
     def _setup_route(cls):
