@@ -50,7 +50,52 @@ class RouteMetadata:
     request_handlers: dict[Type[Request], Callable[[Request], Any]]
 
 
-class Route(Generic[RequestType]):
+class _RouteMetadata:
+    class __metadata__(RouteMetadata):
+        abstract = True
+        registry = set()
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        if _RouteMetadata in cls.__bases__:
+            return
+
+        cls._setup_metadata()
+
+    @classmethod
+    def _create_new_metadata_object(cls):
+        super_route = get_super_route(cls)
+        cls.__metadata__ = create_metadata_type(
+            super_route.__metadata__,
+            abstract=False,
+            request_handlers={},
+            error_handlers={},
+        )
+
+    @classmethod
+    def _setup_metadata(cls):
+        if cls.__metadata__ is get_super_route(cls).__metadata__:
+            cls._create_new_metadata_object()
+
+        elif not issubclass(cls.__metadata__, RouteMetadata):
+            cls._transform_metadata_to_metadata_type()
+
+    @classmethod
+    def _transform_metadata_to_metadata_type(cls):
+        super_route = get_super_route(cls)
+
+        if not hasattr(cls.__metadata__, "request_handlers"):
+            cls.__metadata__.request_handlers = {}
+
+        if not hasattr(cls.__metadata__, "error_handlers"):
+            cls.__metadata__.error_handlers = {}
+
+        cls.__metadata__ = create_metadata_type(
+            cls.__metadata__, super_route.__metadata__
+        )
+
+
+class Route(Generic[RequestType], _RouteMetadata):
     """The route type handles all the magic that allows routes to be defined without any decorator boilerplate. It
     provides the instrumentation necessary for simple request handling by method type using type annotations. It also
     provides a simple exception handling mechanism using the same approach.
@@ -72,10 +117,6 @@ class Route(Generic[RequestType]):
     ```
     """
 
-    class __metadata__(RouteMetadata):
-        abstract = True
-        registry = set()
-
     methods: MethodsCollection
     name: str
     path: str
@@ -83,7 +124,7 @@ class Route(Generic[RequestType]):
     def __init_subclass__(cls, **kwargs):
         """Setup the route class building the route meta, scanning for request & error handlers, and ensuring that
         concrete routes have a path and route handlers."""
-        cls._setup_metadata()
+        super().__init_subclass__(**kwargs)
         cls._setup_route()
         cls._scan_for_handlers()
         cls._validate_route_object()
@@ -115,14 +156,6 @@ class Route(Generic[RequestType]):
             container[handler_type] = function
 
     @classmethod
-    def _create_new_metadata_object(cls):
-        super_route = get_super_route(cls)
-        cls.__metadata__ = create_metadata_type(super_route.__metadata__)
-        cls.__metadata__.abstract = False
-        cls.__metadata__.request_handlers = {}
-        cls.__metadata__.error_handlers = {}
-
-    @classmethod
     def _register_handlers(cls, function, *handler_types):
         if all(issubclass(handler, Request) for handler in handler_types):
             cls._add_handlers(
@@ -150,18 +183,6 @@ class Route(Generic[RequestType]):
                 case Option.Value(UnionType() as ht):
                     cls._register_handlers(function, *get_args(ht))
 
-        cls.methods = cast(
-            tuple[str],
-            tuple(handler.name for handler in cls.__metadata__.request_handlers),
-        )
-
-    @classmethod
-    def _setup_metadata(cls):
-        if cls.__metadata__ is get_super_route(cls).__metadata__:
-            cls._create_new_metadata_object()
-
-        elif not issubclass(cls.__metadata__, RouteMetadata):
-            cls._transform_metadata_to_metadata_type()
         cls.methods = MethodsCollection(*cls.__metadata__.request_handlers)
 
     @classmethod
@@ -171,20 +192,6 @@ class Route(Generic[RequestType]):
 
         if not hasattr(cls, "name"):
             cls.name = cls.__qualname__.casefold()
-
-    @classmethod
-    def _transform_metadata_to_metadata_type(cls):
-        super_route = get_super_route(cls)
-
-        if not hasattr(cls.__metadata__, "request_handlers"):
-            cls.__metadata__.request_handlers = {}
-
-        if not hasattr(cls.__metadata__, "error_handlers"):
-            cls.__metadata__.error_handlers = {}
-
-        cls.__metadata__ = create_metadata_type(
-            cls.__metadata__, super_route.__metadata__
-        )
 
     @classmethod
     def _validate_route_object(cls):
@@ -202,21 +209,15 @@ class Route(Generic[RequestType]):
             )
 
 
-def get_super_route(cls):
-    for base in cls.__bases__:
-        if base is Route or issubclass(base, Route):
-            return base
-
-
 def create_metadata_type(
-    *bases: Type[RouteMetadata] | Type,
+    *bases: Type[RouteMetadata] | Type, **properties: Any
 ) -> Type[RouteMetadata]:
     return cast(
         Type[RouteMetadata],
         type(
             "__metadata__",
             bases,
-            {},
+            properties,
         ),
     )
 
@@ -237,6 +238,12 @@ def get_handler_type(function):
         arg_spec.annotations.get(arg_spec.args[1]) if len(arg_spec.args) > 1 else None
     )
     return Option.Value(arg_type) if arg_type else Option.Null()
+
+
+def get_super_route(cls):
+    for base in cls.__bases__:
+        if base is Route or issubclass(base, Route):
+            return base
 
 
 def unwrap(function):
