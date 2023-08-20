@@ -5,6 +5,7 @@ from starlette.applications import Starlette
 from starlette.types import Scope, Receive, Send
 
 import wordlette.routes
+from wordlette.expand_dict import expand_dict
 from wordlette.requests import Request
 
 
@@ -39,14 +40,16 @@ class Router:
             case str():
                 self._add_new_route(
                     path,
-                    kwargs["route"],
-                    kwargs.get("methods", Request.Get),
-                    kwargs.get("name", ""),
-                    kwargs.get("include_in_schema", True),
+                    *expand_dict(kwargs)(
+                        route=...,
+                        methods=Request.Get,
+                        name="",
+                        include_in_schema=True,
+                    ),
                 )
 
             case wordlette.routes.Route as route:
-                self._add_route(route, kwargs.get("include_in_schema", True))
+                self._add_route(route, *expand_dict(kwargs)(include_in_schema=True))
 
     def _add_route(self, route: "wordlette.routes.Route", include_in_schema: bool):
         self._add_new_route(
