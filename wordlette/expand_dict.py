@@ -11,9 +11,9 @@ class ExpandDict:
     key is required to be in the dict and a KeyError is raised when it is not found.
 
     Example:
-        >>> a, d = ExpandDict({"a": 1, "b": 2, "c": 3})(a=..., d=4)
-        >>> a, d
-        (1, 4)
+        >>> a, b = ExpandDict({"a": 1})(a=..., b=2)
+        >>> a, b
+        (1, 2)
     """
 
     def __init__(self, dict_: dict[str, Any]):
