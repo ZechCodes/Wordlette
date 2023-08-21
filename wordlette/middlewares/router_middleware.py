@@ -30,12 +30,7 @@ class RouteManager:
         self._router = router
 
     def add_route(self, route: Type[Route]):
-        self.router.add_route(
-            route.path,
-            route(),
-            route.methods,
-            route.name,
-        )
+        self.router.add_route(route)
 
     def create_router(self, *routes: Type[Route]):
         self.router = Router()
