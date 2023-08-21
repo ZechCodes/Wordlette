@@ -29,6 +29,7 @@ class Router:
     def add_route(
         self,
         path: str,
+        *,
         route: Callable,
         methods: list[Type[Request]] | Type[Request] | UnionType = Request.Get,
         name: str = "",
