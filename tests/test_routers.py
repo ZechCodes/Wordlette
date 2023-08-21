@@ -27,8 +27,8 @@ def test_build_request_types_strings():
 
 def test_router_routing():
     router = Router()
-    router.add_route("/", PlainTextResponse("Index"), Request.Get)
-    router.add_route("/test", PlainTextResponse("Test"), Request.Get)
+    router.add_route("/", route=PlainTextResponse("Index"), methods=Request.Get)
+    router.add_route("/test", route=PlainTextResponse("Test"), methods=Request.Get)
 
     client = TestClient(router)
     assert client.get("/").text == "Index"
@@ -37,7 +37,9 @@ def test_router_routing():
 
 def test_router_routing_multiple_methods():
     router = Router()
-    router.add_route("/", PlainTextResponse("Index"), Request.Get | Request.Post)
+    router.add_route(
+        "/", route=PlainTextResponse("Index"), methods=Request.Get | Request.Post
+    )
 
     client = TestClient(router)
     assert client.get("/").text == "Index"
@@ -46,7 +48,7 @@ def test_router_routing_multiple_methods():
 
 def test_router_routing_incorrect_method():
     router = Router()
-    router.add_route("/", PlainTextResponse("Index"), Request.Get)
+    router.add_route("/", route=PlainTextResponse("Index"), methods=Request.Get)
 
     client = TestClient(router)
     assert client.post("/").status_code == 405

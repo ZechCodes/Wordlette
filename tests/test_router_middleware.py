@@ -17,7 +17,7 @@ async def test_router():
         ...
 
     app = RouterMiddleware(dummy)
-    router.router.add_route("/", PlainTextResponse("Test", status_code=200))
+    router.router.add_route("/", route=PlainTextResponse("Test", status_code=200))
     response = TestClient(app).get("/")
     assert response.status_code == 200
     assert response.text == "Test"

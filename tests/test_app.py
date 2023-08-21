@@ -55,13 +55,18 @@ def test_custom_extension():
 
 
 def test_app_with_router_and_routes():
-    class Index(Route):
+    class TestRoute(Route):
+        class __metadata__:
+            abstract = True
+            registry = set()
+
+    class Index(TestRoute):
         path = "/"
 
         async def get(self, _: Request.Get):
             return PlainTextResponse("Hello, world!")
 
-    class TestPage(Route):
+    class TestPage(TestRoute):
         path = "/test"
 
         async def get(self, _: Request.Get):
@@ -70,8 +75,13 @@ def test_app_with_router_and_routes():
         async def post(self, _: Request.Post):
             return PlainTextResponse("Test page post")
 
+    class TestState(State):
+        @inject
+        async def enter_state(self, route_manager: RouteManager = dependency()):
+            TestRoute.register_routes(route_manager.router)
+
     app = WordletteApp(
-        middleware=[RouterMiddleware], state_machine=StateMachine(Starting)
+        middleware=[RouterMiddleware], state_machine=StateMachine(TestState)
     )
     get_repository().get(RouteManager).create_router(Index, TestPage)
 
