@@ -53,6 +53,8 @@ class Router:
                     route_type, *from_dict(kwargs).get_values(include_in_schema=True)
                 )
 
+            case _:
+                raise TypeError(f"{path_or_route!r} is not a valid route type")
 
     def _add_route_type(
         self, route_type: "Type[wordlette.routes.Route]", include_in_schema: bool = True
