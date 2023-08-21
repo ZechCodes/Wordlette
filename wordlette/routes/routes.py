@@ -170,7 +170,7 @@ class Route(Generic[RequestType], _RouteMetadata, TypeMatchable, metaclass=Route
     @classmethod
     def register_routes(cls, router: Router):
         """Register all routes in the route registry with the given router."""
-        apply(cls.__metadata__.registry, router.add_route)
+        apply(router.add_route).to(cls.__metadata__.registry)
 
     @classmethod
     def _add_handlers(cls, function, handler_types, container):

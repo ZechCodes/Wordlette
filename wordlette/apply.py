@@ -1,17 +1,15 @@
 from typing import Any, Iterable
 
 
-def apply(iterable: Iterable[Any], *callables):
-    for arg in iterable:
-        for callable_ in callables:
-            callable_(arg)
+class Apply:
+    def __init__(self, *callables):
+        self.callables = callables
+
+    def to(self, *iterables: Iterable[Any]):
+        for args in zip(*iterables):
+            for callable_ in self.callables:
+                callable_(*args)
 
 
-def star_apply(iterable: Iterable[Any], *callables):
-    def splat(callable_):
-        def wrapper(args):
-            callable_(*args)
-
-        return wrapper
-
-    return apply(iterable, *map(splat, callables))
+def apply(*callables) -> Apply:
+    return Apply(*callables)

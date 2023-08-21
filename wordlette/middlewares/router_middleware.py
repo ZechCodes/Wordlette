@@ -34,7 +34,7 @@ class RouteManager:
 
     def create_router(self, *routes: Type[Route]):
         self.router = Router()
-        apply(routes, self.add_route)
+        apply(self.add_route).to(routes)
 
 
 class RouterMiddleware(Middleware, Observer):

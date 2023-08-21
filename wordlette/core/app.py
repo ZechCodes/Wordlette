@@ -147,7 +147,7 @@ class WordletteApp(Observable):
         )
 
     def _build_extensions(self, extension_constructors):
-        apply(extension_constructors, self.add_extension)
+        apply(self.add_extension).to(extension_constructors)
 
     def _build_middleware_stack(self, middleware_constructors) -> ASGIApp:
         def middleware_factory(previous, current) -> ASGIApp:
