@@ -16,7 +16,7 @@ from typing import (
 from starlette.types import Scope, Receive, Send
 
 from wordlette.apply import apply
-from wordlette.match_type import TypeMatchable
+from wordlette.match_types import TypeMatchable
 from wordlette.options import Option
 from wordlette.requests import Request
 from wordlette.routers import Router
