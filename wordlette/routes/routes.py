@@ -101,7 +101,17 @@ class _RouteMetadata:
         )
 
 
-class Route(Generic[RequestType], _RouteMetadata):
+class RouteMCS(type):
+    methods: MethodsCollection
+    name: str
+    path: str
+
+    def __repr__(cls):
+        path, name, methods = cls.path, cls.name, cls.methods.names
+        return f"<Route:{cls.__name__} {path=} {name=} {methods=}>"
+
+
+class Route(Generic[RequestType], _RouteMetadata, metaclass=RouteMCS):
     """The route type handles all the magic that allows routes to be defined without any decorator boilerplate. It
     provides the instrumentation necessary for simple request handling by method type using type annotations. It also
     provides a simple exception handling mechanism using the same approach.
