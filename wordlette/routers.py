@@ -1,7 +1,8 @@
 from types import UnionType
 from typing import Callable, get_args, Type, overload
 
-from starlette.applications import Starlette
+from bevy import get_repository
+from starlette.routing import Router as StarletteRouter
 from starlette.types import Scope, Receive, Send
 
 import wordlette.routes
@@ -11,10 +12,10 @@ from wordlette.requests import Request
 
 class Router:
     def __init__(self):
-        self.app = Starlette()
+        self.router = StarletteRouter()
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
-        return await self.app(scope, receive, send)
+        return await self.router(scope, receive, send)
 
     @overload
     def add_route(
@@ -72,7 +73,7 @@ class Router:
         name: str,
         include_in_schema: bool,
     ):
-        self.app.add_route(
+        self.router.add_route(
             path,
             route,
             self._build_methods_list(methods),
