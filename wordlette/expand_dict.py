@@ -11,7 +11,7 @@ class ExpandDict:
     key is required to be in the dict and a KeyError is raised when it is not found.
 
     Example:
-        >>> a, b = ExpandDict({"a": 1})(a=..., b=2)
+        >>> a, b = ExpandDict({"a": 1}).get_values(a=..., b=2)
         >>> a, b
         (1, 2)
     """
@@ -19,7 +19,7 @@ class ExpandDict:
     def __init__(self, dict_: dict[str, Any]):
         self.dict = dict_
 
-    def __call__(self, **values) -> Iterable[Any]:
+    def get_values(self, **values) -> Iterable[Any]:
         return map(self._value_getter, values.items())
 
     def _value_getter(self, item: tuple[str, Any]) -> Any:
@@ -42,3 +42,7 @@ class ExpandDict:
             )
 
         return dict_[key]
+
+
+def from_dict(dict_: dict[str, Any]) -> ExpandDict:
+    return ExpandDict(dict_)
