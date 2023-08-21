@@ -16,6 +16,7 @@ from typing import (
 from starlette.types import Scope, Receive, Send
 
 from wordlette.apply import apply
+from wordlette.match_type import TypeMatchable
 from wordlette.options import Option
 from wordlette.requests import Request
 from wordlette.routers import Router
@@ -111,7 +112,7 @@ class RouteMCS(type):
         return f"<Route:{cls.__name__} {path=} {name=} {methods=}>"
 
 
-class Route(Generic[RequestType], _RouteMetadata, metaclass=RouteMCS):
+class Route(Generic[RequestType], _RouteMetadata, TypeMatchable, metaclass=RouteMCS):
     """The route type handles all the magic that allows routes to be defined without any decorator boilerplate. It
     provides the instrumentation necessary for simple request handling by method type using type annotations. It also
     provides a simple exception handling mechanism using the same approach.
