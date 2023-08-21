@@ -1,39 +1,22 @@
-from typing import Sequence, Protocol, runtime_checkable, Type
+from typing import Type
 
 from bevy import dependency
-from starlette.routing import Router
 from starlette.types import Scope, Send, Receive
 
 from wordlette.apply import apply
 from wordlette.events import Observer
 from wordlette.middlewares import Middleware
+from wordlette.routers import Router
 from wordlette.routes import Route
-
-
-@runtime_checkable
-class RouterProtocol(Protocol):
-    async def __call__(self, scope: Scope, receive: Receive, send: Send):
-        ...
-
-    def add_route(
-        self,
-        path: str,
-        route: Route,
-        methods: Sequence[str],
-        name: str,
-        *args,
-        **kwargs,
-    ):
-        ...
 
 
 class RouteManager:
     def __init__(self):
         super().__init__()
-        self._router: RouterProtocol | None = None
+        self._router: Router | None = None
 
     @property
-    def router(self) -> RouterProtocol:
+    def router(self) -> Router:
         if not self._router:
             self.create_router()
 
@@ -41,8 +24,8 @@ class RouteManager:
 
     @router.setter
     def router(self, router):
-        if not isinstance(router, RouterProtocol):
-            raise TypeError(f"router must adhere to the {RouterProtocol.__name__}")
+        if not isinstance(router, Router):
+            raise TypeError(f"router must be an instance of {Router.__qualname__}")
 
         self._router = router
 
