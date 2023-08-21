@@ -16,6 +16,7 @@ from bevy import get_repository
 from starlette.responses import PlainTextResponse
 from starlette.types import Receive, Send, Scope, Message, ASGIApp
 
+from wordlette.apply import apply
 from wordlette.core.events import (
     LifespanStartupEvent,
     LifespanShutdownEvent,
@@ -146,8 +147,7 @@ class WordletteApp(Observable):
         )
 
     def _build_extensions(self, extension_constructors):
-        for extension_constructor in extension_constructors:
-            self.add_extension(extension_constructor)
+        apply(extension_constructors, self.add_extension)
 
     def _build_middleware_stack(self, middleware_constructors) -> ASGIApp:
         def middleware_factory(previous, current) -> ASGIApp:
