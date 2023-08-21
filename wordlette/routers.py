@@ -19,7 +19,7 @@ class Router:
     @overload
     def add_route(
         self,
-        route: "wordlette.routes.Route",
+        route: "type[wordlette.routes.Route]",
         include_in_schema: bool = True,
     ):
         ...
@@ -54,7 +54,10 @@ class Router:
                 )
 
 
-    def _add_route(self, route: "wordlette.routes.Route", include_in_schema: bool):
+    def _add_route_type(
+        self, route_type: "Type[wordlette.routes.Route]", include_in_schema: bool = True
+    ):
+        route = get_repository().get(route_type)
         self._add_new_route(
             route.path, route, route.methods.names, route.name, include_in_schema
         )
