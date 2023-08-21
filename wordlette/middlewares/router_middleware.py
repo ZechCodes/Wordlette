@@ -4,6 +4,7 @@ from bevy import dependency
 from starlette.routing import Router
 from starlette.types import Scope, Send, Receive
 
+from wordlette.apply import apply
 from wordlette.events import Observer
 from wordlette.middlewares import Middleware
 from wordlette.routes import Route
@@ -55,8 +56,7 @@ class RouteManager:
 
     def create_router(self, *routes: Type[Route]):
         self.router = Router()
-        for route in routes:
-            self.add_route(route)
+        apply(routes, self.add_route)
 
 
 class RouterMiddleware(Middleware, Observer):
