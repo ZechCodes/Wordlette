@@ -3,11 +3,11 @@ from typing import Type
 from bevy import dependency
 from starlette.types import Scope, Send, Receive
 
-from wordlette.apply import apply
 from wordlette.events import Observer
 from wordlette.middlewares import Middleware
 from wordlette.routers import Router
 from wordlette.routes import Route
+from wordlette.utils.apply import apply
 
 
 class RouteManager:

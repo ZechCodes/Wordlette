@@ -15,12 +15,12 @@ from typing import (
 
 from starlette.types import Scope, Receive, Send
 
-from wordlette.apply import apply
 from wordlette.options import Option
 from wordlette.requests import Request
 from wordlette.routers import Router
 from wordlette.routes.exception_contexts import ExceptionHandlerContext
 from wordlette.routes.exceptions import MissingRoutePath, NoRouteHandlersFound
+from wordlette.utils.apply import apply
 from wordlette.utils.match_types import TypeMatchable
 
 P = ParamSpec("P")

@@ -16,7 +16,6 @@ from bevy import get_repository
 from starlette.responses import PlainTextResponse
 from starlette.types import Receive, Send, Scope, Message, ASGIApp
 
-from wordlette.apply import apply
 from wordlette.core.events import (
     LifespanStartupEvent,
     LifespanShutdownEvent,
@@ -26,6 +25,7 @@ from wordlette.events import Observer, Observable
 from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
 from wordlette.state_machines import StateMachine
+from wordlette.utils.apply import apply
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("App")
