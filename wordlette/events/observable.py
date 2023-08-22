@@ -2,10 +2,10 @@ import asyncio
 from typing import Type, Generator, TypeVar
 from weakref import WeakSet
 
-from wordlette.contextual_methods import contextual_method
 from wordlette.events.dispatch import Callback, Listener, EventDispatch
 from wordlette.events.dispatchable import Dispatchable
 from wordlette.events.events import Event
+from wordlette.utils.contextual_methods import contextual_method
 
 T = TypeVar("T")
 
