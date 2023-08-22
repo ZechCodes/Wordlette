@@ -4,7 +4,6 @@ from starlette.responses import PlainTextResponse
 from starlette.testclient import TestClient
 
 from wordlette.core import WordletteApp
-from wordlette.core.states import Starting
 from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
 from wordlette.middlewares.router_middleware import RouteManager, RouterMiddleware
@@ -35,6 +34,10 @@ def test_custom_middleware():
             await PlainTextResponse("Hello, world!")(scope, receive, send)
             await self.next()
 
+    class Starting(State):
+        async def enter_state(self):
+            return
+
     app = WordletteApp(
         middleware=[TestMiddleware], state_machine=StateMachine(Starting)
     )
@@ -47,6 +50,10 @@ def test_custom_extension():
     class TestExtension(Extension):
         def __init__(self):
             self.test = "test"
+
+    class Starting(State):
+        async def enter_state(self):
+            return
 
     _ = WordletteApp(
         extensions=[TestExtension], middleware=[], state_machine=StateMachine(Starting)
