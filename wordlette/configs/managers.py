@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Type, Sequence, TypeVar, Any, Callable
 
 from wordlette.configs.handlers import ConfigHandler
-from wordlette.exceptions import ConfigFileNotFound
+from wordlette.core.exceptions import ConfigFileNotFound
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("Config")

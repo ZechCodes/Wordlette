@@ -15,7 +15,7 @@ from typing import (
 
 from starlette.types import Scope, Receive, Send
 
-from wordlette.exceptions import MissingRoutePath, NoRouteHandlersFound
+from wordlette.core.exceptions import MissingRoutePath, NoRouteHandlersFound
 from wordlette.requests import Request
 from wordlette.routers import Router
 from wordlette.routes.exception_contexts import ExceptionHandlerContext

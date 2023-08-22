@@ -20,8 +20,8 @@ from wordlette.core.events import (
     LifespanStartupEvent,
     LifespanShutdownEvent,
 )
+from wordlette.core.exceptions import InvalidExtensionOrConstructor
 from wordlette.events import Observer, Observable
-from wordlette.exceptions import InvalidExtensionOrConstructor
 from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
 from wordlette.state_machines import StateMachine
