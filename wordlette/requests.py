@@ -1,7 +1,9 @@
 from typing import Type
 
+from starlette.requests import Request as StarletteRequest
 
-class Request:
+
+class Request(StarletteRequest):
     Delete: "Type[Delete]"
     Get: "Type[Get]"
     Head: "Type[Head]"
@@ -13,13 +15,6 @@ class Request:
 
     def __init_subclass__(cls, **kwargs):
         cls.name = cls.__name__.upper()
-
-    def __init__(self, scope):
-        self._scope = scope
-
-    @property
-    def scope(self):
-        return self._scope
 
     @classmethod
     def factory(cls, scope) -> "Request":
