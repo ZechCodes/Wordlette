@@ -4,7 +4,6 @@ from collections import defaultdict
 from typing import Coroutine, Generic, Type, TypeVar
 
 from wordlette.events import Observable
-from wordlette.maybe_awaitables import maybe_awaitable
 from wordlette.options import Option
 from wordlette.state_machines.predicates import always
 from wordlette.state_machines.states import (
@@ -13,6 +12,7 @@ from wordlette.state_machines.states import (
     RequestCycle,
     Transition,
 )
+from wordlette.utils.maybe_awaitables import maybe_awaitable
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("StateMachine")
