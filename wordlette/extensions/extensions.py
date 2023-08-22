@@ -43,6 +43,6 @@ def scan_directory_for_public_modules(directory: Path) -> set[Path]:
 
 def get_extensions_in_directory(directory: Path) -> list[Extension]:
     return [
-        Extension(path.stem, f"{path.parent.name}.{path.stem}")
+        PackageExtension(path.stem, f"{path.parent.name}.{path.stem}")
         for path in scan_directory_for_public_modules(directory)
     ]
