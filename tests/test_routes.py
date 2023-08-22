@@ -2,8 +2,9 @@ from pytest import raises
 from starlette.responses import PlainTextResponse
 from starlette.testclient import TestClient
 
+from wordlette.exceptions import MissingRoutePath, NoRouteHandlersFound
 from wordlette.requests import Request
-from wordlette.routes import Route, MissingRoutePath, NoRouteHandlersFound
+from wordlette.routes import Route
 
 
 class DefaultPathRoute(Route):
