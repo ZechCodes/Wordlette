@@ -6,8 +6,8 @@ from starlette.routing import Router as StarletteRouter
 from starlette.types import Scope, Receive, Send
 
 import wordlette.routes
-from wordlette.expand_dicts import from_dict
 from wordlette.requests import Request
+from wordlette.utils.expand_dicts import from_dict
 
 
 class Router:
