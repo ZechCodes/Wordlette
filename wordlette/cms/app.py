@@ -23,9 +23,3 @@ app = WordletteApp(
     middleware=[RouterMiddleware],
     state_machine=StateMachine(Setup),
 )
-
-
-def start_server():
-    import uvicorn
-
-    uvicorn.run(app, port=8000, log_level="info")
