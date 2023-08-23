@@ -42,26 +42,34 @@ class Null(Option[T]):
     __match_args__ = ("exception",)
 
     def __init__(self, exception: BaseWordletteException | None = None):
-        self._exception = NoValueException("Null options have no value")
-        if exception is not None:
-            self._exception.__cause__ = exception
+        self._exception = exception
 
     @property
     def exception(self) -> BaseWordletteException:
-        return self._exception
+        return self._exception or self._create_exception()
 
     def exception_or(self, _) -> BaseWordletteException:
-        return self._exception
+        return self.exception
 
     @property
     def value(self) -> NoReturn:
-        raise self._exception
+        raise self._create_exception()
 
     def value_or(self, default: T) -> T:
         return default
 
     def __bool__(self):
         return False
+
+    def _create_exception(self) -> NoValueException:
+        exception = NoValueException("Null options have no value")
+        if self._exception:
+            exc_type = type(self._exception)
+            exception.add_note(
+                f"└─── caused by {exc_type.__module__}.{exc_type.__qualname__}: {self._exception}"
+            )
+
+        return exception
 
 
 class Value(Option[T]):
