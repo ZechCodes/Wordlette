@@ -1,4 +1,4 @@
-# Wordlette 0.1.0-alpha.4
+# Wordlette 0.1.0-alpha.5
 
 > ⚠️ This is alpha software. It is not currently intended for production use.
 
@@ -31,4 +31,4 @@ pip install wordlette[cms]
 wordlette
 ```
 
-That'll start a uvicorn server on (localhost:8000)[HTTP://localhost:8000).
+That'll start a uvicorn server on [localhost:800](HTTP://localhost:8000).
