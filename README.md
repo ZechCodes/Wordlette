@@ -33,4 +33,4 @@ pip install wordlette[cms]
 wordlette serve
 ```
 
-That'll start a uvicorn server on [localhost:800](HTTP://localhost:8000).
+That'll start a uvicorn server on [localhost:8000](HTTP://localhost:8000).
