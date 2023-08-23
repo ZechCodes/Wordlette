@@ -94,20 +94,20 @@ class JinjaTemplateLoader(jinja2.BaseLoader):
 class Template(Response):
     def __init__(
         self,
-        template_name: str,
-        status_code: int = 200,
-        media_type: str | None = None,
-        background: BackgroundTask | None = None,
+        _template_name: str,
+        _status_code: int = 200,
+        *,
         _headers: Mapping[str, str] | None = None,
+        _media_type: str | None = None,
+        _background: BackgroundTask | None = None,
         **context: Any,
     ):
-        self.name = template_name
+        self.name = _template_name
         self.context = context
-        self.status_code = status_code
-        self.headers = headers
-        self.media_type = media_type
-        self.background = background
+        self.status_code = _status_code
         self._headers = _headers
+        self.media_type = _media_type
+        self.background = _background
 
     def __call__(self, *args, **kwargs):
         return HTMLResponse(
