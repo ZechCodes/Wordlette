@@ -14,7 +14,7 @@ logger = logging.getLogger("Theming")
 
 
 class ThemeManager:
-    package_resources: Annotated[Path, "package-resources"] = dependency()
+    wordlette_res: Annotated[Path, "package-resources"] = dependency()
 
     def __init__(self):
         self._theme = None
@@ -23,7 +23,7 @@ class ThemeManager:
 
     @property
     def default_theme(self) -> Path:
-        return self.package_resources / "themes" / "default"
+        return self.wordlette_res / "themes" / "default"
 
     def find_template(self, template_name: str) -> Option[Path]:
         for theme in self._iterate_themes():

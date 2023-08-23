@@ -27,5 +27,5 @@ class Setup(State):
         route_manager: RouteManager = dependency(),
         theme_manager: ThemeManager = dependency(),
     ):
-        theme_manager.set_theme(theme_manager.package_resources / "themes" / "setup")
+        theme_manager.set_theme(theme_manager.wordlette_res / "themes" / "setup")
         _SetupRoute.register_routes(route_manager.router)
