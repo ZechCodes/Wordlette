@@ -1,6 +1,7 @@
-from typing import Type
+from typing import Type, Callable
 
 from bevy import dependency
+from starlette.responses import Response
 from starlette.types import Scope, Send, Receive
 
 from wordlette.events import Observer
@@ -14,6 +15,7 @@ class RouteManager:
     def __init__(self):
         super().__init__()
         self._router: Router | None = None
+        self._error_pages: dict[int, Callable[[int, Scope], Response]] = {}
 
     @property
     def router(self) -> Router:
@@ -29,12 +31,20 @@ class RouteManager:
 
         self._router = router
 
+    def add_error_page(
+        self, status_code: int, get_page: Callable[[int, Scope], Response]
+    ):
+        self._error_pages[status_code] = get_page
+        if self._router:
+            self._router.add_error_page(status_code, get_page)
+
     def add_route(self, route: Type[Route]):
         self.router.add_route(route)
 
     def create_router(self, *routes: Type[Route]):
         self.router = Router()
         apply(self.add_route).to(routes)
+        apply(self.add_error_page).to(self._error_pages.keys(), self._error_pages.values())
 
 
 class RouterMiddleware(Middleware, Observer):
