@@ -1,0 +1,22 @@
+{% include 'head.html' %}
+<header>
+    <div class="container">
+        <div class="column">
+            <h1>{{ status_code }}</h1>
+            <h3>{{ name }}</h3>
+        </div>
+    </div>
+</header>
+<div class="container">
+    <div class="column">
+        <p>
+            {% if status_code == 404 %}
+            Wordlette could not find a page at <code>{{ path }}</code>.
+            {% else %}
+            Wordlette encountered an error while trying to load <code>{{ path }}</code>.
+            {% endif %}
+        </p>
+        <a href="/">Go Home</a>
+    </div>
+</div>
+{% include "foot.html" %}

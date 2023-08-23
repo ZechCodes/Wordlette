@@ -3,6 +3,7 @@ from typing import Annotated
 
 from bevy import get_repository
 
+from wordlette.cms.extensions.error_pages import ErrorPages
 from wordlette.cms.states.setup import Setup
 from wordlette.core import WordletteApp
 from wordlette.middlewares.router_middleware import RouterMiddleware
@@ -18,6 +19,7 @@ def _setup_repository():
 
 _setup_repository()
 app = WordletteApp(
+    extensions=[ErrorPages],
     middleware=[RouterMiddleware],
     state_machine=StateMachine(Setup),
 )
