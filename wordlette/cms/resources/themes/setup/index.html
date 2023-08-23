@@ -1,4 +1,14 @@
 {% include 'head.html' %}
+<header>
+    <div class="container">
+        <div class="column">
+            <h1>{{ title }}</h1>
+            {% if subtitle %}
+            <h3>{{ subtitle }}</h3>
+            {% endif %}
+        </div>
+    </div>
+</header>
 <div class="container">
     <div class="column">
         <p>Welcome to Wordlette! Your site needs a little bit of setup before it'll be ready to use.</p>

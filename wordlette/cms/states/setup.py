@@ -17,7 +17,9 @@ class Index(_SetupRoute):
     path = "/"
 
     async def get(self, request: Request.Get):
-        return Template("index.html", title="Wordlette Setup")
+        return Template(
+            "index.html", title="Wordlette", subtitle="Setting Up Your Site"
+        )
 
 
 class Setup(State):
