@@ -5,7 +5,7 @@ from typing import Annotated, Any, Mapping
 import jinja2
 from bevy import inject, dependency
 from starlette.background import BackgroundTask
-from starlette.responses import HTMLResponse
+from starlette.responses import HTMLResponse, Response
 
 from wordlette.cms.exceptions import ThemeNotFound, TemplateNotFound
 from wordlette.utils.options import Option, Value, Null
@@ -91,14 +91,14 @@ class JinjaTemplateLoader(jinja2.BaseLoader):
             return template_file.read(), str(template_location), is_current
 
 
-class Template:
+class Template(Response):
     def __init__(
         self,
         template_name: str,
         status_code: int = 200,
-        headers: Mapping[str, str] | None = None,
         media_type: str | None = None,
         background: BackgroundTask | None = None,
+        _headers: Mapping[str, str] | None = None,
         **context: Any,
     ):
         self.name = template_name
@@ -107,6 +107,7 @@ class Template:
         self.headers = headers
         self.media_type = media_type
         self.background = background
+        self._headers = _headers
 
     def __call__(self, *args, **kwargs):
         return HTMLResponse(
