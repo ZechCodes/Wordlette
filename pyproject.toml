@@ -24,6 +24,9 @@ jinja2 = "^3.1.2"
 [tool.poetry.extras]
 cms = ["uvicorn", "jinja2"]
 
+[tool.poetry.scripts]
+wordlette = "wordlette.cms.app:start_server"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
