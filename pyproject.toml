@@ -21,6 +21,9 @@ pyyaml = "^6.0.1"
 sqlalchemy = "^2.0.19"
 jinja2 = "^3.1.2"
 
+[tool.poetry.extras]
+cms = ["uvicorn", "jinja2"]
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
