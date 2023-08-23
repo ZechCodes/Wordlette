@@ -2,7 +2,9 @@ from types import UnionType
 from typing import Callable, get_args, Type, overload
 
 from bevy import get_repository
-from starlette.routing import Router as StarletteRouter
+from starlette.exceptions import HTTPException
+from starlette.responses import Response, HTMLResponse
+from starlette.routing import Router as _StarletteRouter
 from starlette.types import Scope, Receive, Send
 
 import wordlette.routes
@@ -10,12 +12,33 @@ from wordlette.requests import Request
 from wordlette.utils.expand_dicts import from_dict
 
 
+class StarletteRouter(_StarletteRouter):
+    async def not_found(self, scope: Scope, receive: Receive, send: Send) -> None:
+        if scope["type"] == "websocket":
+            return await super().not_found(scope, receive, send)
+
+        raise HTTPException(status_code=404)
+
+
 class Router:
     def __init__(self):
         self.router = StarletteRouter()
+        self.error_pages: dict[int, Callable[[int, Scope], Response]] = {
+            0: self._generic_error_page,
+            404: self._404_error_page,
+        }
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
-        return await self.router(scope, receive, send)
+        try:
+            return await self.router(scope, receive, send)
+        except HTTPException as exc:
+            page = self._get_error_page(exc.status_code, scope)
+            await page(scope, receive, send)
+
+    def add_error_page(
+        self, status_code: int, get_page: Callable[[int, Scope], Response]
+    ):
+        self.error_pages[status_code] = get_page
 
     @overload
     def add_route(
@@ -57,6 +80,18 @@ class Router:
 
             case _:
                 raise TypeError(f"{path_or_route!r} is not a valid route type")
+
+    def _404_error_page(self, status_code: int, scope: Scope) -> Response:
+        return HTMLResponse(
+            f"<h1>{status_code}: Page Not Found</h1><p>Wordlette couldn't find any resources at <code>{scope['path']}</code>.<p>",
+            status_code,
+        )
+
+    def _generic_error_page(self, status_code: int, scope: Scope) -> Response:
+        return HTMLResponse(
+            f"<h1>{status_code}: Error Encountered</h1><p>Wordlette encountered an error and couldn't recover.<p>",
+            status_code,
+        )
 
     def _add_route_type(
         self, route_type: "Type[wordlette.routes.Route]", include_in_schema: bool = True
@@ -103,3 +138,8 @@ class Router:
 
             case _:
                 raise TypeError("Invalid type for methods")
+
+    def _get_error_page(self, status_code: int, scope: Scope) -> Response:
+        for code in (round(status_code, f) for f in range(0, -4, -1)):
+            if code in self.error_pages:
+                return self.error_pages[code](status_code, scope)
