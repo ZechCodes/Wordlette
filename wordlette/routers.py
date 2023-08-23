@@ -23,10 +23,7 @@ class StarletteRouter(_StarletteRouter):
 class Router:
     def __init__(self):
         self.router = StarletteRouter()
-        self.error_pages: dict[int, Callable[[int, Scope], Response]] = {
-            0: self._generic_error_page,
-            404: self._404_error_page,
-        }
+        self.error_pages: dict[int, Callable[[int, Scope], Response]] = {}
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send):
         try:
@@ -140,6 +137,14 @@ class Router:
                 raise TypeError("Invalid type for methods")
 
     def _get_error_page(self, status_code: int, scope: Scope) -> Response:
-        for code in (round(status_code, f) for f in range(0, -4, -1)):
-            if code in self.error_pages:
-                return self.error_pages[code](status_code, scope)
+        page = self._generic_error_page
+        if status_code in self.error_pages:
+            page = self.error_pages[status_code]
+
+        elif 0 in self.error_pages:
+            page = self.error_pages[0]
+
+        elif status_code == 404:
+            page = self._404_error_page
+
+        return page(status_code, scope)
