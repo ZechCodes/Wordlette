@@ -14,9 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 class ErrorPages(Extension, Observer):
-    def __init__(self):
-        logger.debug("Initializing error pages")
-
     @inject
     async def on_startup(
         self, _: LifespanStartupEvent, route_manager: RouteManager = dependency()
@@ -25,7 +22,9 @@ class ErrorPages(Extension, Observer):
         route_manager.add_error_page(0, self._error_page)
 
     @inject
-    def _error_page(self, status_code: int, scope: Scope, theme: ThemeManager = dependency()) -> Template:
+    def _error_page(
+        self, status_code: int, scope: Scope, theme: ThemeManager = dependency()
+    ) -> Template:
         match theme.find_template(f"errors/{status_code}.html"):
             case Value():
                 template_name = f"errors/{status_code}.html"
