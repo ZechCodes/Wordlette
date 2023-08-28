@@ -1,5 +1,6 @@
 import logging
 from functools import reduce
+from pathlib import Path
 from typing import (
     TypeAlias,
     Callable,
@@ -12,7 +13,7 @@ from typing import (
     Protocol,
 )
 
-from bevy import get_repository
+from bevy import get_repository, dependency, inject
 from starlette.responses import PlainTextResponse
 from starlette.types import Receive, Send, Scope, Message, ASGIApp
 
@@ -55,12 +56,14 @@ class WordletteApp(Observable):
         *,
         extensions: Sequence[Callable[[], Extension]] = (),
         middleware: Sequence[_MiddlewareConstructor],
+        settings: dict[str, Any] | None = None,
         state_machine: StateMachine,
     ):
-        self._update_repository()
+        self._setup_repository()
         self._extensions: dict[str, Extension] = {}
         self._middleware_stack: ASGIApp = self._build_middleware_stack(middleware)
         self._state_machine = state_machine
+        self.settings = self._set_settings_defaults(settings or {})
 
         self._state_machine.__event_dispatch__.propagate_to(
             self.__event_dispatch__.emit
@@ -161,8 +164,9 @@ class WordletteApp(Observable):
             cast(ASGIApp, self._500_response),
         )
 
-    def _update_repository(self):
+    def _setup_repository(self):
         repo = get_repository()
+        repo.add_providers(AtProvider())
         repo.set(WordletteApp, self)
 
     def _add_extension(self, name: str, extension: Extension):
@@ -170,3 +174,8 @@ class WordletteApp(Observable):
         get_repository().set(type(extension), extension)
         if isinstance(extension, Observer):
             extension.observe(self)
+
+    def _set_settings_defaults(self, settings: dict[str, Any]) -> dict[str, Any]:
+        settings.setdefault("settings-filename", "settings.wordlette")
+        settings.setdefault("working-directory", Path.cwd())
+        return settings
