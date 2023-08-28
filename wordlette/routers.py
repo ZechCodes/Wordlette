@@ -78,6 +78,9 @@ class Router:
             case _:
                 raise TypeError(f"{path_or_route!r} is not a valid route type")
 
+    def url_for(self, route: "type[wordlette.routes.Route]", **path_params) -> str:
+        return self.router.url_path_for(route.name, **path_params)
+
     def _404_error_page(self, status_code: int, scope: Scope) -> Response:
         return HTMLResponse(
             f"<h1>{status_code}: Page Not Found</h1><p>Wordlette couldn't find any resources at <code>{scope['path']}</code>.<p>",

@@ -46,6 +46,9 @@ class RouteManager:
         apply(self.add_route).to(routes)
         apply(self.add_error_page).to(self._error_pages.keys(), self._error_pages.values())
 
+    def url_for(self, route: Type[Route], **path_params) -> str:
+        return self.router.url_for(route, **path_params)
+
 
 class RouterMiddleware(Middleware, Observer):
     route_manager: RouteManager = dependency()
