@@ -1,6 +1,8 @@
 from bevy import inject, dependency
 
 from wordlette.cms.theming import Template, ThemeManager
+from wordlette.configs.managers import ConfigManager
+from wordlette.core.app import AppSetting
 from wordlette.middlewares.router_middleware import RouteManager
 from wordlette.requests import Request
 from wordlette.routes import Route
@@ -18,8 +20,25 @@ class Index(_SetupRoute):
 
     async def get(self, request: Request.Get):
         return Template(
-            "index.html", title="Wordlette", subtitle="Setting Up Your Site"
+            "index.html",
+            title="Wordlette",
+            subtitle="Setting Up Your Site",
+            next_page_url=self._get_next_page(),
         )
+
+    @inject
+    def _get_next_page(
+        self,
+        config: ConfigManager = dependency(),
+        settings_filename: str @ AppSetting("settings-filename") = dependency(),
+        working_directory: str @ AppSetting("working-directory") = dependency(),
+        router: RouteManager = dependency(),
+    ):
+        settings_path = config.find_config_file(settings_filename, working_directory)
+        if settings_path is None:
+            return router.url_for(CreateSettingsFile)
+
+        return router.url_for(SetupComplete)
 
 
 class CreateSettingsFile(_SetupRoute):
