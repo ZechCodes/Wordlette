@@ -1,4 +1,4 @@
-# Wordlette 0.1.0-alpha.5
+# Wordlette 0.1.0-alpha.8
 
 > ⚠️ This is alpha software. It is not currently intended for production use.
 

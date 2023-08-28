@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "wordlette"
-version = "0.1.0a7"
+version = "0.1.0a8"
 description = "Simple and easy framework for building complex websites."
 authors = ["ZechCodes <hi@zech.codes>"]
 license = "MIT"
