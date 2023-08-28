@@ -1,5 +1,5 @@
 import logging
-from functools import reduce
+from functools import reduce, partial
 from pathlib import Path
 from typing import (
     TypeAlias,
@@ -11,12 +11,14 @@ from typing import (
     overload,
     runtime_checkable,
     Protocol,
+    Any,
 )
 
 from bevy import get_repository, dependency, inject
 from starlette.responses import PlainTextResponse
 from starlette.types import Receive, Send, Scope, Message, ASGIApp
 
+from wordlette.at_annotateds import AtAnnotation, AtProvider
 from wordlette.core.events import (
     LifespanStartupEvent,
     LifespanShutdownEvent,
@@ -27,6 +29,7 @@ from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
 from wordlette.state_machines import StateMachine
 from wordlette.utils.apply import apply
+from wordlette.utils.options import Null
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("App")
@@ -179,3 +182,18 @@ class WordletteApp(Observable):
         settings.setdefault("settings-filename", "settings.wordlette")
         settings.setdefault("working-directory", Path.cwd())
         return settings
+
+
+class AppSetting(AtAnnotation):
+    def __init__(self, key: str, default: Any = Null()):
+        self.key = key
+        self.default = default
+
+    @inject
+    def strategy(self, *_, app: WordletteApp = dependency()):
+        match self.default:
+            case Null():
+                return lambda: app.settings[self.key]
+
+            case _:
+                return partial(app.settings.get, self.key, self.default)
