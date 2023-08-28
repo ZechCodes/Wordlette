@@ -4,6 +4,7 @@ from starlette.responses import PlainTextResponse
 from starlette.testclient import TestClient
 
 from wordlette.core import WordletteApp
+from wordlette.core.app import AppSetting
 from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
 from wordlette.middlewares.router_middleware import RouteManager, RouterMiddleware
@@ -149,3 +150,17 @@ async def test_app_states_cycle():
     response = TestClient(app).get("/b")
     assert response.status_code == 200
     assert response.text == "RouteB"
+
+
+def test_app_settings():
+    class TestState(State):
+        async def enter_state(self):
+            ...
+
+    app = WordletteApp(
+        middleware=[RouterMiddleware],
+        state_machine=StateMachine(TestState),
+        settings={"test": 123},
+    )
+    setting = get_repository().get(int @ AppSetting("test"))
+    assert setting == 123
