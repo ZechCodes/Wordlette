@@ -22,6 +22,28 @@ class Index(_SetupRoute):
         )
 
 
+class CreateSettingsFile(_SetupRoute):
+    path = "/create-settings-file"
+
+    async def get_setup_page(self, _: Request.Get):
+        return Template(
+            "create-settings-file.html",
+            title="Wordlette",
+            subtitle="Create Settings File",
+        )
+
+
+class SetupComplete(_SetupRoute):
+    path = "/setup-complete"
+
+    async def get_setup_page(self, _: Request.Get):
+        return Template(
+            "setup-complete.html",
+            title="Wordlette",
+            subtitle="Setup Complete",
+        )
+
+
 class Setup(State):
     @inject
     async def enter_state(
