@@ -138,13 +138,13 @@ async def test_app_states_cycle():
 
     response = TestClient(app).get("/b")
     assert response.status_code == 404
-    assert response.text == "Not Found"
+    assert "404: Page Not Found" in response.text
 
     await statemachine.cycle()
 
     response = TestClient(app).get("/a")
     assert response.status_code == 404
-    assert response.text == "Not Found"
+    assert "404: Page Not Found" in response.text
 
     response = TestClient(app).get("/b")
     assert response.status_code == 200
