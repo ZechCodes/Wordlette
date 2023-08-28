@@ -1,4 +1,7 @@
 import logging
+import traceback
+from dataclasses import dataclass
+from io import StringIO
 
 from bevy import inject, dependency
 from starlette.types import Scope
@@ -11,6 +14,13 @@ from wordlette.middlewares.router_middleware import RouteManager
 from wordlette.utils.options import Value
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ExceptionObject:
+    name: str
+    message: str
+    stacktrace: str
 
 
 class ErrorPages(Extension, Observer):
@@ -37,4 +47,18 @@ class ErrorPages(Extension, Observer):
             name="Page not found" if status_code == 404 else "An error was encountered",
             path=scope["path"],
             status_code=status_code,
+            exception=(
+                ExceptionObject(
+                    type(scope["exception"]).__name__,
+                    str(scope["exception"]),
+                    self._get_stacktrace(scope["exception"]),
+                )
+                if "exception" in scope
+                else None
+            ),
         )
+
+    def _get_stacktrace(self, exception: Exception) -> str | None:
+        io = StringIO()
+        traceback.print_exception(exception, file=io)
+        return io.getvalue()
