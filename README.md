@@ -34,3 +34,8 @@ wordlette serve
 ```
 
 That'll start a uvicorn server on [localhost:8000](HTTP://localhost:8000).
+
+You can use the `--debug` (or `-d`) flag to enable debug mode. This currently only gives you stacktraces on 500 error
+pages in the CMS.
+
+```bash
