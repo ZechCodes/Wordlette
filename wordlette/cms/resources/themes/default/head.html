@@ -78,6 +78,27 @@
         .setup-welcome-next {
             margin-top: 32px;
         }
+
+        pre {
+            border-color: rgb(0, 119, 226);
+            padding: 8px 16px;
+        }
+
+        blockquote.error {
+            border-left-color: #ff4444
+        }
+
+        h1:has(+pre), h2:has(+pre), h3:has(+pre), h4:has(+pre), h5:has(+pre), h6:has(+pre) {
+            margin-bottom: 0.25em;
+        }
+
+        h1 + pre, h2 + pre, h3 + pre, h4 + pre, h5 + pre, h6 + pre {
+            margin-top: 0;
+        }
+
+        .error-page a + h4 {
+            margin-top: 48px;
+        }
     </style>
 </head>
 <body>

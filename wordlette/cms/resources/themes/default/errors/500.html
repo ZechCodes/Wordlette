@@ -1,0 +1,27 @@
+{% include 'head.html' %}
+<header>
+    <div class="container">
+        <div class="column">
+            <h1>{{ status_code }}</h1>
+            <h3>{{ name }}</h3>
+        </div>
+    </div>
+</header>
+<div class="container error-page">
+    <div class="column">
+        {% if exception %}
+        <blockquote class="error">
+            <h5>{{ exception.name }}</h5>
+            <p>{{ exception.message }}</p>
+        </blockquote>
+        {% else %}
+        <p>Wordlette encountered an error while trying to load this page.</p>
+        {% endif %}
+        <a href="/" class="go-home">Return Home</a>
+        {% if exception %}
+        <h4>Stacktrace</h4>
+        <pre>{{ exception.stacktrace }}</pre>
+        {% endif %}
+    </div>
+</div>
+{% include "foot.html" %}
