@@ -1,13 +1,14 @@
 from types import UnionType
 from typing import Callable, get_args, Type, overload
 
-from bevy import get_repository
+from bevy import get_repository, inject, dependency
 from starlette.exceptions import HTTPException
 from starlette.responses import Response, HTMLResponse
 from starlette.routing import Router as _StarletteRouter
 from starlette.types import Scope, Receive, Send
 
 import wordlette.routes
+from wordlette.core.app import AppSetting
 from wordlette.requests import Request
 from wordlette.utils.expand_dicts import from_dict
 
@@ -25,11 +26,26 @@ class Router:
         self.router = StarletteRouter()
         self.error_pages: dict[int, Callable[[int, Scope], Response]] = {}
 
-    async def __call__(self, scope: Scope, receive: Receive, send: Send):
+    @inject
+    async def __call__(
+        self,
+        scope: Scope,
+        receive: Receive,
+        send: Send,
+        debug: bool @ AppSetting("debug", False) = dependency(),
+    ):
         try:
             return await self.router(scope, receive, send)
+
         except HTTPException as exc:
             page = self._get_error_page(exc.status_code, scope)
+            await page(scope, receive, send)
+
+        except Exception as exc:
+            if debug:
+                scope["exception"] = exc
+
+            page = self._get_error_page(500, scope)
             await page(scope, receive, send)
 
     def add_error_page(
