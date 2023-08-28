@@ -79,7 +79,7 @@ class JinjaTemplateLoader(jinja2.BaseLoader):
 
     def _load_template(self, template_location: Path):
         logger.debug(
-            f"Found template {template_location.name!r} at {template_location.resolve()}"
+            f"Found template {template_location.name!r} in {template_location.parent.resolve()}"
         )
 
         last_mtime = template_location.stat().st_mtime
