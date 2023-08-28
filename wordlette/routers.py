@@ -87,6 +87,12 @@ class Router:
             status_code,
         )
 
+    def _generate_error_page(self, status_code: int, scope: Scope) -> Response:
+        return HTMLResponse(
+            f"<h1>{status_code}: Error Encountered</h1><p>Wordlette encountered an error and couldn't recover.<p><pre>{scope['exception']!r}</pre>",
+            status_code,
+        )
+
     def _generic_error_page(self, status_code: int, scope: Scope) -> Response:
         return HTMLResponse(
             f"<h1>{status_code}: Error Encountered</h1><p>Wordlette encountered an error and couldn't recover.<p>",
@@ -149,5 +155,8 @@ class Router:
 
         elif status_code == 404:
             page = self._404_error_page
+
+        elif status_code == 500 and "exception" in scope:
+            page = self._generate_error_page
 
         return page(status_code, scope)
