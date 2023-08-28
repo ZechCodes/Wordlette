@@ -33,7 +33,7 @@ class ThemeManager:
 
         return Null(
             TemplateNotFound(
-                f"Could not find a template named {template_name!r} in any of the active themes."
+                f"Could not find a template with the name {template_name!r} in any of the active themes."
             )
         )
 
