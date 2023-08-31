@@ -5,7 +5,7 @@ from wordlette.middlewares.router_middleware import RouteManager
 from wordlette.requests import Request
 from wordlette.routes import Route
 from wordlette.state_machines import State
-from wordlette.utils.dependency_injection import dependency, AutoInject
+from wordlette.utils.dependency_injection import inject, AutoInject
 
 
 class _SetupRoute(Route):
@@ -27,8 +27,8 @@ class Index(_SetupRoute):
 
     def _get_next_page(
         self,
-        config: ConfigManager @ dependency,
-        router: RouteManager @ dependency,
+        config: ConfigManager @ inject,
+        router: RouteManager @ inject,
         settings_filename: str @ AppSetting("settings-filename"),
         working_directory: str @ AppSetting("working-directory"),
     ):
@@ -64,8 +64,8 @@ class SetupComplete(_SetupRoute):
 class Setup(State, AutoInject):
     async def enter_state(
         self,
-        route_manager: RouteManager @ dependency,
-        theme_manager: ThemeManager @ dependency,
+        route_manager: RouteManager @ inject,
+        theme_manager: ThemeManager @ inject,
     ):
         theme_manager.set_theme(theme_manager.wordlette_res / "themes" / "setup")
         _SetupRoute.register_routes(route_manager.router)

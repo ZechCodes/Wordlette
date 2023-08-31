@@ -4,7 +4,11 @@ from bevy import get_repository, Repository
 from pytest_asyncio import fixture
 
 from wordlette.at_annotateds import AtProvider, AtAnnotation
-from wordlette.utils.dependency_injection import inject, dependency, AutoInject
+from wordlette.utils.dependency_injection import (
+    inject_dependencies,
+    inject,
+    AutoInject,
+)
 
 
 @fixture
@@ -22,8 +26,8 @@ def test_function_param_injection(repo: Repository):
     class Dep:
         message: str
 
-    @inject
-    def func(dep: Dep @ dependency) -> str:
+    @inject_dependencies
+    def func(dep: Dep @ inject) -> str:
         return dep.message
 
     repo.set(Dep, Dep("hello"))
@@ -38,7 +42,7 @@ def test_custom_injector_types(repo):
         def strategy(self, type_, _):
             return lambda: type_(self.message)
 
-    @inject
+    @inject_dependencies
     def func(dep: str @ TestInjector("hello")) -> str:
         return dep
 
@@ -47,7 +51,7 @@ def test_custom_injector_types(repo):
 
 def test_auto_inject_class(repo):
     class TestClass(AutoInject):
-        def function(self, dep: str @ dependency = "") -> str:
+        def function(self, dep: str @ inject = "") -> str:
             return dep
 
     repo.set(str, "hello")
@@ -56,7 +60,7 @@ def test_auto_inject_class(repo):
 
 def test_auto_inject_class_functions_only_with_dependencies():
     class TestClass(AutoInject):
-        def function(self, dep: str @ dependency = "") -> str:
+        def function(self, dep: str @ inject = "") -> str:
             ...
 
         def no_dep_function(self):

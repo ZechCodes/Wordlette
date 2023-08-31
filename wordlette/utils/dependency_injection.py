@@ -11,10 +11,10 @@ from wordlette.at_annotateds import AtAnnotation
 T = TypeVar("T", bound=Callable)
 
 
-def inject(func: T) -> T:
+def inject_dependencies(func: T) -> T:
     sig = signature(func)
     annotations = _get_annotations(func)
-    # Determine which parameters have a declared dependency
+    # Determine which parameters have a declared inject
     inject_parameters = {
         name: annotations[name]
         for name, parameter in sig.parameters.items()
@@ -24,7 +24,7 @@ def inject(func: T) -> T:
     @wraps(func)
     def injector(*args, **kwargs):
         params = sig.bind_partial(*args, **kwargs)
-        # Get instances from the repo to fill all missing dependency parameters
+        # Get instances from the repo to fill all missing inject parameters
         params.arguments |= {
             name: get_repository().get(annotation)
             for name, annotation in inject_parameters.items()
@@ -54,7 +54,7 @@ class AutoInject:
                 continue
 
             if not name.endswith("__") and _needs_injector(attr):
-                setattr(cls, name, inject(attr))
+                setattr(cls, name, inject_dependencies(attr))
 
 
 class Dependency(AtAnnotation):
@@ -91,4 +91,4 @@ def _needs_injector(attr):
     )
 
 
-dependency = Dependency
+inject = Dependency
