@@ -20,6 +20,7 @@ from wordlette.requests import Request
 from wordlette.routers import Router
 from wordlette.routes.exception_contexts import ExceptionHandlerContext
 from wordlette.utils.apply import apply
+from wordlette.utils.dependency_injection import AutoInject
 from wordlette.utils.match_types import TypeMatchable
 from wordlette.utils.options import Option
 
@@ -112,7 +113,9 @@ class RouteMCS(type):
         return f"<Route:{cls.__name__} {path=} {name=} {methods=}>"
 
 
-class Route(Generic[RequestType], _RouteMetadata, TypeMatchable, metaclass=RouteMCS):
+class Route(
+    Generic[RequestType], _RouteMetadata, TypeMatchable, AutoInject, metaclass=RouteMCS
+):
     """The route type handles all the magic that allows routes to be defined without any decorator boilerplate. It
     provides the instrumentation necessary for simple request handling by method type using type annotations. It also
     provides a simple exception handling mechanism using the same approach.
