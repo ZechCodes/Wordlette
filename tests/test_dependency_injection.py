@@ -52,3 +52,15 @@ def test_auto_inject_class(repo):
 
     repo.set(str, "hello")
     assert TestClass().function() == "hello"
+
+
+def test_auto_inject_class_functions_only_with_dependencies():
+    class TestClass(AutoInject):
+        def function(self, dep: str @ dependency = "") -> str:
+            ...
+
+        def no_dep_function(self):
+            ...
+
+    assert hasattr(TestClass.function, "injected_params")
+    assert not hasattr(TestClass.no_dep_function, "injected_params")

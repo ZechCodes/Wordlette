@@ -12,8 +12,7 @@ T = TypeVar("T", bound=Callable)
 
 def inject(func: T) -> T:
     sig = signature(func)
-    ns = _get_function_namespace(func)
-    annotations = get_annotations(func, globals=ns, eval_str=True)
+    annotations = _get_annotations(func)
     # Determine which parameters have a declared dependency
     inject_parameters = {
         name: annotations[name]
@@ -42,11 +41,7 @@ class AutoInject:
         super().__init_subclass__(**kwargs)
         for name in dir(cls):
             attr = getattr(cls, name)
-            if (
-                not name.endswith("__")
-                and callable(attr)
-                and not hasattr(attr, "injected_params")
-            ):
+            if not name.endswith("__") and _needs_injector(attr):
                 setattr(cls, name, inject(attr))
 
 
@@ -55,12 +50,30 @@ class Dependency(AtAnnotation):
         return partial(get_repository().get, type_)
 
 
+def _get_annotations(func):
+    ns = _get_function_namespace(func)
+    return get_annotations(func, globals=ns, eval_str=True)
+
+
 def _is_at_annotation_type(annotation) -> bool:
     origin = get_origin(annotation)
     if origin is not Annotated:
         return False
 
     return True
+
+
+def _needs_injector(attr):
+    if not callable(attr):
+        return False
+
+    if hasattr(attr, "injected_params"):
+        return False
+
+    return any(
+        _is_at_annotation_type(annotation)
+        for annotation in _get_annotations(attr).values()
+    )
 
 
 dependency = Dependency
