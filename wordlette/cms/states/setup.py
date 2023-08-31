@@ -60,7 +60,7 @@ class CreateSettingsFile(_SetupRoute):
         subtitle = "Your Settings Have Been Saved"
         return Template(
             "create-settings-file.html",
-            title="Wordlette: {subtitle}",
+            title=f"Wordlette: {subtitle}",
             heading="Setup",
             subtitle=subtitle,
             created_settings_file=True,
