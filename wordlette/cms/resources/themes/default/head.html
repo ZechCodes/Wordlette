@@ -70,9 +70,9 @@
             max-width: 320pt;
         }
 
-        .button {
-            background-color: rgb(0, 119, 226);
-            border-color: rgb(0, 119, 226);
+        .button, input[type="submit"] {
+            background-color: #0077e2;
+            border-color: #0077e2;
             border-radius: 32px;
             border-width: 2px;
             color: white;
@@ -84,10 +84,10 @@
             transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
         }
 
-        .button:hover {
-            color: rgb(0, 119, 226);
+        .button:hover, input[type="submit"]:hover {
+            color: #0077e2;
             background-color: white;
-            border-color: rgb(0, 119, 226);
+            border-color: #0077e2;
         }
 
         .setup-welcome-next {
@@ -95,7 +95,7 @@
         }
 
         pre {
-            border-color: rgb(0, 119, 226);
+            border-color: #0077e2;
             padding: 8px 16px;
         }
 
@@ -143,6 +143,19 @@
 
         .container + .container {
             margin-top: 32px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        select:focus {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 8" width="30"><path fill="%230077e2" d="M0,0l6,8l6-8"/></svg>');
+            border-color: #0077e2;
+        }
+
+        input[type='color']:focus, input[type='date']:focus, input[type='datetime']:focus, input[type='datetime-local']:focus, input[type='email']:focus, input[type='month']:focus, input[type='number']:focus, input[type='password']:focus, input[type='search']:focus, input[type='tel']:focus, input[type='text']:focus, input[type='url']:focus, input[type='week']:focus, input:not([type]):focus, textarea:focus, select:focus {
+            border-color: #0077e2;
         }
     </style>
 </head>
