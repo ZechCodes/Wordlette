@@ -51,6 +51,7 @@ class ErrorPages(Extension, Observer):
         return Template(
             template_name,
             name=name,
+            title=f"{status_code} - {name}",
             path=scope["path"],
             status_code=status_code,
             exception=(
