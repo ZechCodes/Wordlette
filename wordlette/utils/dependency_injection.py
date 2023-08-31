@@ -72,6 +72,9 @@ def _is_at_annotation_type(annotation) -> bool:
 
 
 def _needs_injector(attr):
+    if isinstance(attr, type):
+        return False
+
     if not callable(attr):
         return False
 
