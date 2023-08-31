@@ -13,7 +13,7 @@ class JsonHandler(ConfigHandler):
 
     def write(self, data: dict | Serializable, file: BinaryIO):
         def write(d):
-            json.dump(d, f := StringIO())
+            json.dump(d, f := StringIO(), indent=2)
             file.write(f.getvalue().encode())
 
         match data:
