@@ -44,10 +44,10 @@ class State(Generic[_T], metaclass=StateABCMeta):
         return RequestCycle()
 
     @abstractmethod
-    async def enter_state(self) -> RequestCycle | None:
+    async def enter_state(self, *_, **__) -> RequestCycle | None:
         ...
 
-    async def exit_state(self):
+    async def exit_state(self, *_, **__) -> None:
         return
 
     def __repr__(self):
