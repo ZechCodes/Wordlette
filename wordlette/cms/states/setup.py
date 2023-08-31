@@ -28,9 +28,9 @@ class Index(_SetupRoute):
     def _get_next_page(
         self,
         config: ConfigManager @ dependency,
+        router: RouteManager @ dependency,
         settings_filename: str @ AppSetting("settings-filename"),
         working_directory: str @ AppSetting("working-directory"),
-        router: RouteManager @ dependency,
     ):
         settings_path = config.find_config_file(settings_filename, working_directory)
         if settings_path is None:
