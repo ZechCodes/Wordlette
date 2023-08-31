@@ -1,5 +1,10 @@
 from typing import BinaryIO, Any
 
+from wordlette.configs.exceptions import (
+    ConfigCannotCreateFiles,
+    ConfigCannotLoadFiles,
+)
+
 try:
     import tomlkit as toml
 
@@ -20,13 +25,17 @@ class TomlHandler(ConfigHandler):
 
     def load(self, file: BinaryIO) -> dict[str, Any]:
         if not toml:
-            raise ImportError("tomlkit or tomllib is required to load TOML files.")
+            raise ConfigCannotLoadFiles(
+                "You must install tomlkit or tomllib to load TOML files."
+            )
 
         return toml.load(file)
 
     def write(self, data: dict | Serializable, file: BinaryIO):
         if not can_write:
-            raise ImportError("tomlkit is required to write TOML files.")
+            raise ConfigCannotCreateFiles(
+                "You must install tomlkit to write TOML files."
+            )
 
         def write(d):
             file.write(toml.dumps(d).encode())
