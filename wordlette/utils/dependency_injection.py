@@ -48,7 +48,11 @@ class AutoInject:
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         for name in dir(cls):
-            attr = getattr(cls, name)
+            try:
+                attr = getattr(cls, name)
+            except AttributeError:
+                continue
+
             if not name.endswith("__") and _needs_injector(attr):
                 setattr(cls, name, inject(attr))
 
