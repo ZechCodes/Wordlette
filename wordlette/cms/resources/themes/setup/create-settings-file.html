@@ -1,0 +1,54 @@
+{% include 'head.html' %}
+<header class="short">
+    <div class="container">
+        <div class="column">
+            <h1>{{ heading }}</h1>
+            {% if subtitle %}
+            <h3>{{ subtitle }}</h3>
+            {% endif %}
+        </div>
+    </div>
+</header>
+{% if created_settings_file %}
+<div class="container">
+    <div class="row">
+        <div class="column">
+            <p><i>Wordlette</i> has created a settings file for your website at <code>{{ file_path }}</code>.</p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="column">
+            <a href="{{ next_page_url }}" class="button">Next</a>
+        </div>
+    </div>
+</div>
+{% else %}
+<div class="container">
+    <div class="column">
+        <p><i>Wordlette</i> can't find a settings file for your website, so let's create one.</p>
+    </div>
+</div>
+<form method="post">
+    <div class="container">
+        <div class="row">
+            <div class="column column-50">
+                <fieldset>
+                    <h3>Site Settings</h3>
+                    <label for="site-name">What is your website's name?</label>
+                    <input type="text" name="site-name" id="site-name"
+                           placeholder="ex. &quot;Bob's Blog&quot; or &quot;Paul's Portfolio&quot;"
+                           required>
+                    <label for="domain-name">What is your website's domain name?</label>
+                    <input type="text" name="domain-name" id="domain-name"
+                           placeholder="ex. &quot;bobsblog.com&quot; or &quot;www.paulsportfolio.com&quot;"
+                           required>
+                    <input type="checkbox" name="uses-https" id="uses-https" class="label-inline" checked>
+                    <label for="uses-https" class="label-inline">Uses HTTPS</label>
+                </fieldset>
+                <input type="submit" value="Save Settings">
+            </div>
+        </div>
+    </div>
+</form>
+{% endif %}
+{% include "foot.html" %}
