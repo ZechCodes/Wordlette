@@ -19,16 +19,20 @@
                 <p>Wordlette encountered an error while loading this page.</p>
                 {% endif %}
             </blockquote>
-            <a href="/" class="go-home">Return Home</a>
-            {% if exception %}
         </div>
     </div>
 </div>
 <div class="container">
     <div class="column">
-        <h4>Stacktrace</h4>
-        <pre>{{ exception.stacktrace }}</pre>
-        {% endif %}
+        <a href="/" class="go-home">Take Me Home</a>
     </div>
 </div>
+{% if exception %}
+<div class="container">
+    <div class="column">
+        <h4>Stacktrace</h4>
+        <pre>{{ exception.stacktrace }}</pre>
+    </div>
+</div>
+{% endif %}
 {% include "foot.html" %}
