@@ -1,3 +1,4 @@
+import logging
 from types import UnionType
 from typing import Callable, get_args, Type, overload
 
@@ -11,6 +12,8 @@ import wordlette.routes
 from wordlette.core.app import AppSetting
 from wordlette.requests import Request
 from wordlette.utils.expand_dicts import from_dict
+
+logger = logging.getLogger("Router")
 
 
 class StarletteRouter(_StarletteRouter):
@@ -42,6 +45,11 @@ class Router:
                 scope["exception"] = exc
 
             page = self._get_error_page(getattr(exc, "status_code", 500), scope)
+            if not isinstance(exc, HTTPException):
+                logger.exception(
+                    "The router encountered an error while running the route handler."
+                )
+
             await page(scope, receive, send)
 
     def add_error_page(
