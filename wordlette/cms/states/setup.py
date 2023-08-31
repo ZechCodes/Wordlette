@@ -30,7 +30,7 @@ class CreateSettingsFile(_SetupRoute):
     path = "/create-settings-file"
 
     async def get_setup_page(self, _: Request.Get):
-        subtitle = "Create Your Settings File"
+        subtitle = "Configure Your Website"
         return Template(
             "create-settings-file.html",
             title=f"Wordlette: {subtitle}",
@@ -57,7 +57,7 @@ class CreateSettingsFile(_SetupRoute):
                 }
             },
         )
-        subtitle = "Your Settings File Has Been Created"
+        subtitle = "Your Settings Have Been Saved"
         return Template(
             "create-settings-file.html",
             title="Wordlette: {subtitle}",
