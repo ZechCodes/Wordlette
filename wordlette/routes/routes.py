@@ -159,7 +159,7 @@ class Route(
             await error_handler(scope, receive, send)
 
     async def _handle(self, scope: Scope, receive: Receive, send: Send):
-        request = Request.factory(scope)
+        request = Request.factory(scope, receive, send)
         if type(request) not in self.__metadata__.request_handlers:
             raise Exception(
                 f"Request type {type(request)} not handled by {self.__class__.__qualname__}"

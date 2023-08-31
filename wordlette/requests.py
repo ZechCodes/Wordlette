@@ -1,6 +1,6 @@
 from typing import Type
 
-from starlette.requests import Request as StarletteRequest
+from starlette.requests import Request as StarletteRequest, empty_receive, empty_send
 
 
 class Request(StarletteRequest):
@@ -17,28 +17,30 @@ class Request(StarletteRequest):
         cls.name = cls.__name__.upper()
 
     @classmethod
-    def factory(cls, scope) -> "Request":
+    def factory(cls, scope, receive=empty_receive, send=empty_send) -> "Request":
         match scope["method"].upper():
             case "DELETE":
-                return cls.Delete(scope)
+                request_type = cls.Delete
 
             case "GET":
-                return cls.Get(scope)
+                request_type = cls.Get
 
             case "HEAD":
-                return cls.Head(scope)
+                request_type = cls.Head
 
             case "PATCH":
-                return cls.Patch(scope)
+                request_type = cls.Patch
 
             case "POST":
-                return cls.Post(scope)
+                request_type = cls.Post
 
             case "PUT":
-                return cls.Put(scope)
+                request_type = cls.Put
 
             case _:
-                return Request(scope)
+                request_type = Request
+
+        return request_type(scope, receive, send)
 
 
 class Delete(Request):
