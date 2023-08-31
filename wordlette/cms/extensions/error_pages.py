@@ -49,7 +49,11 @@ class ErrorPages(Extension, Observer):
             status_code=status_code,
             exception=(
                 ExceptionObject(
-                    type(scope["exception"]).__name__,
+                    (
+                        scope["exception"].name
+                        if hasattr(scope["exception"], "name")
+                        else type(scope["exception"]).__name__
+                    ),
                     str(scope["exception"]),
                     self._get_stacktrace(scope["exception"]),
                 )

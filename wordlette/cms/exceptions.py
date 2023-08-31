@@ -8,6 +8,10 @@ class BaseWordletteCMSExecption(BaseWordletteException):
 class ThemeNotFound(BaseWordletteCMSExecption):
     """Raised when a theme cannot be found."""
 
+    name = "Theme Not Found"
+
 
 class TemplateNotFound(BaseWordletteCMSExecption):
     """Raised when a template cannot be found."""
+
+    name = "Template Not Found"
