@@ -42,9 +42,15 @@ class ErrorPages(Extension, Observer):
             case _:
                 template_name = "errors/default.html"
 
+        name = "An error was encountered"
+        if "exception" in scope and hasattr(scope["exception"], "name"):
+            name = scope["exception"].name
+        elif status_code == 404:
+            name = "Page not found"
+
         return Template(
             template_name,
-            name="Page not found" if status_code == 404 else "An error was encountered",
+            name=name,
             path=scope["path"],
             status_code=status_code,
             exception=(
