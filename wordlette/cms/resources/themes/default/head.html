@@ -38,7 +38,10 @@
             background: linear-gradient(90deg, rgba(0, 19, 126, 1) 0%, rgba(0, 221, 255, 1) 100%);
             color: white;
             padding: 92px 0;
-            margin-bottom: 64px;
+        }
+
+        header + div {
+            margin-top: 64px;
         }
 
         header h1 {
@@ -96,8 +99,35 @@
             margin-top: 0;
         }
 
-        .error-page a + h4 {
-            margin-top: 48px;
+        .error-page {
+            margin-top: 0;
+            padding: 0;
+        }
+
+        .error-page .error-section {
+            background-color: #ffddcc;
+            color: #444444;
+            margin-bottom: 32px;
+            margin-top: 0;
+            padding: 32px;
+        }
+
+        .error-page .error-section a {
+            color: #333;
+            border: none;
+            border-bottom: 1px solid transparent;
+        }
+
+        .error-page .error-section a:hover {
+            border-bottom: 1px solid #333;
+        }
+
+        .error-page .error-section blockquote {
+            border-left-color: #ff4444;
+        }
+
+        .error-page .error-section h4 {
+            color: black;
         }
     </style>
 </head>
