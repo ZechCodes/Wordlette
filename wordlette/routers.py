@@ -37,15 +37,11 @@ class Router:
         try:
             return await self.router(scope, receive, send)
 
-        except HTTPException as exc:
-            page = self._get_error_page(exc.status_code, scope)
-            await page(scope, receive, send)
-
         except Exception as exc:
             if debug:
                 scope["exception"] = exc
 
-            page = self._get_error_page(500, scope)
+            page = self._get_error_page(getattr(exc, "status_code", 500), scope)
             await page(scope, receive, send)
 
     def add_error_page(
