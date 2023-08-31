@@ -43,11 +43,18 @@ class ErrorPages(Extension, Observer):
             case _:
                 template_name = "errors/default.html"
 
+        exception_name = None
+        if "exception" in scope:
+            exception = scope["exception"]
+            exception_name = type(exception).__name__
+            if isinstance(exception, HTTPException) and exception.detail is not None:
+                exception_name = exception.detail
+            elif hasattr(exception, "name") and exception.name is not None:
+                exception_name = exception.name
+
         name = "An error was encountered"
-        if "exception" in scope and isinstance(scope["exception"], HTTPException):
-            name = scope["exception"].detail
-        elif "exception" in scope and hasattr(scope["exception"], "name"):
-            name = scope["exception"].name
+        if exception_name:
+            name = exception_name
         elif status_code == 404:
             name = "Page not found"
 
@@ -59,11 +66,7 @@ class ErrorPages(Extension, Observer):
             status_code=status_code,
             exception=(
                 ExceptionObject(
-                    getattr(
-                        scope["exception"],
-                        "name",
-                        type(scope["exception"]).__name__,
-                    ),
+                    exception_name,
                     getattr(scope["exception"], "detail", str(scope["exception"])),
                     self._get_stacktrace(scope["exception"]),
                 )
