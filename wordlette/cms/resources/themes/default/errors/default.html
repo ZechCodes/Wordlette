@@ -12,11 +12,24 @@
         <div class="container">
             <div class="column">
                 <blockquote>
+                    {% if exception %}
+                    <h4>{{ exception.name }}</h4>
+                    <p>{{ exception.message }}</p>
+                    {% else %}
                     <h4>Oops!</h4>
-                    <p>Wordlette encountered an unknown {{ status_code }} error.</p>
+                    <p>Wordlette encountered an error while loading this page.</p>
+                    {% endif %}
                 </blockquote>
                 <a href="/" class="go-home">Return Home</a>
+                {% if exception %}
             </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="column">
+            <h4>Stacktrace</h4>
+            <pre>{{ exception.stacktrace }}</pre>
+            {% endif %}
         </div>
     </div>
 </div>
