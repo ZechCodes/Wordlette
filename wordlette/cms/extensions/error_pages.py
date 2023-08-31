@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from io import StringIO
 
 from bevy import inject, dependency
+from starlette.exceptions import HTTPException
 from starlette.types import Scope
 
 from wordlette.cms.theming import Template, ThemeManager
@@ -43,7 +44,9 @@ class ErrorPages(Extension, Observer):
                 template_name = "errors/default.html"
 
         name = "An error was encountered"
-        if "exception" in scope and hasattr(scope["exception"], "name"):
+        if "exception" in scope and isinstance(scope["exception"], HTTPException):
+            name = scope["exception"].detail
+        elif "exception" in scope and hasattr(scope["exception"], "name"):
             name = scope["exception"].name
         elif status_code == 404:
             name = "Page not found"
@@ -56,12 +59,12 @@ class ErrorPages(Extension, Observer):
             status_code=status_code,
             exception=(
                 ExceptionObject(
-                    (
-                        scope["exception"].name
-                        if hasattr(scope["exception"], "name")
-                        else type(scope["exception"]).__name__
+                    getattr(
+                        scope["exception"],
+                        "name",
+                        type(scope["exception"]).__name__,
                     ),
-                    str(scope["exception"]),
+                    getattr(scope["exception"], "detail", str(scope["exception"])),
                     self._get_stacktrace(scope["exception"]),
                 )
                 if "exception" in scope
