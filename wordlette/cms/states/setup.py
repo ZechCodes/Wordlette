@@ -1,5 +1,3 @@
-from bevy import inject, dependency
-
 from wordlette.cms.theming import Template, ThemeManager
 from wordlette.configs.managers import ConfigManager
 from wordlette.core.app import AppSetting
@@ -7,6 +5,7 @@ from wordlette.middlewares.router_middleware import RouteManager
 from wordlette.requests import Request
 from wordlette.routes import Route
 from wordlette.state_machines import State
+from wordlette.utils.dependency_injection import dependency, AutoInject
 
 
 class _SetupRoute(Route):
@@ -26,13 +25,12 @@ class Index(_SetupRoute):
             next_page_url=self._get_next_page(),
         )
 
-    @inject
     def _get_next_page(
         self,
-        config: ConfigManager = dependency(),
-        settings_filename: str @ AppSetting("settings-filename") = dependency(),
-        working_directory: str @ AppSetting("working-directory") = dependency(),
-        router: RouteManager = dependency(),
+        config: ConfigManager @ dependency,
+        settings_filename: str @ AppSetting("settings-filename"),
+        working_directory: str @ AppSetting("working-directory"),
+        router: RouteManager @ dependency,
     ):
         settings_path = config.find_config_file(settings_filename, working_directory)
         if settings_path is None:
@@ -63,12 +61,11 @@ class SetupComplete(_SetupRoute):
         )
 
 
-class Setup(State):
-    @inject
+class Setup(State, AutoInject):
     async def enter_state(
         self,
-        route_manager: RouteManager = dependency(),
-        theme_manager: ThemeManager = dependency(),
+        route_manager: RouteManager @ dependency,
+        theme_manager: ThemeManager @ dependency,
     ):
         theme_manager.set_theme(theme_manager.wordlette_res / "themes" / "setup")
         _SetupRoute.register_routes(route_manager.router)
