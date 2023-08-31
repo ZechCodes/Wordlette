@@ -7,30 +7,28 @@
         </div>
     </div>
 </header>
-<div class="error-page">
-    <div class="error-section">
-        <div class="container">
-            <div class="column">
-                <blockquote>
-                    {% if exception %}
-                    <h4>{{ exception.name }}</h4>
-                    <p>{{ exception.message }}</p>
-                    {% else %}
-                    <h4>Oops!</h4>
-                    <p>Wordlette encountered an error while loading this page.</p>
-                    {% endif %}
-                </blockquote>
-                <a href="/" class="go-home">Return Home</a>
-                {% if exception %}
-            </div>
-        </div>
-    </div>
+<div class="error-section">
     <div class="container">
         <div class="column">
-            <h4>Stacktrace</h4>
-            <pre>{{ exception.stacktrace }}</pre>
-            {% endif %}
+            <blockquote>
+                {% if exception %}
+                <h4>{{ exception.name }}</h4>
+                <p>{{ exception.message }}</p>
+                {% else %}
+                <h4>Oops!</h4>
+                <p>Wordlette encountered an error while loading this page.</p>
+                {% endif %}
+            </blockquote>
+            <a href="/" class="go-home">Return Home</a>
+            {% if exception %}
         </div>
+    </div>
+</div>
+<div class="container">
+    <div class="column">
+        <h4>Stacktrace</h4>
+        <pre>{{ exception.stacktrace }}</pre>
+        {% endif %}
     </div>
 </div>
 {% include "foot.html" %}
