@@ -3,14 +3,14 @@ from inspect import get_annotations
 from itertools import chain
 from types import UnionType, MethodType
 from typing import (
-    Type,
-    TypeVar,
-    Sequence,
-    get_origin,
-    get_args,
     Annotated,
     Any,
     Callable,
+    Sequence,
+    Type,
+    TypeVar,
+    get_args,
+    get_origin,
 )
 
 from wordlette.cms.forms.fields import Field, FieldConfig
