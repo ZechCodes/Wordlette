@@ -51,9 +51,9 @@ def test_too_large_ints():
         value: int
 
     with pytest.raises(ValidationError):
-        TestForm(2**127)
+        TestForm(2**63)
 
-    assert TestForm(2**127 - 1).value == 2**127 - 1
+    assert TestForm(2**63 - 1).value == 2**63 - 1
 
 
 def test_too_small_ints():
@@ -61,6 +61,6 @@ def test_too_small_ints():
         value: int
 
     with pytest.raises(ValidationError):
-        TestForm(-(2**127) - 1)
+        TestForm(-(2**63) - 1)
 
-    assert TestForm(-(2**127)).value == -(2**127)
+    assert TestForm(-(2**63)).value == -(2**63)

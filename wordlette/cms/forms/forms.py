@@ -200,13 +200,13 @@ def _merge_dicts_of_lists(
 
 
 @Form.add_type_validator(int)
-def validate_type_int_fits_in_an_int128(value: int):
-    if value > 2**127 - 1:
+def validate_type_int_fits_in_a_bigint(value: int):
+    if value > 2**63 - 1:
         raise wordlette.cms.forms.ValidationError(
-            "Integers must not be greater than 2^127 - 1 (largest signed 128-bit integer)"
+            "Integers must not be greater than 2^63 - 1 (largest signed 64-bit integer/bigint)"
         )
 
-    if value < -(2**127):
+    if value < -(2**63):
         raise wordlette.cms.forms.ValidationError(
-            "Integers must not be less than -2^127 (smallest signed 128-bit integer)"
+            "Integers must not be less than -2^63 (smallest signed 64-bit integer/bigint)"
         )
