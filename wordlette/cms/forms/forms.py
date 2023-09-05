@@ -6,14 +6,16 @@ from typing import (
     Annotated,
     Any,
     Callable,
+    Hashable,
     Sequence,
     Type,
+    TypeAlias,
     TypeVar,
     get_args,
     get_origin,
-    TypeAlias,
 )
 
+import wordlette.cms.forms
 from wordlette.cms.forms.fields import Field, FieldConfig
 
 T = TypeVar("T")
@@ -172,5 +174,13 @@ class Form:
         scanner = scanner_type(cls, cls.__form_fields__)
         scanner.scan()
 
-        cls.__validators__ = scanner.validators
-        cls.__type_validators__ = scanner.type_validators
+        _merge_dicts_of_lists(cls.__validators__, scanner.validators)
+        _merge_dicts_of_lists(cls.__type_validators__, scanner.type_validators)
+
+
+
+def _merge_dicts_of_lists(
+    base_dict: dict[Hashable, list[Any]], update_dict: dict[Hashable, list[Any]]
+):
+    for key, value in update_dict.items():
+        base_dict.setdefault(key, []).extend(value)
