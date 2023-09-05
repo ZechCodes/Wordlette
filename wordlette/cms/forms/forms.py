@@ -177,6 +177,19 @@ class Form:
         _merge_dicts_of_lists(cls.__validators__, scanner.validators)
         _merge_dicts_of_lists(cls.__type_validators__, scanner.type_validators)
 
+    @classmethod
+    def add_type_validator(
+        cls, type_: Type[T], validator: Validator | None = None
+    ) -> Callable[[Validator], Validator] | None:
+        if not validator:
+
+            def decorator(v: Validator) -> Validator:
+                cls.add_type_validator(type_, v)
+                return v
+
+            return decorator
+
+        cls.__type_validators__.setdefault(type_, []).append(lambda _, v: validator(v))
 
 
 def _merge_dicts_of_lists(
