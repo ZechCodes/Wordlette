@@ -197,3 +197,16 @@ def _merge_dicts_of_lists(
 ):
     for key, value in update_dict.items():
         base_dict.setdefault(key, []).extend(value)
+
+
+@Form.add_type_validator(int)
+def validate_type_int_fits_in_an_int128(value: int):
+    if value > 2**127 - 1:
+        raise wordlette.cms.forms.ValidationError(
+            "Integers must not be greater than 2^127 - 1 (largest signed 128-bit integer)"
+        )
+
+    if value < -(2**127):
+        raise wordlette.cms.forms.ValidationError(
+            "Integers must not be less than -2^127 (smallest signed 128-bit integer)"
+        )

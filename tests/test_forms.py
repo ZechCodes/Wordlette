@@ -44,3 +44,23 @@ def test_field_validation_by_type():
         TestForm("invalid")
 
     assert TestForm("valid").value == "valid"
+
+
+def test_too_large_ints():
+    class TestForm(Form):
+        value: int
+
+    with pytest.raises(ValidationError):
+        TestForm(2**127)
+
+    assert TestForm(2**127 - 1).value == 2**127 - 1
+
+
+def test_too_small_ints():
+    class TestForm(Form):
+        value: int
+
+    with pytest.raises(ValidationError):
+        TestForm(-(2**127) - 1)
+
+    assert TestForm(-(2**127)).value == -(2**127)
