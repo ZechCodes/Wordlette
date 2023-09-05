@@ -15,8 +15,9 @@ from typing import (
     get_origin,
 )
 
-import wordlette.cms.forms
-from wordlette.cms.forms.fields import Field, FieldConfig
+import wordlette.forms
+from wordlette.forms import Field
+from wordlette.forms.fields import FieldConfig
 
 T = TypeVar("T")
 Validator: TypeAlias = Callable[[T], None]
@@ -202,11 +203,11 @@ def _merge_dicts_of_lists(
 @Form.add_type_validator(int)
 def validate_type_int_fits_in_a_bigint(value: int):
     if value > 2**63 - 1:
-        raise wordlette.cms.forms.ValidationError(
+        raise wordlette.forms.ValidationError(
             "Integers must not be greater than 2^63 - 1 (largest signed 64-bit integer/bigint)"
         )
 
     if value < -(2**63):
-        raise wordlette.cms.forms.ValidationError(
+        raise wordlette.forms.ValidationError(
             "Integers must not be less than -2^63 (smallest signed 64-bit integer/bigint)"
         )

@@ -1,6 +1,6 @@
 import pytest
 
-from wordlette.cms.forms import Form, Field, ValidationError
+from wordlette.forms import Form, Field, ValidationError
 
 
 def test_field_type_validation():
