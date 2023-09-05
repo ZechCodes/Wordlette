@@ -11,11 +11,13 @@ from typing import (
     TypeVar,
     get_args,
     get_origin,
+    TypeAlias,
 )
 
 from wordlette.cms.forms.fields import Field, FieldConfig
 
 T = TypeVar("T")
+Validator: TypeAlias = Callable[[T], None]
 
 
 class FieldScanner:
@@ -71,15 +73,15 @@ class ValidatorScanner:
             if name.startswith(f"validate_{field_name}"):
                 return field_name
 
-    def _process_validator(self, validator: Callable[[T], None], name: str):
+    def _process_validator(self, validator: Validator, name: str):
         field_name = self._get_matching_field_name(name)
         self.validators[field_name].append(validator)
 
-    def _process_type_validator(self, validator: Callable[[T], None]):
+    def _process_type_validator(self, validator: Validator):
         for type_ in self._get_type_validator_types(validator):
             self.type_validators[type_].append(validator)
 
-    def _get_type_validator_types(self, validator: Callable[[T], None]) -> list[Type]:
+    def _get_type_validator_types(self, validator: Validator) -> list[Type]:
         annotations = get_annotations(validator)
         annotation = next(iter(annotations.values()))
         origin = get_origin(annotation)
@@ -101,8 +103,8 @@ class ValidatorScanner:
 
 class Form:
     __form_fields__: dict[str, Field] = {}
-    __validators__: dict[str, list[Callable[[T], None]]] = {}
-    __type_validators__: dict[Type, list[Callable[[T], None]]] = {}
+    __validators__: dict[str, list[Validator]] = {}
+    __type_validators__: dict[Type, list[Validator]] = {}
 
     def __init_subclass__(
         cls,
