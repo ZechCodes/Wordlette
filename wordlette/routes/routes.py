@@ -15,7 +15,11 @@ from typing import (
 
 from starlette.types import Scope, Receive, Send
 
-from wordlette.core.exceptions import MissingRoutePath, NoRouteHandlersFound
+from wordlette.core.exceptions import (
+    MissingRoutePath,
+    NoRouteHandlersFound,
+    CannotHandleInconsistentTypes,
+)
 from wordlette.requests import Request
 from wordlette.routers import Router
 from wordlette.routes.exception_contexts import ExceptionHandlerContext
@@ -183,12 +187,29 @@ class Route(
     @classmethod
     def _register_handlers(cls, function, *handler_types):
         if all(issubclass(handler, Request) for handler in handler_types):
-            cls._add_handlers(
-                function, handler_types, cls.__metadata__.request_handlers
-            )
+            handler_registry = cls.__metadata__.request_handlers
+
+        elif all(issubclass(handler, Form) for handler in handler_types):
+            handler_registry = cls.__metadata__.form_handlers
 
         elif all(issubclass(handler, Exception) for handler in handler_types):
-            cls._add_handlers(function, handler_types, cls.__metadata__.error_handlers)
+            handler_registry = cls.__metadata__.error_handlers
+
+        else:
+            raise cls._create_inconsistent_handler_types_exception(handler_types)
+
+        cls._add_handlers(function, handler_types, handler_registry)
+
+    @staticmethod
+    def _create_inconsistent_handler_types_exception(handler_types):
+        types = ", ".join(
+            handler_type.__qualname__ for handler_type in handler_types[:~0]
+        )
+        types += f", and {handler_types[~0].__qualname__}"
+        raise CannotHandleInconsistentTypes(
+            f"A route handler cannot be registered for inconsistent types: {types} do not share a compatible common"
+            f" base type."
+        )
 
     @classmethod
     def _register_route(cls):

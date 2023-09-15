@@ -23,3 +23,9 @@ class ConfigFileNotFound(BaseWordletteException):
     """Raised when a config file cannot be found."""
 
     name = "Config File Not Found"
+
+
+class CannotHandleInconsistentTypes(BaseWordletteException):
+    """Raised when a route handler is registered to handle inconsistent types."""
+
+    name = "Route Handlers Cannot Handle Inconsistent Types"
