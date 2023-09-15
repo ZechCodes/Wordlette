@@ -17,8 +17,7 @@ class ExceptionHandlerContext:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         if handler := self._find_error_handler(exc_type):
             self.handler = handler
-            self.exception = exc_type(exc_val)
-            self.exception.with_traceback(exc_tb)
+            self.exception = exc_val
             return True
 
     def __bool__(self):
