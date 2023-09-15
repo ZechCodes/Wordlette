@@ -14,6 +14,13 @@
                 {% if exception %}
                 <h4>{{ exception.name }}</h4>
                 <p>{{ exception.message }}</p>
+                {% if exception.notes %}
+                <ul>
+                    {% for note in exception.notes %}
+                    <li>{{ note }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
                 {% else %}
                 <h4>Oops!</h4>
                 <p>Wordlette encountered an error while loading this page.</p>

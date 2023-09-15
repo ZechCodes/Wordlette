@@ -22,6 +22,7 @@ class ExceptionObject:
     name: str
     message: str
     stacktrace: str
+    notes: list[str]
 
 
 class ErrorPages(Extension, Observer):
@@ -69,6 +70,7 @@ class ErrorPages(Extension, Observer):
                     exception_name,
                     getattr(scope["exception"], "detail", str(scope["exception"])),
                     self._get_stacktrace(scope["exception"]),
+                    exception.__notes__
                 )
                 if "exception" in scope
                 else None
