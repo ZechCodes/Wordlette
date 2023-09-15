@@ -1,18 +1,17 @@
 import inspect
-from collections.abc import Set
+from functools import wraps
 from types import MethodType, UnionType
 from typing import (
-    Any,
     Callable,
     Generic,
-    Iterator,
     ParamSpec,
-    Type,
     TypeVar,
-    cast,
     get_args,
+    Type,
 )
 
+from starlette.datastructures import FormData
+from starlette.responses import Response
 from starlette.types import Scope, Receive, Send
 
 from wordlette.core.exceptions import (
@@ -20,9 +19,13 @@ from wordlette.core.exceptions import (
     NoRouteHandlersFound,
     CannotHandleInconsistentTypes,
 )
+from wordlette.forms import Form
 from wordlette.requests import Request
 from wordlette.routers import Router
 from wordlette.routes.exception_contexts import ExceptionHandlerContext
+from wordlette.routes.exceptions import NoCompatibleFormError
+from wordlette.routes.method_collections import MethodsCollection
+from wordlette.routes.route_metadata import RouteMetadataSetup
 from wordlette.utils.apply import apply
 from wordlette.utils.dependency_injection import AutoInject
 from wordlette.utils.match_types import TypeMatchable
@@ -33,78 +36,40 @@ RequestType = TypeVar("RequestType", bound=Request)
 ExceptionType = TypeVar("ExceptionType", bound=Exception)
 
 
-class MethodsCollection(Set[Type[Request]]):
-    def __init__(self, *methods: Type[Request]):
-        self._methods = set(methods)
-
-    @property
-    def names(self):
-        return [method.name for method in self]
-
-    def __contains__(self, request: Request | Type[Request]) -> bool:
-        request_type = type(request) if isinstance(request, Request) else request
-        return request_type in self._methods
-
-    def __iter__(self) -> Iterator[Type[Request]]:
-        return iter(self._methods)
-
-    def __len__(self) -> int:
-        return len(self._methods)
-
-    def __repr__(self):
-        return f"<{type(self).__name__} {{{', '.join(sorted(method.name for method in self))}}}>"
+def get_functions(cls):
+    for name, attr in vars(cls).items():
+        if (
+            callable(attr)
+            and not isinstance(attr, MethodType)
+            and not name.startswith("_")
+        ):
+            yield attr
 
 
-class RouteMetadata:
-    abstract: bool
-    registry: "set[Type[Route]]"
-    error_handlers: dict[Type[Exception], Callable[[Exception], Any]]
-    request_handlers: dict[Type[Request], Callable[[Request], Any]]
+def get_handler_type(function):
+    arg_spec = inspect.getfullargspec(unwrap(function))
+    arg_type = (
+        arg_spec.annotations.get(arg_spec.args[1]) if len(arg_spec.args) > 1 else None
+    )
+    return Option.Value(arg_type) if arg_type else Option.Null()
 
 
-class _RouteMetadata:
-    class __metadata__(RouteMetadata):
-        abstract = True
-        registry = set()
-
-    def __init_subclass__(cls, **kwargs):
-        super().__init_subclass__(**kwargs)
-        if _RouteMetadata in cls.__bases__:
+def never_abstract(func: Callable[P, None]) -> Callable[P, None]:
+    @wraps(func)
+    def wrapper(*args: P.args, **kwargs: P.kwargs):
+        if args[0].__metadata__.abstract:
             return
 
-        cls._setup_metadata()
+        return func(*args, **kwargs)
 
-    @classmethod
-    def _create_new_metadata_object(cls):
-        super_route = get_super_route(cls)
-        cls.__metadata__ = create_metadata_type(
-            super_route.__metadata__,
-            abstract=False,
-            request_handlers={},
-            error_handlers={},
-        )
+    return wrapper
 
-    @classmethod
-    def _setup_metadata(cls):
-        if cls.__metadata__ is get_super_route(cls).__metadata__:
-            cls._create_new_metadata_object()
 
-        elif not issubclass(cls.__metadata__, RouteMetadata):
-            cls._transform_metadata_to_metadata_type()
+def unwrap(function):
+    while hasattr(function, "__wrapped__"):
+        function = function.__wrapped__
 
-    @classmethod
-    def _transform_metadata_to_metadata_type(cls):
-        super_route = get_super_route(cls)
-
-        if not hasattr(cls.__metadata__, "request_handlers"):
-            cls.__metadata__.request_handlers = {}
-
-        if not hasattr(cls.__metadata__, "error_handlers"):
-            cls.__metadata__.error_handlers = {}
-
-        cls.__metadata__ = create_metadata_type(
-            cls.__metadata__, super_route.__metadata__
-        )
+    return function
 
 
 class RouteMCS(type):
@@ -118,7 +83,11 @@ class RouteMCS(type):
 
 
 class Route(
-    Generic[RequestType], _RouteMetadata, TypeMatchable, AutoInject, metaclass=RouteMCS
+    Generic[RequestType],
+    RouteMetadataSetup,
+    TypeMatchable,
+    AutoInject,
+    metaclass=RouteMCS,
 ):
     """The route type handles all the magic that allows routes to be defined without any decorator boilerplate. It
     provides the instrumentation necessary for simple request handling by method type using type annotations. It also
@@ -146,11 +115,12 @@ class Route(
     path: str
 
     def __init_subclass__(cls, **kwargs):
-        """Setup the route class building the route meta, scanning for request & error handlers, and ensuring that
+        """Set up the route class building the route meta, scanning for request & error handlers, and ensuring that
         concrete routes have a path and route handlers."""
         super().__init_subclass__(**kwargs)
         cls._setup_route()
         cls._scan_for_handlers()
+        cls._setup_methods()
         cls._validate_route_object()
         cls._register_route()
 
@@ -212,10 +182,8 @@ class Route(
         )
 
     @classmethod
+    @never_abstract
     def _register_route(cls):
-        if cls.__metadata__.abstract:
-            return
-
         cls.__metadata__.registry.add(cls)
 
     @classmethod
@@ -223,27 +191,28 @@ class Route(
         for function in get_functions(cls):
             handler_type = get_handler_type(function)
             match handler_type:
-                case Option.Value(type() as ht) if issubclass(ht, (Request, Exception)):
+                case Option.Value(type() as ht) if issubclass(
+                    ht, (Request, Exception, Form)
+                ):
                     cls._register_handlers(function, ht)
 
                 case Option.Value(UnionType() as ht):
                     cls._register_handlers(function, *get_args(ht))
 
+    @classmethod
+    def _setup_methods(cls):
         cls.methods = MethodsCollection(*cls.__metadata__.request_handlers)
 
     @classmethod
+    @never_abstract
     def _setup_route(cls):
-        if cls.__metadata__.abstract:
-            return
-
         if not hasattr(cls, "name"):
             cls.name = cls.__qualname__.casefold()
 
     @classmethod
-    def _validate_route_object(cls):
-        if cls.__metadata__.abstract:
-            return
 
+    @never_abstract
+    def _validate_route_object(cls):
         if not hasattr(cls, "path"):
             raise MissingRoutePath(
                 f"Route subclass {cls.__qualname__} is missing a path attribute."
@@ -253,47 +222,3 @@ class Route(
             raise NoRouteHandlersFound(
                 f"Route subclass {cls.__qualname__} has no request handlers."
             )
-
-
-def create_metadata_type(
-    *bases: Type[RouteMetadata] | Type, **properties: Any
-) -> Type[RouteMetadata]:
-    return cast(
-        Type[RouteMetadata],
-        type(
-            "__metadata__",
-            bases,
-            properties,
-        ),
-    )
-
-
-def get_functions(cls):
-    for name, attr in vars(cls).items():
-        if (
-            callable(attr)
-            and not isinstance(attr, MethodType)
-            and not name.startswith("_")
-        ):
-            yield attr
-
-
-def get_handler_type(function):
-    arg_spec = inspect.getfullargspec(unwrap(function))
-    arg_type = (
-        arg_spec.annotations.get(arg_spec.args[1]) if len(arg_spec.args) > 1 else None
-    )
-    return Option.Value(arg_type) if arg_type else Option.Null()
-
-
-def get_super_route(cls):
-    for base in cls.__bases__:
-        if base is Route or issubclass(base, Route):
-            return base
-
-
-def unwrap(function):
-    while hasattr(function, "__wrapped__"):
-        function = function.__wrapped__
-
-    return function
