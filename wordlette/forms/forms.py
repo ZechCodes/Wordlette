@@ -204,7 +204,7 @@ class Form:
         return issubclass(method, cls.__request_method__)
 
     @classmethod
-    def create_from_data(cls: Type[F], data: FormData) -> F:
+    def create_from_form_data(cls: Type[F], data: FormData) -> F:
         return cls(
             **{
                 name: value

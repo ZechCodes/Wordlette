@@ -138,7 +138,7 @@ class Route(
         form_data = await request.form()
         match self._find_best_form_handler(form_data, type(request)):
             case Option.Value((form_type, handler)):
-                return await handler(self, form_type.create_from_data(form_data))
+                return await handler(self, form_type.create_from_form_data(form_data))
 
             case _:
                 raise NoCompatibleFormError(
