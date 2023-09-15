@@ -3,6 +3,18 @@ from typing import Any, Type, TypeVar, Generic
 from wordlette.utils.match_types import TypeMatchable
 
 T = TypeVar("T")
+OPTIONAL = object()
+
+
+def field(name: str = OPTIONAL, type: Type[T] = OPTIONAL, **_config) -> Any:
+    config = _config
+    if name is not OPTIONAL:
+        config["name"] = name
+
+    if type is not OPTIONAL:
+        config["type"] = type
+
+    return FieldConfig(config)
 
 
 class FieldConfig:
@@ -22,7 +34,7 @@ class Field(Generic[T], TypeMatchable):
         if instance is None:
             return self
 
-        return instance.__field_values__[self.name]
+        return instance.get_field_value(self.name)
 
     def validate(self, value: T):
         return

@@ -109,7 +109,8 @@ class ValidatorScanner:
 
 
 class Form:
-    __form_fields__: dict[str, Field] = {}
+    __form_fields__: dict[str, Field]
+    __form_field_name_map__: dict[str, str]
     __validators__: dict[str, list[Validator]] = {}
     __type_validators__: dict[Type, list[Validator]] = {}
     __request_method__: Type[Request]
@@ -130,6 +131,9 @@ class Form:
         self.__field_values__ = {}
         self._load_fields(*args, **kwargs)
         self._validate_fields()
+
+    def get_field_value(self, name: str) -> Any:
+        return self.__field_values__[self.__form_field_name_map__[name]]
 
     def _load_fields(self, *args, **kwargs):
         if len(self.__form_fields__) != len(args) + len(kwargs):
@@ -174,8 +178,10 @@ class Form:
         scanner.scan()
 
         cls.__form_fields__ = scanner.fields
+        cls.__form_field_name_map__ = {}
         for name, field in scanner.fields.items():
             setattr(cls, name, field)
+            cls.__form_field_name_map__[field.name] = name
 
     @classmethod
     def _setup_validators(cls, scanner_type: Type[ValidatorScanner]):
@@ -207,16 +213,18 @@ class Form:
     def create_from_form_data(cls: Type[F], data: FormData) -> F:
         return cls(
             **{
-                name: value
+                cls.__form_field_name_map__[name]: value
                 for name, value in data.items()
-                if name in cls.__form_fields__
+                if name in cls.__form_field_name_map__
             }
         )
 
     @classmethod
     def count_matching_fields(cls, data: FormData) -> int:
+        print(list(data))
+        print(list(cls.__form_field_name_map__))
         if len(data) < len(cls.__form_fields__) or any(
-            name not in data for name in cls.__form_fields__
+            name not in data for name in cls.__form_field_name_map__
         ):
             return 0
 
