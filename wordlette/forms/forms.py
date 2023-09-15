@@ -53,7 +53,7 @@ class FieldScanner:
             case default if hasattr(self.form, name):
                 params["default"] = default
 
-        return field_type(name, type_hint, **params)
+        return field_type(params.pop("name", name), type_hint, **params)
 
 
 class ValidatorScanner:
