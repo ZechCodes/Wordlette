@@ -19,6 +19,7 @@ from starlette.datastructures import FormData
 
 import wordlette.forms
 from wordlette.forms import Field
+from wordlette.forms.exceptions import FormValidationError
 from wordlette.forms.fields import FieldConfig
 from wordlette.requests import Request
 
@@ -130,7 +131,9 @@ class Form:
     def __init__(self, *args, **kwargs):
         self.__field_values__ = {}
         self._load_fields(*args, **kwargs)
-        self._validate_fields()
+
+        if errors := self._validate_fields():
+            raise self._create_validation_exception(errors)
 
     def get_field_value(self, name: str) -> Any:
         return self.__field_values__[self.__form_field_names__[name]]
@@ -152,9 +155,15 @@ class Form:
         for name, value in zip(names, args):
             self.__field_values__[name] = value
 
-    def _validate_fields(self):
+    def _validate_fields(self) -> dict[str, Exception]:
+        validation_errors = {}
         for name, value in self.__field_values__.items():
-            self._validate_field(name, value)
+            try:
+                self._validate_field(name, value)
+            except Exception as e:
+                validation_errors[self.__form_fields__[name].name] = e
+
+        return validation_errors
 
     def _validate_field(self, name: str, value: Any):
         field = self.__form_fields__[name]
@@ -229,6 +238,13 @@ class Form:
             return 0
 
         return len(cls.__form_fields__)
+
+    def _create_validation_exception(self, errors):
+        error_count = "an error"
+        if len(errors) > 1:
+            error_count = f"{len(errors):,} errors"
+        
+        return FormValidationError(f"Form validation failed with {error_count}.", errors)
 
 
 def _merge_dicts_of_lists(
