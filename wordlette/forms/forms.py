@@ -15,10 +15,14 @@ from typing import (
     get_origin,
 )
 
+from starlette.datastructures import FormData
+
 import wordlette.forms
 from wordlette.forms import Field
 from wordlette.forms.fields import FieldConfig
+from wordlette.requests import Request
 
+F = TypeVar("F", bound="Form")
 T = TypeVar("T")
 Validator: TypeAlias = Callable[[T], None]
 
@@ -108,14 +112,17 @@ class Form:
     __form_fields__: dict[str, Field] = {}
     __validators__: dict[str, list[Validator]] = {}
     __type_validators__: dict[Type, list[Validator]] = {}
+    __request_method__: Type[Request]
 
     def __init_subclass__(
         cls,
+        method: Request = Request.Post,
         field_scanner: Type[FieldScanner] | None = None,
         validator_scanner: Type[ValidatorScanner] | None = None,
         **kwargs,
     ):
         super().__init_subclass__(**kwargs)
+        cls.__request_method__ = method
         cls._setup_form_fields(field_scanner or FieldScanner)
         cls._setup_validators(validator_scanner or ValidatorScanner)
 
@@ -125,12 +132,12 @@ class Form:
         self._validate_fields()
 
     def _load_fields(self, *args, **kwargs):
-        names = list(self.__form_fields__.keys())
-        if len(names) != len(args) + len(kwargs):
+        if len(self.__form_fields__) != len(args) + len(kwargs):
             raise TypeError(
-                f"Expected {len(names)} arguments, got {len(args) + len(kwargs)}"
+                f"Expected {len(self.__form_fields__)} arguments, got {len(args) + len(kwargs)}"
             )
 
+        names = list(self.__form_fields__.keys())
         for name, value in kwargs.items():
             if name not in names:
                 raise TypeError(f"Unexpected keyword argument {name}")
@@ -191,6 +198,29 @@ class Form:
             return decorator
 
         cls.__type_validators__.setdefault(type_, []).append(lambda _, v: validator(v))
+
+    @classmethod
+    def can_handle_method(cls, method: Type[Request]) -> bool:
+        return issubclass(method, cls.__request_method__)
+
+    @classmethod
+    def create_from_data(cls: Type[F], data: FormData) -> F:
+        return cls(
+            **{
+                name: value
+                for name, value in data.items()
+                if name in cls.__form_fields__
+            }
+        )
+
+    @classmethod
+    def count_matching_fields(cls, data: FormData) -> int:
+        if len(data) < len(cls.__form_fields__) or any(
+            name not in data for name in cls.__form_fields__
+        ):
+            return 0
+
+        return len(cls.__form_fields__)
 
 
 def _merge_dicts_of_lists(

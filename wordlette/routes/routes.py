@@ -120,6 +120,7 @@ class Route(
         super().__init_subclass__(**kwargs)
         cls._setup_route()
         cls._scan_for_handlers()
+        cls._setup_form_handlers()
         cls._setup_methods()
         cls._validate_route_object()
         cls._register_route()
@@ -131,6 +132,35 @@ class Route(
 
         if error_handler:
             await error_handler(scope, receive, send)
+
+    async def process_forms(self, request: Request) -> Response:
+        """Process all forms in the request body and return the response."""
+        form_data = await request.form()
+        match self._find_best_form_handler(form_data, type(request)):
+            case Option.Value((form_type, handler)):
+                return await handler(self, form_type.create_from_data(form_data))
+
+            case _:
+                raise NoCompatibleFormError(
+                    f"Form handler for {request.name} request not found for {self.__class__.__qualname__}"
+                )
+
+    def _find_best_form_handler(
+        self, form_data: FormData, method_type: Type[Request]
+    ) -> Option[tuple[Type[Form], Callable[[Form], Response]]]:
+        handler, highest_field_count = Option.Null(), 0
+        for form, handler in self.__metadata__.form_handlers.items():
+            if not form.can_handle_method(method_type):
+                continue
+
+            supported_fields = form.count_matching_fields(form_data)
+            if supported_fields > highest_field_count:
+                handler, highest_field_count = Option.Value((form, handler)), supported_fields
+
+            if supported_fields == len(form_data):
+                break
+
+        return handler
 
     async def _handle(self, scope: Scope, receive: Receive, send: Send):
         request = Request.factory(scope, receive, send)
@@ -210,7 +240,16 @@ class Route(
             cls.name = cls.__qualname__.casefold()
 
     @classmethod
+    @never_abstract
+    def _setup_form_handlers(cls):
+        methods = {
+            form_type.__request_method__ for form_type in cls.__metadata__.form_handlers
+        }
+        for method in methods:
+            if method not in cls.__metadata__.request_handlers:
+                cls._register_handlers(cls.process_forms, method)
 
+    @classmethod
     @never_abstract
     def _validate_route_object(cls):
         if not hasattr(cls, "path"):
