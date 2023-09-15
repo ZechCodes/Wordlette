@@ -3,8 +3,10 @@ from starlette.responses import PlainTextResponse
 from starlette.testclient import TestClient
 
 from wordlette.core.exceptions import MissingRoutePath, NoRouteHandlersFound
+from wordlette.forms import Form
 from wordlette.requests import Request
 from wordlette.routes import Route
+from wordlette.routes.exceptions import NoCompatibleFormError
 
 
 class DefaultPathRoute(Route):
@@ -160,3 +162,71 @@ def test_route_registry():
             ...
 
     assert TestRoute in route_registry
+
+
+def test_post_form_route():
+    class TestForm(Form):
+        string: str
+        number: int
+
+    class TestRoute(DefaultPathRoute):
+        async def handle_form(self, form: TestForm):
+            return PlainTextResponse(f"string: {form.string} number: {form.number}")
+
+    client = TestClient(TestRoute())
+    response = client.post("/", data={"string": "testing", "number": "123"})
+    assert response.status_code == 200
+    assert response.text == "string: testing number: 123"
+
+
+def test_incompatible_form_type():
+    class TestForm(Form):
+        field: str
+
+    class TestRoute(DefaultPathRoute):
+        async def handle_form(self, form: TestForm):
+            return
+
+    client = TestClient(TestRoute())
+
+    with raises(NoCompatibleFormError):
+        response = client.post("/", data={"test": "bad data"})
+
+
+def test_extra_form_fields():
+    class TestForm(Form):
+        field: str
+
+    class TestRoute(DefaultPathRoute):
+        async def handle_form(self, form: TestForm):
+            return PlainTextResponse(form.field)
+
+    client = TestClient(TestRoute())
+    response = client.post("/", data={"field": "value", "extra": "extra value"})
+    assert response.status_code == 200
+    assert response.text == "value"
+
+
+def test_multiple_forms():
+    class TestFormA(Form):
+        field_a: str
+
+    class TestFormB(Form):
+        field_a: str
+        field_b: str
+
+    class TestRoute(DefaultPathRoute):
+        async def handle_form_a(self, form: TestFormA):
+            return PlainTextResponse("A")
+
+        async def handle_form_b(self, form: TestFormB):
+            return PlainTextResponse("B")
+
+    client = TestClient(TestRoute())
+    response = client.post("/", data={"field_a": "a"})
+    assert response.status_code == 200
+    assert response.text == "A"
+
+    response = client.post("/", data={"field_a": "a", "field_b": "b"})
+    assert response.status_code == 200
+    assert response.text == "B"
