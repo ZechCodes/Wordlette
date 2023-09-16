@@ -19,7 +19,9 @@ class ThemeManager:
     def __init__(self):
         self._theme = None
         self._secondary_themes = []
-        self._jinja = jinja2.Environment(loader=JinjaTemplateLoader(self))
+        self._jinja = jinja2.Environment(
+            loader=JinjaTemplateLoader(self), autoescape=True
+        )
 
     @property
     def default_theme(self) -> Path:
