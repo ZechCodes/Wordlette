@@ -73,21 +73,28 @@
         .button, input[type="submit"] {
             background-color: #0077e2;
             border-color: #0077e2;
-            border-radius: 32px;
-            border-width: 2px;
+            border-radius: 16px;
+            border-width: 0;
             color: white;
             font-size: 1em;
             height: auto;
             line-height: 1.0;
-            padding: 16px 24px;
+            padding: 8px 24px;
             text-transform: none;
-            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+            transition: background-color 0.3s linear;
         }
 
         .button:hover, input[type="submit"]:hover {
-            color: #0077e2;
-            background-color: white;
-            border-color: #0077e2;
+            background-color: #00137E;
+        }
+
+        label[for] {
+            cursor: pointer;
+        }
+
+        .form-nav a {
+            display: inline-block;
+            margin-right: 20px;
         }
 
         .setup-welcome-next {
