@@ -243,8 +243,10 @@ class Form:
         error_count = "an error"
         if len(errors) > 1:
             error_count = f"{len(errors):,} errors"
-        
-        return FormValidationError(f"Form validation failed with {error_count}.", errors, self)
+
+        return FormValidationError(
+            f"Form validation failed with {error_count}.", errors, self
+        )
 
 
 def _merge_dicts_of_lists(
