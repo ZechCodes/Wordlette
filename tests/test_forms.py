@@ -85,7 +85,7 @@ def test_form_view_compose():
         )
         field: int @ HiddenField() = 321
 
-        buttons = (SubmitButton("Test"),)
+        buttons = SubmitButton("Test")
 
     view = TestForm("Test", 123).view()
     elements = list(view.compose())
