@@ -13,6 +13,7 @@ from typing import (
     TypeVar,
     get_args,
     get_origin,
+    Iterable,
 )
 
 from starlette.datastructures import FormData
@@ -20,8 +21,10 @@ from starlette.datastructures import FormData
 import wordlette.forms
 from wordlette.forms import Field
 from wordlette.forms.exceptions import FormValidationError
-from wordlette.forms.fields import FieldConfig
+from wordlette.forms.field_types import SubmitButton, Button
+from wordlette.forms.views import FormView
 from wordlette.requests import Request
+from wordlette.utils.sentinel import Sentinel
 
 F = TypeVar("F", bound="Form")
 T = TypeVar("T")
@@ -37,24 +40,34 @@ class FieldScanner:
         for name, type_hint in get_annotations(self.form).items():
             self.fields[name] = self._setup_form_field(name, type_hint)
 
-    def _setup_form_field(self, name: str, hint: Type[Field[T]] | T) -> Field[T]:
-        type_hint = hint
-        match hint:
-            case Field.matches_type():
-                field_type = hint
+    def _setup_form_field(self, name: str, hint: Type[Field] | T) -> Field:
+        params = {
+            "name": name,
+            "type_hint": hint,
+        }
+        if hasattr(self.form, name):
+            params["value"] = getattr(self.form, name)
 
-            case _:
-                field_type = Field
+        if _is_annotated_field(hint):
+            params["type_hint"], field = get_args(hint)
+            if isinstance(field, type):
+                return field(**params)
 
-        params = {}
-        match getattr(self.form, name, None):
-            case FieldConfig(config):
-                params |= config
+            field.set_missing(**params)
+            return field
 
-            case default if hasattr(self.form, name):
-                params["default"] = default
+        return Field.from_type(**params)
 
-        return field_type(params.pop("name", name), type_hint, **params)
+
+def _is_annotated_field(hint) -> bool:
+    if get_origin(hint) is not Annotated:
+        return False
+
+    _, field = get_args(hint)
+    if isinstance(field, type):
+        return issubclass(field, Field)
+
+    return isinstance(field, Field)
 
 
 class ValidatorScanner:
@@ -115,17 +128,23 @@ class Form:
     __validators__: dict[str, list[Validator]] = {}
     __type_validators__: dict[Type, list[Validator]] = {}
     __request_method__: Type[Request]
+    __form_view_type__: Type[FormView]
+
+    buttons: Iterable[Button] = (SubmitButton("Submit"),)
 
     def __init_subclass__(
         cls,
-        method: Request = Request.Post,
+        method: Type[Request] = Request.Post,
         field_scanner: Type[FieldScanner] | None = None,
         validator_scanner: Type[ValidatorScanner] | None = None,
+        view: Type[FormView] | None = None,
         **kwargs,
     ):
         super().__init_subclass__(**kwargs)
         cls.__request_method__ = method
+        cls.__form_view_type__ = view or getattr(cls, "__form_view_type__", FormView)
         cls._setup_form_fields(field_scanner or FieldScanner)
+        cls._setup_buttons()
         cls._setup_validators(validator_scanner or ValidatorScanner)
 
     def __init__(self, *args, **kwargs):
@@ -138,8 +157,12 @@ class Form:
     def get_field_value(self, name: str) -> Any:
         return self.__field_values__[self.__form_field_names__[name]]
 
+    def view(self) -> FormView:
+        return self.__form_view_type__(self.__form_fields__, self.buttons, self.__field_values__)
+
     def _load_fields(self, *args, **kwargs):
-        if len(self.__form_fields__) != len(args) + len(kwargs):
+        required_fields = [field for field in self.__form_fields__.values() if isinstance(field.value, Sentinel)]
+        if len(required_fields) > len(args) + len(kwargs):
             raise TypeError(
                 f"Expected {len(self.__form_fields__)} arguments, got {len(args) + len(kwargs)}"
             )
@@ -180,6 +203,11 @@ class Form:
                         validator = MethodType(validator, self)
 
                     validator(value)
+
+    @classmethod
+    def _setup_buttons(cls):
+        if isinstance(cls.buttons, Button):
+            cls.buttons = (cls.buttons,)
 
     @classmethod
     def _setup_form_fields(cls, scanner_type: Type[FieldScanner]):

@@ -1,37 +1,24 @@
-from typing import Any, Type, TypeVar, Generic
+from typing import Type, TypeVar, cast, Annotated, Iterable, Any
 
-from wordlette.utils.match_types import TypeMatchable
+from wordlette.forms.elements import Element
 from wordlette.utils.sentinel import sentinel
 
+NotSet, not_set = sentinel("NotSet")
 T = TypeVar("T")
-Optional, optional = sentinel("Optional")
 
 
-def field(
-    name: str | Optional = optional, type: Type[T] | Optional = optional, **_config
-) -> Any:
-    config = _config
-    if name is not Optional():
-        config["name"] = name
-
-    if type is not Optional():
-        config["type"] = type
-
-    return FieldConfig(config)
+class FieldMCS(type):
+    def __rmatmul__(cls, other: T) -> T:
+        return cast(T, Annotated[other, cls])
 
 
-class FieldConfig:
-    __match_args__ = ("config",)
+class Field(metaclass=FieldMCS):
+    def __init__(self, type_hint: Type[T] | None = None, **attrs):
+        self.attrs = attrs
+        self.type_hint = type_hint
 
-    def __init__(self, config: dict[str, Any]):
-        self.config = config
-
-
-class Field(Generic[T], TypeMatchable):
-    def __init__(self, field_name: str, field_type: Type[T], **config):
-        self.name = field_name
-        self.type = field_type
-        self.config = config
+    def __rmatmul__(self, other: T) -> T:
+        return cast(T, Annotated[other, self])
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -39,5 +26,30 @@ class Field(Generic[T], TypeMatchable):
 
         return instance.get_field_value(self.name)
 
+    @property
+    def name(self) -> str:
+        return self.attrs.get("name", "")
+
+    @property
+    def value(self) -> T | NotSet:
+        return self.attrs.get("value", not_set)
+
+    def compose(self, value: Any | NotSet = not_set) -> Iterable[Element]:
+        from wordlette.forms.field_types import TextField
+
+        params = self.attrs.copy()
+        if value is not not_set:
+            params["value"] = value
+
+        yield TextField(**params)
+
+    def set_missing(self, **kwargs):
+        self.type_hint = kwargs.pop("type_hint", self.type_hint)
+        self.attrs |= {k: v for k, v in kwargs.items() if k not in self.attrs}
+
     def validate(self, value: T):
         return
+
+    @classmethod
+    def from_type(cls, type_hint: "Type[Field]", **config) -> "Field":
+        return cls(type_hint=type_hint, **config)
