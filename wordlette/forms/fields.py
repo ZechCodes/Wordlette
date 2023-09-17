@@ -1,17 +1,20 @@
 from typing import Any, Type, TypeVar, Generic
 
 from wordlette.utils.match_types import TypeMatchable
+from wordlette.utils.sentinel import sentinel
 
 T = TypeVar("T")
-OPTIONAL = object()
+Optional, optional = sentinel("Optional")
 
 
-def field(name: str = OPTIONAL, type: Type[T] = OPTIONAL, **_config) -> Any:
+def field(
+    name: str | Optional = optional, type: Type[T] | Optional = optional, **_config
+) -> Any:
     config = _config
-    if name is not OPTIONAL:
+    if name is not Optional():
         config["name"] = name
 
-    if type is not OPTIONAL:
+    if type is not Optional():
         config["type"] = type
 
     return FieldConfig(config)
