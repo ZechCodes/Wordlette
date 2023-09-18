@@ -46,7 +46,7 @@ class FieldScanner:
             "type_hint": hint,
         }
         if hasattr(self.form, name):
-            params["value"] = getattr(self.form, name)
+            params["value"] = params["default"] = getattr(self.form, name)
 
         if _is_annotated_field(hint):
             params["type_hint"], field = get_args(hint)
