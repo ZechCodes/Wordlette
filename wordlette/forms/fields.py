@@ -97,6 +97,21 @@ class Field(metaclass=FieldMCS):
 
         return InputElement(**params)
 
+    def compose_label(self) -> Element | None:
+        from wordlette.forms.elements import LabelElement
+
+        match self.label:
+            case LabelElement():
+                return self.label
+
+            case str() as body:
+                return LabelElement(
+                    body, **self._filter_and_clean_params(for_=self.attrs["id"])
+                )
+
+            case _:
+                return None
+
     def convert(self, value: Any) -> T:
         converter_name = self.__converters__.get(self.type_hint)
         converter = getattr(self, converter_name) if converter_name else self.type_hint
@@ -109,6 +124,9 @@ class Field(metaclass=FieldMCS):
 
     def validate(self, value: T):
         return
+
+    def _filter_and_clean_params(self, **kwargs):
+        return {k.rstrip("_"): v for k, v in kwargs.items() if v is not not_set}
 
     @classmethod
     def from_type(cls, type_hint: "Type[Field]", **config) -> "Field":
