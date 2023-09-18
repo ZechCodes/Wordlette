@@ -37,7 +37,8 @@ class FieldScanner:
 
     def scan(self):
         for name, type_hint in get_annotations(self.form).items():
-            self.fields[name] = self._setup_form_field(name, type_hint)
+            if not name.startswith("_"):
+                self.fields[name] = self._setup_form_field(name, type_hint)
 
     def _setup_form_field(self, name: str, hint: Type[Field] | T) -> Field:
         params = {
