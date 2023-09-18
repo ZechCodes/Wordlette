@@ -274,8 +274,8 @@ class PasswordField(TextField):
 class RadioButtonField(InputField):
     type = "radio"
 
-    def __init__(self, checked: bool | NotSet = not_set, **kwargs):
-        super().__init__(checked=checked, **kwargs)
+    def __init__(self, *, value: Any, checked: bool | NotSet = not_set, **kwargs):
+        super().__init__(value=value, checked=checked, **kwargs)
 
 
 class RangeField(InputField):
