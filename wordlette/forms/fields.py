@@ -4,7 +4,6 @@ from typing import (
     TypeVar,
     cast,
     Annotated,
-    Iterable,
     Any,
     Callable,
     ParamSpec,
@@ -89,14 +88,14 @@ class Field(metaclass=FieldMCS):
     def required(self) -> bool:
         return self.attrs.get("required", False)
 
-    def compose(self, value: Any | NotSet = not_set) -> Iterable[Element]:
-        from wordlette.forms.field_types import TextField
+    def compose(self, value: Any | NotSet = not_set) -> Element:
+        from wordlette.forms.elements import InputElement
 
         params = self.attrs.copy()
         if value is not not_set:
             params["value"] = value
 
-        yield TextField(**params)
+        return InputElement(**params)
 
     def convert(self, value: Any) -> T:
         converter_name = self.__converters__.get(self.type_hint)
