@@ -29,27 +29,7 @@
 </script>
 {% else %}
 <div class="container">
-    <form method="post">
-        <div class="row">
-            <div class="column column-50">
-                <fieldset>
-                    <label for="site-name">What is your website's name?</label>
-                    <input type="text" name="site-name" id="site-name"
-                           placeholder="ex. &quot;Bob's Blog&quot; or &quot;Paul's Portfolio&quot;"
-                           required>
-                    <label for="domain-name">What is your website's domain name?</label>
-                    <input type="text" name="domain-name" id="domain-name"
-                           placeholder="ex. &quot;bobsblog.com&quot; or &quot;www.paulsportfolio.com&quot;"
-                           required>
-                    <input type="checkbox" name="uses-https" id="uses-https" class="label-inline" checked>
-                    <label for="uses-https" class="label-inline">Uses HTTPS</label>
-                </fieldset>
-                <div class="float-right form-nav">
-                    <a href="/">Back</a><input type="submit" value="Next">
-                </div>
-            </div>
-        </div>
-    </form>
+    {{ form.render() }}
 </div>
 {% endif %}
 {% include "foot.html" %}
