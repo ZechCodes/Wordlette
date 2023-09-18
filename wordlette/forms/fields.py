@@ -78,6 +78,8 @@ class Field(metaclass=FieldMCS):
         return self.attrs.get("name", "")
 
     @property
+    def required(self) -> bool:
+        return self.attrs.get("required", False)
 
     def compose(self, value: Any | NotSet = not_set) -> Iterable[Element]:
         from wordlette.forms.field_types import TextField
