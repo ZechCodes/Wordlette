@@ -24,6 +24,7 @@ from wordlette.forms.field_types import SubmitButton, Button
 from wordlette.forms.fields import Field, NotSet
 from wordlette.forms.views import FormView
 from wordlette.requests import Request
+from wordlette.utils.contextual_methods import contextual_method
 
 F = TypeVar("F", bound="Form")
 T = TypeVar("T")
@@ -159,12 +160,22 @@ class Form:
         field = self.__form_fields__[field_name]
         return self.__field_values__.get(field_name, field.default)
 
+    @contextual_method
     def view(self) -> FormView:
         return self.__form_view_type__(
             self.__form_fields__,
             self.buttons,
             self.__field_values__,
             self._validate_fields(),
+        )
+
+    @view.classmethod
+    def view(cls) -> FormView:
+        return cls.__form_view_type__(
+            cls.__form_fields__,
+            cls.buttons,
+            {},
+            {},
         )
 
     def _load_fields(self, *args, **kwargs):
