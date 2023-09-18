@@ -24,7 +24,6 @@ from wordlette.forms.exceptions import FormValidationError
 from wordlette.forms.field_types import SubmitButton, Button
 from wordlette.forms.views import FormView
 from wordlette.requests import Request
-from wordlette.utils.sentinel import Sentinel
 
 F = TypeVar("F", bound="Form")
 T = TypeVar("T")
@@ -164,9 +163,7 @@ class Form:
 
     def _load_fields(self, *args, **kwargs):
         required_fields = [
-            field
-            for field in self.__form_fields__.values()
-            if isinstance(field.value, Sentinel)
+            field for field in self.__form_fields__.values() if field.required
         ]
         if len(required_fields) > len(args) + len(kwargs):
             raise TypeError(
