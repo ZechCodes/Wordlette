@@ -89,6 +89,30 @@ def test_form_view_compose():
 
         buttons = SubmitButton("Test")
 
+    view = TestForm.view()
+    elements = [*view.fields.values(), *view.buttons]
+
+    assert elements == [
+        InputElement(type="text", name="text-field"),
+        InputElement(type="number", name="number-field", required=True),
+        InputElement(type="hidden", name="field", value=321),
+        ButtonElement("Test", type="submit"),
+    ]
+
+
+def test_form_view_compose_with_values():
+    class TestForm(Form):
+        text_field: str @ TextField(
+            name="text-field",
+        )
+        number_field: int @ NumberField(
+            name="number-field",
+            required=True,
+        )
+        field: int @ HiddenField() = 321
+
+        buttons = SubmitButton("Test")
+
     view = TestForm("Test", 123).view()
     elements = [*view.fields.values(), *view.buttons]
 
