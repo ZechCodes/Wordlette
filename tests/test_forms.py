@@ -10,6 +10,7 @@ from wordlette.forms.field_types import (
     HiddenField,
     CheckBoxField,
 )
+from wordlette.forms.fields import not_set
 
 
 def test_field_type_validation():
@@ -134,3 +135,29 @@ def test_form_checkbox_convert():
     assert form.box_a is False
     assert form.box_b is False
     assert form.box_c is "off"
+
+
+def test_field_default_values():
+    class TestForm(Form):
+        field_a: str @ TextField(
+            value="value a",
+        )
+        field_b: str @ TextField(
+            default="default b",
+        )
+        field_c: str @ TextField() = "default & value c"
+        field_d: str @ TextField()
+
+    form = TestForm()
+    fields = form.__form_fields__
+    assert form.field_a is not_set
+    assert fields["field_a"].attrs["value"] == "value a"
+
+    assert form.field_b == "default b"
+    assert "value" not in fields["field_b"].attrs
+
+    assert form.field_c == "default & value c"
+    assert fields["field_c"].attrs["value"] == "default & value c"
+
+    assert form.field_d is not_set
+    assert "value" not in fields["field_d"].attrs
