@@ -160,7 +160,10 @@ class Form:
 
     def view(self) -> FormView:
         return self.__form_view_type__(
-            self.__form_fields__, self.buttons, self.__field_values__
+            self.__form_fields__,
+            self.buttons,
+            self.__field_values__,
+            self._validate_fields(),
         )
 
     def _load_fields(self, *args, **kwargs):

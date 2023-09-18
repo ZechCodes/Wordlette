@@ -10,9 +10,11 @@ class FormView:
         fields: dict[str, Field],
         buttons: Iterable[Button],
         values: dict[str, Any],
+        errors: dict[str, Exception],
     ):
         self.fields = fields
         self.buttons = buttons
+        self.errors = errors
         self.values = values
 
     def compose(self):
