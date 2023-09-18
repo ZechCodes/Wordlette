@@ -158,10 +158,16 @@ class Form:
         return self.__field_values__[self.__form_field_names__[name]]
 
     def view(self) -> FormView:
-        return self.__form_view_type__(self.__form_fields__, self.buttons, self.__field_values__)
+        return self.__form_view_type__(
+            self.__form_fields__, self.buttons, self.__field_values__
+        )
 
     def _load_fields(self, *args, **kwargs):
-        required_fields = [field for field in self.__form_fields__.values() if isinstance(field.value, Sentinel)]
+        required_fields = [
+            field
+            for field in self.__form_fields__.values()
+            if isinstance(field.value, Sentinel)
+        ]
         if len(required_fields) > len(args) + len(kwargs):
             raise TypeError(
                 f"Expected {len(self.__form_fields__)} arguments, got {len(args) + len(kwargs)}"
