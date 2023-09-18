@@ -60,8 +60,11 @@ class Field(metaclass=FieldMCS):
     ) -> dict[Type, str]:
         return getattr(cls, "__converters__", {}) | scanner_type().scan(cls)
 
-    def __init__(self, type_hint: Type[T] | None = None, **attrs):
+    def __init__(
+        self, type_hint: Type[T] | None = None, default: T | NotSet = not_set, **attrs
+    ):
         self.attrs = attrs
+        self.default = default
         self.type_hint = type_hint
 
     def __rmatmul__(self, other: T) -> T:
@@ -97,6 +100,7 @@ class Field(metaclass=FieldMCS):
 
     def set_missing(self, **kwargs):
         self.type_hint = kwargs.pop("type_hint", self.type_hint)
+        self.default = kwargs.pop("default", self.default)
         self.attrs |= {k: v for k, v in kwargs.items() if k not in self.attrs}
 
     def validate(self, value: T):
