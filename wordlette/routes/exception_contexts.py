@@ -29,5 +29,8 @@ class ExceptionHandlerContext:
 
     def _find_error_handler(self, exception_type: Type[Exception]):
         for error_type, handler in self.route.__metadata__.error_handlers.items():
-            if exception_type is error_type or issubclass(exception_type, error_type):
+            if exception_type is error_type or (
+                isinstance(exception_type, type)
+                and issubclass(exception_type, error_type)
+            ):
                 return handler
