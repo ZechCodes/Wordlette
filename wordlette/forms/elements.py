@@ -36,6 +36,10 @@ class ContainerElement(Element):
         return self.body == other.body
 
 
+class AElement(ContainerElement):
+    tag = "a"
+
+
 class InputElement(Element):
     tag = "input"
 
