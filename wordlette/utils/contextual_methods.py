@@ -7,23 +7,23 @@ R = TypeVar("R")
 
 class ContextualMethod:
     def __init__(self, method: Callable[P, R]):
-        self.method = method
-        self.class_method = method
+        self._method = method
+        self._classmethod = method
 
     def classmethod(self, method: Callable[P, R]) -> Self:
-        if method.__name__ != self.method.__name__:
+        if method.__name__ != self._method.__name__:
             raise ValueError(
-                f"Method name {method.__name__!r} does not match {self.method.__name__!r}"
+                f"Method name {method.__name__!r} does not match {self._method.__name__!r}"
             )
 
-        self.class_method = method
+        self._classmethod = method
         return self
 
     def __get__(self, instance, owner) -> Callable[P, R]:
         if instance is None:
-            return MethodType(self.class_method, owner)
+            return MethodType(self._classmethod, owner)
 
-        return MethodType(self.method, instance)
+        return MethodType(self._method, instance)
 
 
 def contextual_method(func: Callable[P, R]) -> ContextualMethod:
