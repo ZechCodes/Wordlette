@@ -1,4 +1,6 @@
-from typing import Sequence
+from typing import Sequence, Any
+
+from markupsafe import Markup
 
 
 class Element:
@@ -21,10 +23,34 @@ class Element:
     def __repr__(self):
         return f"<{self.tag} {self.attrs}>"
 
+    def render(self, **kwargs):
+        return Markup(f"<{self.tag} {self._build_attrs(kwargs)} />")
+
+    def _build_attrs(self, extra_attrs: dict[str, Any]) -> str:
+        attrs = []
+        attrs_dict = self._merge_attrs_dicts(self.attrs, extra_attrs)
+        for name in ("required", "checked", "disabled", "selected"):
+            if name in attrs_dict:
+                attrs.append(name)
+                del attrs_dict[name]
+
+        attrs.extend(f'{k}="{Markup.escape(v)}"' for k, v in attrs_dict.items())
+        return " ".join(attrs)
+
+    def _merge_attrs_dicts(self, *args):
+        attrs = {}
+        for arg in args:
+            for key, value in arg.items():
+                clean_key = key.rstrip("_")
+                if clean_key in attrs:
+                    attrs[clean_key] += " " + value
+                else:
+                    attrs[clean_key] = value
+
+        return attrs
+
 
 class ContainerElement(Element):
-    has_closing_tag = True
-
     def __init__(self, body: str | Element | Sequence[str | Element], **attrs):
         self.body = body
         super().__init__(**attrs)
@@ -34,6 +60,11 @@ class ContainerElement(Element):
             return False
 
         return self.body == other.body
+
+    def render(self, **kwargs):
+        return Markup(
+            f"<{self.tag} {self._build_attrs(kwargs)}>{Markup.escape(self.body)}</{self.tag}>"
+        )
 
 
 class AElement(ContainerElement):
