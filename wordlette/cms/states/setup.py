@@ -1,11 +1,47 @@
-from wordlette.cms.theming import Template, ThemeManager
+from wordlette.cms.forms import Form
+from wordlette.cms.themes import Template, ThemeManager
 from wordlette.configs.managers import ConfigManager
 from wordlette.core.app import AppSetting
+from wordlette.forms.exceptions import FormValidationError
+from wordlette.forms.field_types import TextField, CheckBoxField, SubmitButton, Link
 from wordlette.middlewares.router_middleware import RouteManager
 from wordlette.requests import Request
 from wordlette.routes import Route
 from wordlette.state_machines import State
 from wordlette.utils.dependency_injection import inject, AutoInject, inject_dependencies
+
+
+class CreateSettingsFileForm(Form):
+    site_name: str @ TextField(
+        name="site-name",
+        id="site-name",
+        required=True,
+        placeholder='ex. "Bob\'s Blog" or "Paul\'s Portfolio"',
+        label="What is your website's name?",
+    )
+    domain_name: str @ TextField(
+        name="domain-name",
+        id="domain-name",
+        required=True,
+        placeholder='ex. "bobsblog.com" or "www.paulsportfolio.com"',
+        label="What is your website's domain name?",
+    )
+    uses_https: bool @ CheckBoxField(
+        name="uses-https",
+        id="uses-https",
+        class_="label-inline",
+        checked=True,
+        label="Uses HTTPS",
+    )
+
+    buttons = (
+        Link("Back", href="/"),
+        SubmitButton("Next", type="submit"),
+    )
+
+    def validate_type_str_isnt_empty(self, value: str):
+        if not value.strip():
+            raise ValueError("Field cannot be empty")
 
 
 class _SetupRoute(Route):
@@ -30,30 +66,25 @@ class CreateSettingsFile(_SetupRoute):
     path = "/create-settings-file"
 
     async def get_setup_page(self, _: Request.Get):
-        subtitle = "Configure Your Website"
-        return Template(
-            "create-settings-file.html",
-            title=f"Wordlette: {subtitle}",
-            heading="Setup",
-            subtitle=subtitle,
+        return self._create_page_template(
+            form=CreateSettingsFileForm.view(),
         )
 
     async def create_settings_file(
         self,
-        request: Request.Post,
+        form: CreateSettingsFileForm,
         config: ConfigManager @ inject,
         settings_filename: str @ AppSetting("settings-filename"),
         working_directory: str @ AppSetting("working-directory"),
     ):
-        settings = await request.form()
         path = config.write_config_file(
             settings_filename,
             working_directory,
             {
                 "site": {
-                    "domain": settings["domain-name"],
-                    "https": settings["uses-https"].casefold() in {"on"},
-                    "name": settings["site-name"],
+                    "domain": form.domain_name,
+                    "https": form.uses_https,
+                    "name": form.site_name,
                 }
             },
         )
@@ -66,6 +97,23 @@ class CreateSettingsFile(_SetupRoute):
             created_settings_file=True,
             file_path=path,
             next_page_url=_get_next_page(),
+        )
+
+    async def handle_form_validation_errors(
+        self, validation_errors: FormValidationError
+    ):
+        return self._create_page_template(
+            form=validation_errors.form.view(),
+        )
+
+    def _create_page_template(self, **kwargs):
+        subtitle = "Configure Your Website"
+        return Template(
+            "create-settings-file.html",
+            title=f"Wordlette: {subtitle}",
+            heading="Setup",
+            subtitle=subtitle,
+            **kwargs,
         )
 
 
