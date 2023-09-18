@@ -173,16 +173,18 @@ class Form:
                 f"Expected {len(self.__form_fields__)} arguments, got {len(args) + len(kwargs)}"
             )
 
-        names = list(self.__form_fields__.keys())
-        for name, value in kwargs.items():
-            if name not in names:
-                raise TypeError(f"Unexpected keyword argument {name}")
+        positional_args = list(reversed(args))
+        for name, field in self.__form_fields__.items():
+            if name in kwargs:
+                value = kwargs[name]
+            elif positional_args:
+                value = positional_args.pop()
+            elif field in required_fields:
+                raise TypeError(f"Missing value for required field {name}")
+            else:
+                continue
 
-            self.__field_values__[name] = value
-            names.remove(name)
-
-        for name, value in zip(names, args):
-            self.__field_values__[name] = value
+            self.__field_values__[name] = field.convert(value)
 
     def _validate_fields(self) -> dict[str, Exception]:
         validation_errors = {}
