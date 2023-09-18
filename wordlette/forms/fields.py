@@ -90,6 +90,11 @@ class Field(metaclass=FieldMCS):
 
         yield TextField(**params)
 
+    def convert(self, value: Any) -> T:
+        converter_name = self.__converters__.get(self.type_hint)
+        converter = getattr(self, converter_name) if converter_name else self.type_hint
+        return converter(value)
+
     def set_missing(self, **kwargs):
         self.type_hint = kwargs.pop("type_hint", self.type_hint)
         self.attrs |= {k: v for k, v in kwargs.items() if k not in self.attrs}
