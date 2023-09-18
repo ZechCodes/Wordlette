@@ -26,7 +26,7 @@ class ContainerElement(Element):
     has_closing_tag = True
 
     def __init__(self, body: str | Element | Sequence[str | Element], **attrs):
-        self.body = (body,) if isinstance(body, (str, Element)) else body
+        self.body = body
         super().__init__(**attrs)
 
     def __eq__(self, other):
