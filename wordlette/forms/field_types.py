@@ -125,6 +125,12 @@ class CheckBoxField(InputField):
     def __init__(self, checked: bool | NotSet = not_set, **kwargs):
         super().__init__(checked=checked, **kwargs)
 
+    def convert_to_bool(self, value: str) -> bool:
+        if self.value is not_set:
+            return value.casefold() == "on"
+
+        return value == self.value
+
 
 class ColorField(InputField):
     type = "color"
@@ -276,6 +282,9 @@ class RadioButtonField(InputField):
 
     def __init__(self, *, value: Any, checked: bool | NotSet = not_set, **kwargs):
         super().__init__(value=value, checked=checked, **kwargs)
+
+    def convert_to_bool(self, value: str) -> bool:
+        return value == self.value
 
 
 class RangeField(InputField):
