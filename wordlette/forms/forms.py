@@ -19,9 +19,9 @@ from typing import (
 from starlette.datastructures import FormData
 
 import wordlette.forms
-from wordlette.forms import Field
 from wordlette.forms.exceptions import FormValidationError
 from wordlette.forms.field_types import SubmitButton, Button
+from wordlette.forms.fields import Field, NotSet
 from wordlette.forms.views import FormView
 from wordlette.requests import Request
 
@@ -153,8 +153,10 @@ class Form:
         if errors := self._validate_fields():
             raise self._create_validation_exception(errors)
 
-    def get_field_value(self, name: str) -> Any:
-        return self.__field_values__[self.__form_field_names__[name]]
+    def get_field_value(self, name: str) -> Any | NotSet:
+        field_name = self.__form_field_names__[name]
+        field = self.__form_fields__[field_name]
+        return self.__field_values__.get(field_name, field.default)
 
     def view(self) -> FormView:
         return self.__form_view_type__(
