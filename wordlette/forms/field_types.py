@@ -43,14 +43,10 @@ class InputField(Field):
         *,
         disabled: bool | NotSet = not_set,
         id_: str | NotSet = not_set,
-        label: str | Label | NotSet = not_set,
         required: bool | NotSet = not_set,
         value: Any | NotSet = not_set,
         **kwargs,
     ):
-        if id_ is not_set and label is not not_set:
-            raise ValueError("You must set an id to use a label")
-
         super().__init__(
             **self._filter_and_clean_params(
                 type_=self.type,
@@ -61,8 +57,6 @@ class InputField(Field):
                 **kwargs,
             )
         )
-
-        self.label = label
 
     @property
     def id(self) -> str | NotSet:

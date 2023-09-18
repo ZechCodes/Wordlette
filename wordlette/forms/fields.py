@@ -61,11 +61,16 @@ class Field(metaclass=FieldMCS):
         return getattr(cls, "__converters__", {}) | scanner_type().scan(cls)
 
     def __init__(
-        self, type_hint: Type[T] | None = None, default: T | NotSet = not_set, **attrs
+        self,
+        type_hint: Type[T] | None = None,
+        default: T | NotSet = not_set,
+        label: str | Element | NotSet = not_set,
+        **attrs,
     ):
         self.attrs = attrs
         self.default = default
         self.type_hint = type_hint
+        self.label = label
 
     def __rmatmul__(self, other: T) -> T:
         return cast(T, Annotated[other, self])
