@@ -1,10 +1,43 @@
-from typing import Type, TypeVar, cast, Annotated, Iterable, Any
+from inspect import get_annotations
+from typing import (
+    Type,
+    TypeVar,
+    cast,
+    Annotated,
+    Iterable,
+    Any,
+    Callable,
+    ParamSpec,
+    Iterator,
+)
 
 from wordlette.forms.elements import Element
 from wordlette.utils.sentinel import sentinel
 
 NotSet, not_set = sentinel("NotSet")
+P = ParamSpec("P")
 T = TypeVar("T")
+
+
+class ConverterScanner:
+    def scan(self, cls: Type) -> dict[Type, str]:
+        return dict(self._scan(cls))
+
+    def _scan(self, cls: Type) -> Iterator[tuple[Type, str]]:
+        for name, return_type in self._get_converter_return_types(cls):
+            if return_type is not None:
+                yield return_type, name
+
+    def _get_converter_return_types(self, cls) -> Iterator[tuple[str, Type[T] | None]]:
+        for name, method in vars(cls).items():
+            if callable(method) and self._valid_name(name):
+                yield name, self._get_return_type(method)
+
+    def _get_return_type(self, method: Callable[[P], Type[T]]) -> Type[T] | None:
+        return get_annotations(method).pop("return", None)
+
+    def _valid_name(self, name: str) -> bool:
+        return name.startswith("convert_")
 
 
 class FieldMCS(type):
@@ -13,6 +46,20 @@ class FieldMCS(type):
 
 
 class Field(metaclass=FieldMCS):
+    __converters__: dict[Type, str] = {}
+
+    def __init_subclass__(
+        cls, converter_scanner: Type[ConverterScanner] = ConverterScanner, **kwargs
+    ):
+        super().__init_subclass__(**kwargs)
+        cls.__converters__ = cls._scan_for_converters(converter_scanner)
+
+    @classmethod
+    def _scan_for_converters(
+        cls, scanner_type: Type[ConverterScanner]
+    ) -> dict[Type, str]:
+        return getattr(cls, "__converters__", {}) | scanner_type().scan(cls)
+
     def __init__(self, type_hint: Type[T] | None = None, **attrs):
         self.attrs = attrs
         self.type_hint = type_hint
