@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Any, Annotated
 
 from wordlette.forms import Field
-from wordlette.forms.elements import ButtonElement
+from wordlette.forms.elements import ButtonElement, AElement
 from wordlette.forms.fields import NotSet, not_set
 
 
@@ -387,3 +387,15 @@ class SubmitButton(Button):
 
 class ResetButton(Button):
     button_type = "reset"
+
+
+class Link:
+    def __init__(self, text: str, href: str | NotSet = not_set, **attrs):
+        self.attrs = {key.rstrip("_"): value for key, value in attrs.items()}
+        self.text = text
+
+        if href is not not_set:
+            self.attrs["href"] = href
+
+    def compose(self):
+        return AElement(self.text, **self.attrs)
