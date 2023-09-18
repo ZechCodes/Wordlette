@@ -8,6 +8,7 @@ from wordlette.forms.field_types import (
     NumberField,
     SubmitButton,
     HiddenField,
+    CheckBoxField,
 )
 
 
@@ -96,3 +97,40 @@ def test_form_view_compose():
         InputElement(type="hidden", name="field", value=321),
         ButtonElement("Test", type="submit"),
     ]
+
+
+def test_form_field_converters():
+    class TestForm(Form):
+        field_a: bool @ TextField()
+        field_b: int @ NumberField()
+        field_c: float @ NumberField()
+
+    form = TestForm("Field A", "20", "0.2")
+    assert form.field_a is True
+    assert form.field_b == 20
+    assert form.field_c == 0.2
+
+
+def test_form_checkbox_convert():
+    class TestForm(Form):
+        box_a: bool @ CheckBoxField(
+            name="box-a",
+        )
+        box_b: bool @ CheckBoxField(
+            name="box-b",
+            value="Box B",
+        )
+        box_c: str @ CheckBoxField(
+            name="box-c",
+            value="Box C",
+        )
+
+    form = TestForm("on", "Box B", "Box C")
+    assert form.box_a is True
+    assert form.box_b is True
+    assert form.box_c == "Box C"
+
+    form = TestForm("off", "off", "off")
+    assert form.box_a is False
+    assert form.box_b is False
+    assert form.box_c is "off"
