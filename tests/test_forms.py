@@ -18,7 +18,7 @@ def test_field_type_validation():
                 raise FormValidationError("Invalid value", {}, Form())
 
     class TestForm(Form):
-        value: int @ TestField
+        value: str @ TestField
 
     with pytest.raises(FormValidationError):
         TestForm("invalid")
