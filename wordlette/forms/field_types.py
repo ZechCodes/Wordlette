@@ -126,10 +126,10 @@ class CheckBoxField(InputField):
         super().__init__(checked=checked, **kwargs)
 
     def convert_to_bool(self, value: str) -> bool:
-        if self.value is not_set:
-            return value.casefold() == "on"
+        if "value" in self.attrs:
+            return value == self.attrs["value"]
 
-        return value == self.value
+        return value.casefold() == "on"
 
 
 class ColorField(InputField):
