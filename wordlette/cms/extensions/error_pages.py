@@ -7,7 +7,7 @@ from bevy import inject, dependency
 from starlette.exceptions import HTTPException
 from starlette.types import Scope
 
-from wordlette.cms.theming import Template, ThemeManager
+from wordlette.cms.themes import Template, ThemeManager
 from wordlette.core.events import LifespanStartupEvent
 from wordlette.events import Observer
 from wordlette.extensions import Extension
