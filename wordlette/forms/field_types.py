@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Any, Annotated
 
 from wordlette.forms import Field
-from wordlette.forms.elements import ButtonElement, InputElement, LabelElement
+from wordlette.forms.elements import ButtonElement
 from wordlette.forms.fields import NotSet, not_set
 
 
@@ -57,29 +57,6 @@ class InputField(Field):
                 **kwargs,
             )
         )
-
-    @property
-    def id(self) -> str | NotSet:
-        return self.attrs.get("id", not_set)
-
-    def compose(self, value: Any | NotSet = not_set):
-        if self.label is not not_set:
-            yield self.create_label()
-
-        yield self.create_element(value)
-
-    def create_element(self, value: Any | NotSet) -> InputElement:
-        params = self.attrs.copy()
-        if value is not not_set:
-            params["value"] = value
-
-        return InputElement(**params)
-
-    def create_label(self) -> LabelElement:
-        return LabelElement(self.label, for_=self.id)
-
-    def _filter_and_clean_params(self, **kwargs):
-        return {k.rstrip("_"): v for k, v in kwargs.items() if v is not not_set}
 
 
 class TextField(InputField):
