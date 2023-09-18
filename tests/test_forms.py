@@ -90,7 +90,7 @@ def test_form_view_compose():
         buttons = SubmitButton("Test")
 
     view = TestForm("Test", 123).view()
-    elements = list(view.compose())
+    elements = [*view.fields.values(), *view.buttons]
 
     assert elements == [
         InputElement(type="text", name="text-field", value="Test"),
