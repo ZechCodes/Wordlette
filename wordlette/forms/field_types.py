@@ -403,7 +403,7 @@ class Button:
         self.attrs = attrs | {"type": self.button_type}
 
     def compose(self):
-        yield ButtonElement(self.text, **self.attrs)
+        return ButtonElement(self.text, **self.attrs)
 
 
 class SubmitButton(Button):
