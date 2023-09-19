@@ -280,8 +280,6 @@ class Form:
 
     @classmethod
     def count_matching_fields(cls, data: FormData) -> int:
-        print(list(data))
-        print(list(cls.__form_field_names__))
         if len(data) < len(cls.__form_fields__) or any(
             name not in data for name in cls.__form_field_names__
         ):
