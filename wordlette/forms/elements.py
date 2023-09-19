@@ -73,9 +73,9 @@ class ContainerElement(Element):
 
         return self.body == other.body
 
-    def render(self, **kwargs):
+    def render(self):
         return Markup(
-            f"<{self.tag} {self._build_attrs(kwargs)}>{Markup.escape(self.body)}</{self.tag}>"
+            f"<{self.tag} {self._build_attrs()}>{Markup.escape(self.body)}</{self.tag}>"
         )
 
 
