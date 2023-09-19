@@ -29,7 +29,7 @@ class CreateSettingsFileForm(Form):
     uses_https: bool @ CheckBoxField(
         name="uses-https",
         id="uses-https",
-        class_="label-inline",
+        classes=["label-inline"],
         checked=True,
         label="Uses HTTPS",
     )
