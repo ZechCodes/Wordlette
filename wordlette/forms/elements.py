@@ -54,7 +54,7 @@ class Element:
         return attrs
 
     def _clean_attr_name(self, name: str) -> str:
-        return name.replace("_", "-").rstrip("_").strip().casefold()
+        return name.rstrip("_").strip().replace("_", "-").casefold()
 
     def _create_clone(self, **attrs) -> "Element":
         clone = type(self)(**attrs)
