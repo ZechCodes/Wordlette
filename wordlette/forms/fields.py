@@ -69,8 +69,9 @@ class Field(metaclass=FieldMCS):
     ):
         self.attrs = attrs
         self.default = default
-        self.type_hint = type_hint
         self.label = label
+        self.optional = False
+        self.type_hint = type_hint
 
     def __rmatmul__(self, other: T) -> T:
         return cast(T, AnnotatedAggregator[other, self])
@@ -87,7 +88,7 @@ class Field(metaclass=FieldMCS):
 
     @property
     def required(self) -> bool:
-        return self.attrs.get("required", False)
+        return not self.optional and self.default is not_set
 
     def compose(self, value: Any | NotSet = not_set) -> Element:
         from wordlette.forms.elements import InputElement
@@ -95,6 +96,9 @@ class Field(metaclass=FieldMCS):
         params = self.attrs.copy()
         if value is not not_set:
             params["value"] = value
+
+        if self.required:
+            params["required"] = True
 
         return InputElement(**params)
 
@@ -119,8 +123,10 @@ class Field(metaclass=FieldMCS):
         return converter(value)
 
     def set_missing(self, **kwargs):
-        self.type_hint = kwargs.pop("type_hint", self.type_hint)
         self.default = kwargs.pop("default", self.default)
+        self.optional = kwargs.pop("optional", self.optional)
+        self.type_hint = kwargs.pop("type_hint", self.type_hint)
+
         self.attrs |= {k: v for k, v in kwargs.items() if k not in self.attrs}
 
     def validate(self, value: T):
