@@ -8,7 +8,7 @@ class Element:
     has_closing_tag = False
 
     def __init__(self, **attrs):
-        self.attrs = attrs
+        self.attrs = self._clean_attrs(attrs)
 
     def __eq__(self, other):
         if not isinstance(other, Element):
@@ -46,10 +46,16 @@ class Element:
                     attrs[clean_key] += " " + value
                 else:
                     attrs[clean_key] = value
+
+    def _clean_attrs(self, attrs: dict[str, Any]) -> dict[str, Any]:
+        attrs = {self._clean_attr_name(k): v for k, v in attrs.items()}
         if class_ := attrs.pop("class", None):
             attrs.setdefault("classes", []).extend(filter(bool, class_.split()))
 
         return attrs
+
+    def _clean_attr_name(self, name: str) -> str:
+        return name.replace("_", "-").rstrip("_").strip().casefold()
 
 
 class ContainerElement(Element):
