@@ -17,7 +17,7 @@ class Element:
         return self.tag == other.tag and self.attrs == other.attrs
 
     def __repr__(self):
-        return f"<{self.tag} {self.attrs}>"
+        return f"<{type(self).__name__} {self.tag} {self.attrs}>"
 
     def render(self, **attr_overrides):
         return Markup(f"<{self.tag} {self._build_attrs(attr_overrides)} />")
