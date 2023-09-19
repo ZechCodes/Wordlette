@@ -1,20 +1,19 @@
 <form method="post">
     <div class="row">
         <div class="column column-50">
-            {{ form.values }}
             <fieldset>
                 {% for name, field in form.fields.items() %}
-                {% if name in form.labels and "label-inline" not in field.attrs["class"] %}
+                {% if name in form.labels and "label-inline" not in field.attrs["classes"] %}
                 {{ form.labels[name].render() }}
                 {% endif %}
                 {% if name in form.errors %}
-                {{ field.render(class_="error") }}
+                {{ field.add_class("error").render() }}
                 <div class="error">*{{ form.errors[name] }}</div>
                 {% else %}
                 {{ field.render() }}
                 {% endif %}
-                {% if name in form.labels and "label-inline" in field.attrs["class"] %}
-                {{ form.labels[name].render(class_="label-inline") }}
+                {% if name in form.labels and "label-inline" in field.attrs["classes"] %}
+                {{ form.labels[name].add_class("label-inline").render() }}
                 {% endif %}
                 {% endfor %}
             </fieldset>
