@@ -14,6 +14,7 @@ from typing import (
     get_args,
     get_origin,
     Iterable,
+    ParamSpec,
 )
 
 from starlette.datastructures import FormData
@@ -26,6 +27,7 @@ from wordlette.forms.views import FormView
 from wordlette.requests import Request
 from wordlette.utils.contextual_methods import contextual_method
 
+P = ParamSpec("P")
 F = TypeVar("F", bound="Form")
 T = TypeVar("T")
 Validator: TypeAlias = Callable[[T], None]
@@ -46,9 +48,11 @@ class FieldScanner:
         if hasattr(self.form, name):
             params["value"] = params["default"] = getattr(self.form, name)
 
+        construct: Callable[[P], Field] = Field.from_type
         if _is_annotated_field(hint):
-            field: Field
             params["type_hint"], field = get_args(hint)
+            construct = field.set_missing
+
             if isinstance(field, type):
                 return field(**params)
 
@@ -57,10 +61,19 @@ class FieldScanner:
                 params["id"] = field.attrs.get("name") or html_name
 
             params["name"] = field.attrs.get("id") or html_name
-            field.set_missing(**params)
-            return field
 
-        return Field.from_type(**params)
+        if get_origin(params["type_hint"]) is UnionType:
+            args = get_args(params["type_hint"])
+            if len(args) > 1 and not isinstance(None, args[1]):
+                raise TypeError(
+                    f"Form field's may not have more than one annotated type. Got {len(args)} annotations."
+                )
+
+            params["type_hint"] = args[0]
+            params["optional"] = type(None) in args
+            params.setdefault("default", None)
+
+        return construct(**params)
 
 
 def _is_annotated_field(hint) -> bool:

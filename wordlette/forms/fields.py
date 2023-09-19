@@ -8,6 +8,7 @@ from typing import (
     Callable,
     ParamSpec,
     Iterator,
+    Self,
 )
 
 from wordlette.forms.elements import Element
@@ -122,12 +123,13 @@ class Field(metaclass=FieldMCS):
         converter = getattr(self, converter_name) if converter_name else self.type_hint
         return converter(value)
 
-    def set_missing(self, **kwargs):
+    def set_missing(self, **kwargs) -> Self:
         self.default = kwargs.pop("default", self.default)
         self.optional = kwargs.pop("optional", self.optional)
         self.type_hint = kwargs.pop("type_hint", self.type_hint)
 
         self.attrs |= {k: v for k, v in kwargs.items() if k not in self.attrs}
+        return self
 
     def validate(self, value: T):
         return
