@@ -92,6 +92,10 @@ class CheckBoxField(InputField):
     def __init__(self, checked: bool | NotSet = not_set, **kwargs):
         super().__init__(checked=checked, **kwargs)
 
+    @property
+    def required(self):
+        return False
+
     def convert_to_bool(self, value: str) -> bool:
         if "value" in self.attrs:
             return value == self.attrs["value"]
