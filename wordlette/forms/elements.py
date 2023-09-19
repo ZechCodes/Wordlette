@@ -20,8 +20,6 @@ class Element:
     def __repr__(self):
         return f"<{type(self).__name__} {self.tag} {self.attrs}>"
 
-    def render(self, **attr_overrides):
-        return Markup(f"<{self.tag} {self._build_attrs(attr_overrides)} />")
 
     def clone(self, **attrs) -> "Element":
         if self.cloned:
@@ -30,8 +28,14 @@ class Element:
 
         return self._create_clone(**attrs)
 
-    def _build_attrs(self, attr_overrides: dict[str, Any]) -> str:
-        attrs_dict = self.attrs | self._clean_attrs(attr_overrides)
+    def render(self):
+        return Markup(f"<{self.tag} {self._build_attrs()} />")
+
+    def _build_attrs(self) -> str:
+        attrs_dict = self.attrs.copy()
+        if classes := attrs_dict.pop("class", None):
+            attrs_dict["class"] = " ".join(classes)
+
         attrs = [
             f'{k}="{Markup.escape(v)}"'
             for k, v in attrs_dict.items()
