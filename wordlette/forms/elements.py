@@ -6,6 +6,7 @@ from markupsafe import Markup
 class Element:
     tag: str
     has_closing_tag = False
+    flag_attrs = frozenset(("required", "checked", "disabled", "selected"))
 
     def __init__(self, **attrs):
         self.attrs = self._clean_attrs(attrs)
@@ -14,38 +15,25 @@ class Element:
         if not isinstance(other, Element):
             return False
 
-        return (
-            self.tag == other.tag
-            and self.attrs == other.attrs
-            and self.has_closing_tag == other.has_closing_tag
-        )
+        return self.tag == other.tag and self.attrs == other.attrs
 
     def __repr__(self):
         return f"<{self.tag} {self.attrs}>"
 
-    def render(self, **kwargs):
-        return Markup(f"<{self.tag} {self._build_attrs(kwargs)} />")
+    def render(self, **attr_overrides):
+        return Markup(f"<{self.tag} {self._build_attrs(attr_overrides)} />")
 
-    def _build_attrs(self, extra_attrs: dict[str, Any]) -> str:
-        attrs = []
-        attrs_dict = self._merge_attrs_dicts(self.attrs, extra_attrs)
-        for name in ("required", "checked", "disabled", "selected"):
-            if name in attrs_dict:
-                attrs.append(name)
-                del attrs_dict[name]
-
-        attrs.extend(f'{k}="{Markup.escape(v)}"' for k, v in attrs_dict.items())
-        return " ".join(attrs)
-
-    def _merge_attrs_dicts(self, *args):
-        attrs = {}
-        for arg in args:
-            for key, value in arg.items():
-                clean_key = key.rstrip("_")
-                if clean_key in attrs:
-                    attrs[clean_key] += " " + value
-                else:
-                    attrs[clean_key] = value
+    def _build_attrs(self, attr_overrides: dict[str, Any]) -> str:
+        attrs_dict = self.attrs | self._clean_attrs(attr_overrides)
+        attrs = [
+            f'{k}="{Markup.escape(v)}"'
+            for k, v in attrs_dict.items()
+            if k not in self.flag_attrs
+        ]
+        flags = [
+            name for name in self.flag_attrs if attrs_dict.get(name, False) is not False
+        ]
+        return " ".join(attrs + flags)
 
     def _clean_attrs(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = {self._clean_attr_name(k): v for k, v in attrs.items()}
