@@ -28,9 +28,7 @@ class Element:
         return self.clone(**self.attrs | new_attrs)
 
     def add_class(self, *new_classes: str) -> "Element":
-        return self.clone(
-            **self.attrs | {"class": self.attrs.get("class", set()) | set(new_classes)}
-        )
+        return self.clone(**self.attrs | {"class": self.classes | set(new_classes)})
 
     def clone(self, **attrs) -> "Element":
         if self.cloned:
