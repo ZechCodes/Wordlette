@@ -5,7 +5,6 @@ from markupsafe import Markup
 
 class Element:
     tag: str
-    has_closing_tag = False
     flag_attrs = frozenset(("required", "checked", "disabled", "selected"))
 
     def __init__(self, **attrs):
