@@ -48,8 +48,8 @@ class Element:
 
     def _clean_attrs(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = {self._clean_attr_name(k): v for k, v in attrs.items()}
-        if class_ := attrs.pop("class", None):
-            attrs.setdefault("classes", []).extend(filter(bool, class_.split()))
+        if isinstance(classes := attrs.get("class"), str):
+            attrs["class"] = set(classes.split(" "))
 
         return attrs
 
