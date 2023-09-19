@@ -13,25 +13,19 @@ from wordlette.utils.dependency_injection import inject, AutoInject, inject_depe
 
 class CreateSettingsFileForm(Form):
     site_name: str @ TextField(
-        name="site-name",
-        id="site-name",
         required=True,
         placeholder='ex. "Bob\'s Blog" or "Paul\'s Portfolio"',
         label="What is your website's name?",
     )
     domain_name: str @ TextField(
-        name="domain-name",
-        id="domain-name",
         required=True,
         placeholder='ex. "bobsblog.com" or "www.paulsportfolio.com"',
         label="What is your website's domain name?",
     )
-    uses_https: bool @ CheckBoxField(
-        name="uses-https",
-        id="uses-https",
+    force_https: bool @ CheckBoxField(
         classes=["label-inline"],
         checked=True,
-        label="Uses HTTPS",
+        label="Force HTTPS",
     )
 
     buttons = (
@@ -83,7 +77,7 @@ class CreateSettingsFile(_SetupRoute):
             {
                 "site": {
                     "domain": form.domain_name,
-                    "https": form.uses_https,
+                    "https": form.force_https,
                     "name": form.site_name,
                 }
             },

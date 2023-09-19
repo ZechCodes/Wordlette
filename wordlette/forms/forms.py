@@ -21,7 +21,7 @@ from starlette.datastructures import FormData
 import wordlette.forms
 from wordlette.forms.exceptions import FormValidationError
 from wordlette.forms.field_types import SubmitButton, Button
-from wordlette.forms.fields import Field, NotSet
+from wordlette.forms.fields import Field, NotSet, not_set
 from wordlette.forms.views import FormView
 from wordlette.requests import Request
 from wordlette.utils.contextual_methods import contextual_method
@@ -42,18 +42,21 @@ class FieldScanner:
                 self.fields[name] = self._setup_form_field(name, type_hint)
 
     def _setup_form_field(self, name: str, hint: Type[Field] | T) -> Field:
-        params = {
-            "name": name,
-            "type_hint": hint,
-        }
+        params = {"type_hint": hint}
         if hasattr(self.form, name):
             params["value"] = params["default"] = getattr(self.form, name)
 
         if _is_annotated_field(hint):
+            field: Field
             params["type_hint"], field = get_args(hint)
             if isinstance(field, type):
                 return field(**params)
 
+            html_name = name.replace("_", "-").casefold()
+            if field.label is not not_set:
+                params["id"] = field.attrs.get("name") or html_name
+
+            params["name"] = field.attrs.get("id") or html_name
             field.set_missing(**params)
             return field
 
