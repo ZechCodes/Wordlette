@@ -78,6 +78,11 @@ class ContainerElement(Element):
             f"<{self.tag} {self._build_attrs()}>{Markup.escape(self.body)}</{self.tag}>"
         )
 
+    def _create_clone(self, **attrs) -> "ContainerElement":
+        clone = type(self)(self.body, **attrs)
+        clone.cloned = True
+        return clone
+
 
 class AElement(ContainerElement):
     tag = "a"
