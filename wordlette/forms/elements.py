@@ -6,6 +6,7 @@ from markupsafe import Markup
 class Element:
     tag: str
     flag_attrs = frozenset(("required", "checked", "disabled", "selected"))
+    cloned: bool = False
 
     def __init__(self, **attrs):
         self.attrs = self._clean_attrs(attrs)
@@ -21,6 +22,13 @@ class Element:
 
     def render(self, **attr_overrides):
         return Markup(f"<{self.tag} {self._build_attrs(attr_overrides)} />")
+
+    def clone(self, **attrs) -> "Element":
+        if self.cloned:
+            self.attrs = attrs
+            return self
+
+        return self._create_clone(**attrs)
 
     def _build_attrs(self, attr_overrides: dict[str, Any]) -> str:
         attrs_dict = self.attrs | self._clean_attrs(attr_overrides)
@@ -43,6 +51,11 @@ class Element:
 
     def _clean_attr_name(self, name: str) -> str:
         return name.replace("_", "-").rstrip("_").strip().casefold()
+
+    def _create_clone(self, **attrs) -> "Element":
+        clone = type(self)(**attrs)
+        clone.cloned = True
+        return clone
 
 
 class ContainerElement(Element):
