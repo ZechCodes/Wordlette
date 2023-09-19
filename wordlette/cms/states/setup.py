@@ -13,12 +13,10 @@ from wordlette.utils.dependency_injection import inject, AutoInject, inject_depe
 
 class CreateSettingsFileForm(Form):
     site_name: str @ TextField(
-        required=True,
         placeholder='ex. "Bob\'s Blog" or "Paul\'s Portfolio"',
         label="What is your website's name?",
     )
     domain_name: str @ TextField(
-        required=True,
         placeholder='ex. "bobsblog.com" or "www.paulsportfolio.com"',
         label="What is your website's domain name?",
     )
