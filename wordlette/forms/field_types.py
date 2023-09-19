@@ -42,7 +42,6 @@ class InputField(Field):
         self,
         *,
         disabled: bool | NotSet = not_set,
-        required: bool | NotSet = not_set,
         value: Any | NotSet = not_set,
         **kwargs,
     ):
@@ -50,7 +49,6 @@ class InputField(Field):
             **self._filter_and_clean_params(
                 type_=self.type,
                 disabled=disabled,
-                required=required,
                 value=value,
                 **kwargs,
             )
