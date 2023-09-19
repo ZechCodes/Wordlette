@@ -3,7 +3,7 @@
         <div class="column column-50">
             <fieldset>
                 {% for name, field in form.fields.items() %}
-                {% if name in form.labels and "label-inline" not in field.attrs["classes"] %}
+                {% if name in form.labels and "label-inline" not in field.classes %}
                 {{ form.labels[name].render() }}
                 {% endif %}
                 {% if name in form.errors %}
@@ -12,7 +12,7 @@
                 {% else %}
                 {{ field.render() }}
                 {% endif %}
-                {% if name in form.labels and "label-inline" in field.attrs["classes"] %}
+                {% if name in form.labels and "label-inline" in field.classes %}
                 {{ form.labels[name].add_class("label-inline").render() }}
                 {% endif %}
                 {% endfor %}

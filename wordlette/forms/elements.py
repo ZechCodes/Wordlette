@@ -20,6 +20,10 @@ class Element:
     def __repr__(self):
         return f"<{type(self).__name__} {self.tag} {self.attrs}>"
 
+    @property
+    def classes(self) -> set[str]:
+        return self.attrs.get("class", set())
+
     def add_attr(self, **new_attrs: Any) -> "Element":
         return self.clone(**self.attrs | new_attrs)
 
