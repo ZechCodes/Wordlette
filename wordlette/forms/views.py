@@ -53,8 +53,8 @@ class FormView:
         self, fields: dict[str, Field], values: dict[str, Any]
     ) -> dict[str, Element]:
         return {
-            field.attrs["name"]: field.compose(values.get(name, not_set))
-            for name, field in fields.items()
+            field.attrs["name"]: field.compose(values.get(field.attrs["name"], not_set))
+            for field in fields.values()
         }
 
     def _compose_labels(self, fields: dict[str, Field]) -> dict[str, LabelElement]:
