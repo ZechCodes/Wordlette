@@ -11,6 +11,7 @@ from typing import (
 )
 
 from wordlette.forms.elements import Element
+from wordlette.utils.annotated_aggregator import AnnotatedAggregator
 from wordlette.utils.sentinel import sentinel
 
 NotSet, not_set = sentinel("NotSet")
@@ -72,7 +73,7 @@ class Field(metaclass=FieldMCS):
         self.label = label
 
     def __rmatmul__(self, other: T) -> T:
-        return cast(T, Annotated[other, self])
+        return cast(T, AnnotatedAggregator[other, self])
 
     def __get__(self, instance, owner):
         if instance is None:
