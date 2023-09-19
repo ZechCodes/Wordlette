@@ -185,11 +185,6 @@ class Form:
         required_fields = [
             field for field in self.__form_fields__.values() if field.required
         ]
-        if len(required_fields) > len(args) + len(kwargs):
-            raise TypeError(
-                f"Expected {len(self.__form_fields__)} arguments, got {len(args) + len(kwargs)}"
-            )
-
         positional_args = list(reversed(args))
         for name, field in self.__form_fields__.items():
             if name in kwargs:
