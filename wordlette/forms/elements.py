@@ -1,4 +1,4 @@
-from typing import Sequence, Any
+from typing import Sequence, Any, Iterable
 
 from markupsafe import Markup
 
@@ -47,7 +47,9 @@ class Element:
 
     def _build_attrs(self) -> str:
         attrs_dict = self.attrs.copy()
-        if classes := attrs_dict.pop("class", None):
+        classes = self._process_classes(attrs_dict.pop("class", set()))
+        classes |= self._process_classes(attrs_dict.pop("classes", set()))
+        if classes:
             attrs_dict["class"] = " ".join(classes)
 
         attrs = [
@@ -62,8 +64,10 @@ class Element:
 
     def _clean_attrs(self, attrs: dict[str, Any]) -> dict[str, Any]:
         attrs = {self._clean_attr_name(k): v for k, v in attrs.items()}
-        if isinstance(classes := attrs.get("class"), str):
-            attrs["class"] = set(classes.split(" "))
+        classes = self._process_classes(attrs.pop("classes", set()))
+        classes |= self._process_classes(attrs.pop("class", set()))
+        if classes:
+            attrs["class"] = classes
 
         return attrs
 
@@ -72,6 +76,14 @@ class Element:
 
     def _create_clone(self, **attrs) -> "Element":
         return type(self)(__clone__=True, **attrs)
+
+    def _process_classes(self, classes: str | Iterable[str]) -> set[str]:
+        match classes:
+            case str():
+                return set(classes.split())
+
+            case _:
+                return set(classes)
 
 
 class ContainerElement(Element):
