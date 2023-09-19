@@ -20,6 +20,13 @@ class Element:
     def __repr__(self):
         return f"<{type(self).__name__} {self.tag} {self.attrs}>"
 
+    def add_attr(self, **new_attrs: Any) -> "Element":
+        return self.clone(**self.attrs | new_attrs)
+
+    def add_class(self, *new_classes: str) -> "Element":
+        return self.clone(
+            **self.attrs | {"class": self.attrs.get("class", set()) | set(new_classes)}
+        )
 
     def clone(self, **attrs) -> "Element":
         if self.cloned:
@@ -27,6 +34,11 @@ class Element:
             return self
 
         return self._create_clone(**attrs)
+
+    def remove(self, *remove_attrs: str) -> "Element":
+        return self.clone(
+            **{k: v for k, v in self.attrs.items() if k not in remove_attrs}
+        )
 
     def render(self):
         return Markup(f"<{self.tag} {self._build_attrs()} />")
