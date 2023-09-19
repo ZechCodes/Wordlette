@@ -6,10 +6,10 @@ from markupsafe import Markup
 class Element:
     tag: str
     flag_attrs = frozenset(("required", "checked", "disabled", "selected"))
-    cloned: bool = False
 
-    def __init__(self, **attrs):
+    def __init__(self, *, __clone__: bool = False, **attrs):
         self.attrs = self._clean_attrs(attrs)
+        self.cloned = __clone__
 
     def __eq__(self, other):
         if not isinstance(other, Element):
@@ -73,9 +73,7 @@ class Element:
         return name.rstrip("_").strip().replace("_", "-").casefold()
 
     def _create_clone(self, **attrs) -> "Element":
-        clone = type(self)(**attrs)
-        clone.cloned = True
-        return clone
+        return type(self)(__clone__=True, **attrs)
 
 
 class ContainerElement(Element):
@@ -95,9 +93,7 @@ class ContainerElement(Element):
         )
 
     def _create_clone(self, **attrs) -> "ContainerElement":
-        clone = type(self)(self.body, **attrs)
-        clone.cloned = True
-        return clone
+        return type(self)(self.body, __clone__=True, **attrs)
 
 
 class AElement(ContainerElement):
