@@ -46,6 +46,8 @@ class Element:
                     attrs[clean_key] += " " + value
                 else:
                     attrs[clean_key] = value
+        if class_ := attrs.pop("class", None):
+            attrs.setdefault("classes", []).extend(filter(bool, class_.split()))
 
         return attrs
 
