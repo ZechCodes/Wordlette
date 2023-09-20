@@ -65,9 +65,6 @@ class SetupRouteCategoryController:
         else:
             self.categories[route.setup_category].add_route(route)
 
-    def completed(self, route: "SetupRoute"):
-        self.categories[route.setup_category].completed(route)
-
     async def get_next_route(self) -> "SetupRoute":
         while (
             self.current_category is not SetupCategory.NoCategory
@@ -115,9 +112,6 @@ class SetupRoute(Route):
 
     async def setup_status(self) -> SetupStatus:
         return SetupStatus.Waiting
-
-    def completed(self):
-        self.controller.completed(self)
 
     async def get_next_route(self) -> "SetupRoute":
         return await self.controller.get_next_route()
