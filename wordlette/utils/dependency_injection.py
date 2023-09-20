@@ -53,7 +53,7 @@ class AutoInject:
             except AttributeError:
                 continue
 
-            if not name.endswith("__") and _needs_injector(attr):
+            if not name.endswith("__") and _needs_injector(attr, {cls.__name__: cls}):
                 setattr(cls, name, inject_dependencies(attr))
 
         for name, value in get_annotations(cls).items():
@@ -79,9 +79,12 @@ class Dependency(AtAnnotation):
         return partial(get_repository().get, type_)
 
 
-def _get_annotations(func):
-    ns = _get_function_namespace(func)
-    return get_annotations(func, globals=ns, eval_str=True)
+def _get_annotations(func, ns=None):
+    ns = (ns or {}) | _get_function_namespace(func)
+    try:
+        return get_annotations(func, globals=ns, eval_str=True)
+    except NameError as exc:
+        raise NameError(f"Couldn't process annotations on {func.__qualname__}") from exc
 
 
 def _is_at_annotation_type(annotation) -> bool:
@@ -92,7 +95,7 @@ def _is_at_annotation_type(annotation) -> bool:
     return True
 
 
-def _needs_injector(attr):
+def _needs_injector(attr, ns=None):
     if isinstance(attr, type):
         return False
 
@@ -104,7 +107,7 @@ def _needs_injector(attr):
 
     return any(
         _is_at_annotation_type(annotation)
-        for annotation in _get_annotations(attr).values()
+        for annotation in _get_annotations(attr, ns).values()
     )
 
 
