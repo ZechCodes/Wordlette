@@ -1,6 +1,6 @@
 from typing import Type, Callable
 
-from bevy import dependency
+from bevy import dependency, get_repository
 from starlette.responses import Response
 from starlette.types import Scope, Send, Receive
 
@@ -30,6 +30,7 @@ class RouteManager:
             raise TypeError(f"router must be an instance of {Router.__qualname__}")
 
         self._router = router
+        get_repository().set(Router, self._router)
 
     def add_error_page(
         self, status_code: int, get_page: Callable[[int, Scope], Response]
@@ -44,7 +45,9 @@ class RouteManager:
     def create_router(self, *routes: Type[Route]):
         self.router = Router()
         apply(self.add_route).to(routes)
-        apply(self.add_error_page).to(self._error_pages.keys(), self._error_pages.values())
+        apply(self.add_error_page).to(
+            self._error_pages.keys(), self._error_pages.values()
+        )
 
     def url_for(self, route: Type[Route], **path_params) -> str:
         return self.router.url_for(route, **path_params)
