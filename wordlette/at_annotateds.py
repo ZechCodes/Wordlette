@@ -4,19 +4,21 @@ from bevy.options import Null, Value, Option
 from bevy.provider_state import ProviderState
 from bevy.providers import AnnotatedProvider
 
+from wordlette.utils.annotated_aggregator import AnnotatedAggregator
+
 T = TypeVar("T")
 
 
 class AtAnnotationMCS(type):
     def __rmatmul__(self, other: T) -> T:
-        return Annotated[other, self()]
+        return AnnotatedAggregator[other, self()]
 
 
 class AtAnnotation(metaclass=AtAnnotationMCS):
     __match_args__ = ("strategy",)
 
     def __rmatmul__(self, other):
-        return Annotated[other, self]
+        return AnnotatedAggregator[other, self]
 
 
 class AtProvider(AnnotatedProvider):
