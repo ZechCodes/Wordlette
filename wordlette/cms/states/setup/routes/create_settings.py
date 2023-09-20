@@ -73,6 +73,7 @@ class CreateSettingsFile(SetupRoute, setup_category=SetupCategory.Config):
             },
         )
         subtitle = "Your Settings Have Been Saved"
+        next_page = await self.get_next_page()
         return Template(
             "create-settings-file.html",
             title=f"Wordlette: {subtitle}",
@@ -80,7 +81,7 @@ class CreateSettingsFile(SetupRoute, setup_category=SetupCategory.Config):
             subtitle=subtitle,
             created_settings_file=True,
             file_path=path,
-            next_page_url=self.get_next_step_url(),
+            next_page_url=next_page.url(),
         )
 
     async def handle_form_validation_errors(

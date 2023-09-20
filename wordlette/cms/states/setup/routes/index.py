@@ -7,7 +7,7 @@ class Index(SetupRoute):
     path = "/"
 
     async def get(self, request: Request.Get):
-        next_page = await self.get_next_route()
+        next_page = await self.get_next_page()
         return Template(
             "index.html",
             title="Wordlette",

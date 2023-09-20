@@ -113,5 +113,5 @@ class SetupRoute(Route):
     async def setup_status(self) -> SetupStatus:
         return SetupStatus.Waiting
 
-    async def get_next_route(self) -> "SetupRoute":
+    async def get_next_page(self) -> "SetupRoute":
         return await self.controller.get_next_route()
