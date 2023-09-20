@@ -68,3 +68,16 @@ def test_auto_inject_class_functions_only_with_dependencies():
 
     assert hasattr(TestClass.function, "injected_params")
     assert not hasattr(TestClass.no_dep_function, "injected_params")
+
+
+def test_auto_inject_class_annotations():
+    class Dep:
+        ...
+
+    class TestClass(AutoInject):
+        dep: Dep @ inject
+
+    inst_a = TestClass()
+    inst_b = TestClass()
+    assert isinstance(inst_a.dep, Dep)
+    assert inst_a.dep is inst_b.dep

@@ -1,7 +1,7 @@
 from asyncio import iscoroutinefunction
 from functools import wraps, partial
 from inspect import signature, get_annotations
-from typing import TypeVar, Callable, get_origin, Annotated
+from typing import TypeVar, Callable, get_origin, Annotated, get_args
 
 from bevy import get_repository
 from bevy.injectors.functions import _get_function_namespace
@@ -56,9 +56,26 @@ class AutoInject:
             if not name.endswith("__") and _needs_injector(attr):
                 setattr(cls, name, inject_dependencies(attr))
 
+        for name, value in get_annotations(cls).items():
+            if get_origin(value) is Annotated:
+                hint, annotation = get_args(value)
+                if isinstance(annotation, Dependency):
+                    annotation.injector = annotation.strategy(hint)
+                    setattr(cls, name, annotation)
+
 
 class Dependency(AtAnnotation):
-    def strategy(self, type_, _):
+    def __init__(self):
+        super().__init__()
+        self.injector = None
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+
+        return self.injector()
+
+    def strategy(self, type_, *_):
         return partial(get_repository().get, type_)
 
 
