@@ -29,6 +29,10 @@ class Form(_Form):
     __form_view_type__ = FormView
 
     @contextual_method
+    def render(self):
+        return self.view().render()
+
+    @contextual_method
     def view(self) -> FormView:
         return self.__form_view_type__(
             self.__form_template__,
