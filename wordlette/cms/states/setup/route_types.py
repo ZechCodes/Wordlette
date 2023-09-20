@@ -66,22 +66,14 @@ class SetupRouteCategoryController:
             self.categories[route.setup_category].add_route(route)
 
     async def get_next_route(self) -> "SetupRoute":
-        while (
-            self.current_category is not SetupCategory.NoCategory
-            and self.categories[self.current_category].is_done()
-        ):
-            self.current_category = self.next_category()
-
-        if self.current_category in self.categories:
+        while self.current_category is not SetupCategory.NoCategory:
             route = await self.categories[self.current_category].get_next_route()
-
             if route is not None:
                 return route
 
+            self.current_category = self.next_category()
+
         return self.completed_route
-
-
-
 
     def _build_categories(self) -> dict[SetupCategory, CategoryController]:
         categories = {}
