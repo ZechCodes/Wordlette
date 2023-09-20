@@ -38,7 +38,15 @@ class CreateSettingsFileForm(Form):
 class CreateSettingsFile(SetupRoute, setup_category=SetupCategory.Config):
     path = "/create-settings-file"
 
-    async def setup_status(self) -> SetupStatus:
+    async def setup_status(
+        self,
+        config: ConfigManager @ inject = None,
+        settings_filename: str @ AppSetting("settings-filename") = None,
+        working_directory: str @ AppSetting("working-directory") = None,
+    ) -> SetupStatus:
+        if config.find_config_file(settings_filename, working_directory):
+            return SetupStatus.Complete
+
         return SetupStatus.Ready
 
     async def get_setup_page(self, _: Request.Get):
