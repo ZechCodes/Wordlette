@@ -1,14 +1,13 @@
 from wordlette.cms.forms import Form
-from wordlette.cms.themes import Template, ThemeManager
+from wordlette.cms.states.setup.enums import SetupCategory, SetupStatus
+from wordlette.cms.states.setup.route_types import SetupRoute
+from wordlette.cms.themes import Template
 from wordlette.configs.managers import ConfigManager
 from wordlette.core.app import AppSetting
 from wordlette.forms.exceptions import FormValidationError
-from wordlette.forms.field_types import TextField, CheckBoxField, SubmitButton, Link
-from wordlette.middlewares.router_middleware import RouteManager
+from wordlette.forms.field_types import Link, SubmitButton, CheckBoxField, TextField
 from wordlette.requests import Request
-from wordlette.routes import Route
-from wordlette.state_machines import State
-from wordlette.utils.dependency_injection import inject, AutoInject, inject_dependencies
+from wordlette.utils.dependency_injection import inject
 
 
 class CreateSettingsFileForm(Form):
@@ -36,30 +35,15 @@ class CreateSettingsFileForm(Form):
             raise ValueError("Field cannot be empty")
 
 
-class _SetupRoute(Route):
-    class __metadata__:
-        abstract = True
-        registry = set()
-
-
-class Index(_SetupRoute):
-    path = "/"
-
-    async def get(self, request: Request.Get):
-        return Template(
-            "index.html",
-            title="Wordlette",
-            subtitle="Setting Up Your Site",
-            next_page_url=_get_next_page(),
-        )
-
-
-class CreateSettingsFile(_SetupRoute):
+class CreateSettingsFile(SetupRoute, setup_category=SetupCategory.Config):
     path = "/create-settings-file"
+
+    async def setup_status(self) -> SetupStatus:
+        return SetupStatus.Ready
 
     async def get_setup_page(self, _: Request.Get):
         return self._create_page_template(
-            form=CreateSettingsFileForm.view(),
+            form=CreateSettingsFileForm,
         )
 
     async def create_settings_file(
@@ -88,14 +72,14 @@ class CreateSettingsFile(_SetupRoute):
             subtitle=subtitle,
             created_settings_file=True,
             file_path=path,
-            next_page_url=_get_next_page(),
+            next_page_url=self.get_next_step_url(),
         )
 
     async def handle_form_validation_errors(
         self, validation_errors: FormValidationError
     ):
         return self._create_page_template(
-            form=validation_errors.form.view(),
+            form=validation_errors.form,
         )
 
     def _create_page_template(self, **kwargs):
@@ -107,38 +91,3 @@ class CreateSettingsFile(_SetupRoute):
             subtitle=subtitle,
             **kwargs,
         )
-
-
-class SetupComplete(_SetupRoute):
-    path = "/setup-complete"
-
-    async def get_setup_page(self, _: Request.Get):
-        return Template(
-            "setup-complete.html",
-            title="Wordlette",
-            subtitle="Setup Complete",
-        )
-
-
-class Setup(State, AutoInject):
-    async def enter_state(
-        self,
-        route_manager: RouteManager @ inject,
-        theme_manager: ThemeManager @ inject,
-    ):
-        theme_manager.set_theme(theme_manager.wordlette_res / "themes" / "setup")
-        _SetupRoute.register_routes(route_manager.router)
-
-
-@inject_dependencies
-def _get_next_page(
-    config: ConfigManager @ inject = None,
-    router: RouteManager @ inject = None,
-    settings_filename: str @ AppSetting("settings-filename") = None,
-    working_directory: str @ AppSetting("working-directory") = None,
-):
-    settings_path = config.find_config_file(settings_filename, working_directory)
-    if settings_path is None:
-        return router.url_for(CreateSettingsFile)
-
-    return router.url_for(SetupComplete)
