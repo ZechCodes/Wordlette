@@ -78,8 +78,11 @@ class RouteMCS(type):
     path: str
 
     def __repr__(cls):
-        path, name, methods = cls.path, cls.name, cls.methods.names
-        return f"<Route:{cls.__name__} {path=} {name=} {methods=}>"
+        if hasattr(cls, "path"):
+            path, name, methods = cls.path, cls.name, cls.methods.names
+            return f"<Route:{cls.__name__} {path=} {name=} {methods=}>"
+
+        return f"<Route:Abstract:{cls.__name__}>"
 
 
 class Route(
