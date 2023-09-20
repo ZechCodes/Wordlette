@@ -21,7 +21,7 @@ class CategoryController:
     def is_done(self):
         return not self.routes
 
-    async def get_next_route(self) -> "SetupRoute":
+    async def get_next_route(self) -> "SetupRoute | None":
         for route in self.routes.copy():
             status = await route.setup_status()
             if status is SetupStatus.Ready:
@@ -32,7 +32,7 @@ class CategoryController:
                 self.completed(route)
 
         else:
-            return self.routes[0]
+            return self.routes[0] if self.routes else None
 
 
 class SetupRouteCategoryController:
@@ -75,10 +75,16 @@ class SetupRouteCategoryController:
         ):
             self.current_category = self.next_category()
 
-        if self.current_category is SetupCategory.NoCategory:
-            return self.completed_route
+        if self.current_category in self.categories:
+            route = await self.categories[self.current_category].get_next_route()
 
-        return await self.categories[self.current_category].get_next_route()
+            if route is not None:
+                return route
+
+        return self.completed_route
+
+
+
 
     def _build_categories(self) -> dict[SetupCategory, CategoryController]:
         categories = {}
