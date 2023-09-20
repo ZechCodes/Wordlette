@@ -10,6 +10,7 @@ from typing import (
     Type,
 )
 
+from bevy import get_repository
 from starlette.datastructures import FormData
 from starlette.responses import Response
 from starlette.types import Scope, Receive, Send
@@ -158,7 +159,10 @@ class Route(
 
             supported_fields = form.count_matching_fields(form_data)
             if supported_fields > highest_field_count:
-                handler, highest_field_count = Option.Value((form, handler)), supported_fields
+                handler, highest_field_count = (
+                    Option.Value((form, handler)),
+                    supported_fields,
+                )
 
             if supported_fields == len(form_data):
                 break
@@ -176,6 +180,11 @@ class Route(
         request_type = type(request)
         response = await handler_registry[request_type](self, request)
         await response(scope, receive, send)
+
+    @classmethod
+    def url(cls, **path_params):
+        router: Router = get_repository().get(Router)
+        return router.url_for(cls, **path_params)
 
     @classmethod
     def register_routes(cls, router: Router):
