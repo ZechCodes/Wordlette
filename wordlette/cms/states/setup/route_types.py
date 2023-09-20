@@ -102,7 +102,7 @@ class SetupRoute(Route):
         super().__init__()
         self.controller.add_route(self)
 
-    async def setup_status(self) -> SetupStatus:
+    async def setup_status(self, *_) -> SetupStatus:
         return SetupStatus.Waiting
 
     async def get_next_page(self) -> "SetupRoute":

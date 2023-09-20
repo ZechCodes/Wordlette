@@ -40,9 +40,9 @@ class CreateSettingsFile(SetupRoute, setup_category=SetupCategory.Config):
 
     async def setup_status(
         self,
-        config: ConfigManager @ inject = None,
-        settings_filename: str @ AppSetting("settings-filename") = None,
-        working_directory: str @ AppSetting("working-directory") = None,
+        config: ConfigManager @ inject,
+        settings_filename: str @ AppSetting("settings-filename"),
+        working_directory: str @ AppSetting("working-directory"),
     ) -> SetupStatus:
         if config.find_config_file(settings_filename, working_directory):
             return SetupStatus.Complete
