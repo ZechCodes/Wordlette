@@ -36,7 +36,6 @@ class AbstractDatabaseDriver(ABC):
         ...
 
     @abstractmethod
-    async def count(self, *predicates: DatabasePredicate) -> int:
         ...
 
     @abstractmethod
