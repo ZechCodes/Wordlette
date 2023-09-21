@@ -22,16 +22,10 @@ class DummyDriver(DatabaseDriver, driver_name="dummy"):
     async def add(self, *items: DatabaseModel) -> DatabaseStatus:
         pass
 
-    async def count(self, *predicates: DatabasePredicate) -> int:
-        pass
-
-    async def filter(self, *predicates: DatabasePredicate) -> DatabaseStatus:
-        pass
-
     async def get(self, *predicates: DatabasePredicate) -> DatabaseStatus:
         pass
 
-    async def remove(self, *items: DatabaseModel) -> DatabaseStatus:
+    async def delete(self, *items: DatabaseModel) -> DatabaseStatus:
         pass
 
     async def sync_schema(self, models: set[Type[DatabaseModel]]) -> DatabaseStatus:
