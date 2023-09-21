@@ -36,6 +36,7 @@ class AbstractDatabaseDriver(ABC):
         ...
 
     @abstractmethod
+    async def delete(self, *items: DatabaseModel) -> DatabaseStatus:
         ...
 
     @abstractmethod
@@ -44,10 +45,6 @@ class AbstractDatabaseDriver(ABC):
 
     @abstractmethod
     async def get(self, *predicates: DatabasePredicate) -> DatabaseStatus:
-        ...
-
-    @abstractmethod
-    async def remove(self, *items: DatabaseModel) -> DatabaseStatus:
         ...
 
     @abstractmethod
