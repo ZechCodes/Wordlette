@@ -114,3 +114,24 @@ def test_inherited_models():
 
     model = TestChildModel(id=1, name="test", age=30)
     assert model.to_dict() == {"id": 1, "name": "test", "age": 30}
+
+
+def test_joined_models():
+    class TestModelA(Model):
+        id: int @ FieldSchema
+        name: str @ FieldSchema
+
+    class TestModelB(Model):
+        age: int @ FieldSchema
+
+    data = {"id": 1, "name": "test", "age": 30}
+    JoinedModel = TestModelA & TestModelB
+
+    model = TestModelA(**data)
+    assert model.to_dict() == {"id": 1, "name": "test"}
+
+    model = TestModelB(**data)
+    assert model.to_dict() == {"age": 30}
+
+    model = JoinedModel(**data)
+    assert model.to_dict() == data

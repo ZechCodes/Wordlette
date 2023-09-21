@@ -45,6 +45,9 @@ class ModelMCS(type):
             if hasattr(base, "__fields__"):
                 yield from base.__fields__.items()
 
+    def __and__(cls, other: "Type[Model]") -> "ModelMCS":
+        return ModelMCS(f"Joined_{cls.__name__}_{other.__name__}", (cls, other), {})
+
 
 class Model(metaclass=ModelMCS):
     __fields__: dict[FieldName, Field]
