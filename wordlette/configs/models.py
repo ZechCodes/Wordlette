@@ -1,9 +1,10 @@
 from bevy import inject, dependency
 
 from wordlette.configs.managers import ConfigManager
+from wordlette.models import Model
 
 
-class ConfigModel:
+class ConfigModel(Model):
     __config_key__: str
 
     def __init_subclass__(cls, **kwargs):
