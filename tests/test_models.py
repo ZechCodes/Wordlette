@@ -1,3 +1,5 @@
+from typing import Annotated
+
 import pytest
 
 from wordlette.models import FieldSchema, Model, ValidationError
@@ -88,3 +90,15 @@ def test_sequence_type_conversion():
 
     model = TestModel(values=range(1, 4))
     assert model.values == [1, 2, 3]
+
+
+def test_annotated_hints():
+    class TestModel(Model):
+        id: Annotated[int, FieldSchema()]
+        name: Annotated[str, FieldSchema()]
+
+    class TestParentModel(Model):
+        child: Annotated[TestModel, FieldSchema()]
+
+    model = TestParentModel(child=TestModel(id=1, name="test"))
+    assert model.to_dict() == {"child": {"id": 1, "name": "test"}}
