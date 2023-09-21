@@ -16,12 +16,14 @@ class ValidationError(BaseWordletteException):
 
 
 class ModelMCS(type):
-    def __new__(mcs, name: str, bases: tuple[Type, ...], namespace: dict[str, Any]):
+    def __new__(
+        mcs, name: str, bases: tuple[Type, ...], namespace: dict[str, Any], **kwargs
+    ):
         annotations = namespace.get("__annotations__", {})
         fields = dict(mcs.build_fields(annotations, namespace))
         namespace["__fields__"] = dict(mcs.inherit_fields(bases)) | fields
         namespace |= fields
-        return super().__new__(mcs, name, bases, namespace)
+        return super().__new__(mcs, name, bases, namespace, **kwargs)
 
     @staticmethod
     def build_fields(
