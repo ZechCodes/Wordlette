@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from bevy import get_repository, Repository
 from pytest_asyncio import fixture
 
-from wordlette.at_annotateds import AtProvider, AtAnnotation
+from wordlette.utils.at_annotateds import AtProvider, AtAnnotation
 from wordlette.utils.dependency_injection import (
     inject_dependencies,
     inject,

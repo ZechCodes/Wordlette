@@ -18,7 +18,6 @@ from bevy import get_repository, dependency, inject
 from starlette.responses import PlainTextResponse
 from starlette.types import Receive, Send, Scope, Message, ASGIApp
 
-from wordlette.at_annotateds import AtAnnotation, AtProvider
 from wordlette.core.events import (
     LifespanStartupEvent,
     LifespanShutdownEvent,
@@ -29,6 +28,7 @@ from wordlette.extensions import Extension
 from wordlette.middlewares import Middleware
 from wordlette.state_machines import StateMachine
 from wordlette.utils.apply import apply
+from wordlette.utils.at_annotateds import AtAnnotation, AtProvider
 from wordlette.utils.options import Null
 
 logging.basicConfig(level=logging.DEBUG)

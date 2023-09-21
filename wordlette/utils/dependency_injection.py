@@ -6,7 +6,7 @@ from typing import TypeVar, Callable, get_origin, Annotated, get_args
 from bevy import get_repository
 from bevy.injectors.functions import _get_function_namespace
 
-from wordlette.at_annotateds import AtAnnotation
+from wordlette.utils.at_annotateds import AtAnnotation
 
 T = TypeVar("T", bound=Callable)
 

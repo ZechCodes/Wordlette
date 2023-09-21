@@ -1,3 +1,4 @@
+from abc import ABCMeta
 from typing import get_origin, get_args, Annotated, TypeVar
 
 from bevy.options import Null, Value, Option
@@ -9,7 +10,7 @@ from wordlette.utils.annotated_aggregator import AnnotatedAggregator
 T = TypeVar("T")
 
 
-class AtAnnotationMCS(type):
+class AtAnnotationMCS(ABCMeta):
     def __rmatmul__(self, other: T) -> T:
         return AnnotatedAggregator[other, self()]
 
