@@ -64,7 +64,7 @@ class AbstractDatabaseDriver(ABC):
         ...
 
 
-class DatabaseDriver(ABC, AbstractDatabaseDriver):
+class DatabaseDriver(AbstractDatabaseDriver, ABC):
     __drivers__ = {}
     driver_name: DriverName
 
