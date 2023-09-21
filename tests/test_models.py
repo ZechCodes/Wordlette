@@ -102,3 +102,15 @@ def test_annotated_hints():
 
     model = TestParentModel(child=TestModel(id=1, name="test"))
     assert model.to_dict() == {"child": {"id": 1, "name": "test"}}
+
+
+def test_inherited_models():
+    class TestModel(Model):
+        id: int @ FieldSchema
+        name: str @ FieldSchema
+
+    class TestChildModel(TestModel):
+        age: int @ FieldSchema
+
+    model = TestChildModel(id=1, name="test", age=30)
+    assert model.to_dict() == {"id": 1, "name": "test", "age": 30}

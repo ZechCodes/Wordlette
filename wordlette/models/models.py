@@ -1,4 +1,4 @@
-from typing import Annotated, Any, Type, TypeAlias, get_origin, get_args
+from typing import Annotated, Any, Type, TypeAlias, get_origin, get_args, Generator
 
 from wordlette.base_exceptions import BaseWordletteException
 from wordlette.models.fields import Field, FieldSchema, _not_set_
@@ -17,25 +17,33 @@ class ValidationError(BaseWordletteException):
 
 class ModelMCS(type):
     def __new__(mcs, name: str, bases: tuple[Type, ...], namespace: dict[str, Any]):
-        namespace |= mcs.build_fields(namespace.get("__annotations__", {}), namespace)
+        annotations = namespace.get("__annotations__", {})
+        fields = dict(mcs.build_fields(annotations, namespace))
+        namespace["__fields__"] = dict(mcs.inherit_fields(bases)) | fields
+        namespace |= fields
         return super().__new__(mcs, name, bases, namespace)
 
     @staticmethod
     def build_fields(
         annotations: dict[str, Any], namespace: dict[str, Any]
-    ) -> dict[str, Any]:
-        ns = {"__fields__": {}}
+    ) -> Generator[tuple[str, Field], None, None]:
         for name, annotation in annotations.items():
             if get_origin(annotation) is not Annotated:
                 continue
 
             hint, field = get_args(annotation)
             if isinstance(field, FieldSchema):
-                ns[name] = ns["__fields__"][name] = field.create_field(
+                yield name, field.create_field(
                     name, hint, namespace.get(name, _not_set_)
                 )
 
-        return ns
+    @staticmethod
+    def inherit_fields(
+        bases: tuple[Type, ...]
+    ) -> Generator[tuple[str, Field], None, None]:
+        for base in bases:
+            if hasattr(base, "__fields__"):
+                yield from base.__fields__.items()
 
 
 class Model(metaclass=ModelMCS):
