@@ -44,10 +44,6 @@ class AbstractDatabaseDriver(ABC):
         ...
 
     @abstractmethod
-    async def filter(self, *predicates: DatabasePredicate) -> DatabaseStatus:
-        ...
-
-    @abstractmethod
     async def get(self, *predicates: DatabasePredicate) -> DatabaseStatus:
         ...
 
