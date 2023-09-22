@@ -83,7 +83,7 @@ async def test_connect():
     assert isinstance(get_repository().get(DatabaseDriver), DummyDriver)
 
 
-def test_predicates():
+def test_query_ast():
     ast = (
         when(10 > ASTReferenceNode("x") > 5)
         .And(when(ASTReferenceNode("y") < 10).Or(ASTReferenceNode("y") > 20))
