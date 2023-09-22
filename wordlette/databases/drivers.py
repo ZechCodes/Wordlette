@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Type, TypeAlias
 
+from wordlette.configs import ConfigModel
 from wordlette.databases.models import DatabaseModel
 from wordlette.databases.query_ast import ASTGroupNode
 from wordlette.databases.statuses import DatabaseStatus
@@ -32,7 +33,7 @@ class AbstractDatabaseDriver(ABC):
         ...
 
     @abstractmethod
-    async def connect(self) -> DatabaseStatus:
+    async def connect(self, config: ConfigModel | None = None) -> DatabaseStatus:
         ...
 
     @abstractmethod
