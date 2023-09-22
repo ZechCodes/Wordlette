@@ -53,7 +53,10 @@ class ASTGroupNode(ASTNode):
                 case (ASTLiteralNode(a), ASTLiteralNode(b)) if a == b:
                     continue
 
-                case (ASTReferenceNode(a), ASTReferenceNode(b)) if a != b:
+                case (
+                    ASTReferenceNode(af, am),
+                    ASTReferenceNode(bf, bm),
+                ) if af == bf and am == bm:
                     continue
 
                 case (
