@@ -13,7 +13,7 @@ class ASTLogicalOperatorNode(ASTNode, Enum):
     OR = auto()
 
 
-class Operator(Enum):
+class ASTOperatorNode(ASTNode, Enum):
     EQUALS = auto()
     NOT_EQUALS = auto()
     GREATER_THAN = auto()
@@ -63,7 +63,10 @@ class ASTGroupNode(ASTNode):
                 case (ASTGroupNode() as a, ASTGroupNode() as b) if a == b:
                     continue
 
-                case (ASTLogicalOperatorNode() as a, ASTLogicalOperatorNode() as b) if a == b:
+                case (
+                    ASTLogicalOperatorNode() as a,
+                    ASTLogicalOperatorNode() as b,
+                ) if a == b:
                     continue
 
                 case _:
@@ -104,40 +107,46 @@ class ASTComparableNode(ASTNode):
 
     def __eq__(self, other) -> "ASTComparisonNode":
         self.group.add(
-            node := ASTComparisonNode(self, other, Operator.EQUALS, self.group)
+            node := ASTComparisonNode(self, other, ASTOperatorNode.EQUALS, self.group)
         )
         return node
 
     def __ne__(self, other) -> "ASTComparisonNode":
         self.group.add(
-            node := ASTComparisonNode(self, other, Operator.NOT_EQUALS, self.group)
+            node := ASTComparisonNode(
+                self, other, ASTOperatorNode.NOT_EQUALS, self.group
+            )
         )
         return node
 
     def __gt__(self, other) -> "ASTComparisonNode":
         self.group.add(
-            node := ASTComparisonNode(self, other, Operator.GREATER_THAN, self.group)
+            node := ASTComparisonNode(
+                self, other, ASTOperatorNode.GREATER_THAN, self.group
+            )
         )
         return node
 
     def __ge__(self, other) -> "ASTComparisonNode":
         self.group.add(
             node := ASTComparisonNode(
-                self, other, Operator.GREATER_THAN_OR_EQUAL, self.group
+                self, other, ASTOperatorNode.GREATER_THAN_OR_EQUAL, self.group
             )
         )
         return node
 
     def __lt__(self, other) -> "ASTComparisonNode":
         self.group.add(
-            node := ASTComparisonNode(self, other, Operator.LESS_THAN, self.group)
+            node := ASTComparisonNode(
+                self, other, ASTOperatorNode.LESS_THAN, self.group
+            )
         )
         return node
 
     def __le__(self, other) -> "ASTComparisonNode":
         self.group.add(
             node := ASTComparisonNode(
-                self, other, Operator.LESS_THAN_OR_EQUAL, self.group
+                self, other, ASTOperatorNode.LESS_THAN_OR_EQUAL, self.group
             )
         )
         return node
@@ -191,7 +200,7 @@ class ASTComparisonNode(ASTComparableNode):
         self,
         left: ASTLiteralNode | ASTReferenceNode | Any,
         right: ASTLiteralNode | ASTReferenceNode | Any,
-        operator: Operator,
+        operator: ASTOperatorNode,
         group=None,
     ):
         super().__init__(group or ASTGroupNode())

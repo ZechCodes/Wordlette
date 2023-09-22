@@ -12,8 +12,8 @@ from wordlette.databases.query_ast import (
     ASTGroupNode,
     ASTLiteralNode,
     ASTReferenceNode,
-    LogicalOperatorNode,
-    Operator,
+    ASTLogicalOperatorNode,
+    ASTOperatorNode,
     when,
 )
 from wordlette.databases.statuses import DatabaseSuccessStatus, DatabaseStatus
@@ -95,31 +95,37 @@ def test_query_ast():
     assert ast == ASTGroupNode(
         [
             ASTComparisonNode(
-                ASTReferenceNode("x", None), ASTLiteralNode(10), Operator.LESS_THAN
+                ASTReferenceNode("x", None),
+                ASTLiteralNode(10),
+                ASTOperatorNode.LESS_THAN,
             ),
-            LogicalOperatorNode.AND,
+            ASTLogicalOperatorNode.AND,
             ASTComparisonNode(
-                ASTReferenceNode("x", None), ASTLiteralNode(5), Operator.GREATER_THAN
+                ASTReferenceNode("x", None),
+                ASTLiteralNode(5),
+                ASTOperatorNode.GREATER_THAN,
             ),
-            LogicalOperatorNode.AND,
+            ASTLogicalOperatorNode.AND,
             ASTGroupNode(
                 [
                     ASTComparisonNode(
                         ASTReferenceNode("y", None),
                         ASTLiteralNode(10),
-                        Operator.LESS_THAN,
+                        ASTOperatorNode.LESS_THAN,
                     ),
-                    LogicalOperatorNode.OR,
+                    ASTLogicalOperatorNode.OR,
                     ASTComparisonNode(
                         ASTReferenceNode("y", None),
                         ASTLiteralNode(20),
-                        Operator.GREATER_THAN,
+                        ASTOperatorNode.GREATER_THAN,
                     ),
                 ]
             ),
-            LogicalOperatorNode.OR,
+            ASTLogicalOperatorNode.OR,
             ASTComparisonNode(
-                ASTReferenceNode("z", None), ASTLiteralNode(10), Operator.GREATER_THAN
+                ASTReferenceNode("z", None),
+                ASTLiteralNode(10),
+                ASTOperatorNode.GREATER_THAN,
             ),
         ]
     )
@@ -128,11 +134,11 @@ def test_query_ast():
     assert ast == ASTGroupNode(
         [
             ASTComparisonNode(
-                ASTReferenceNode("x", None), ASTLiteralNode(10), Operator.EQUALS
+                ASTReferenceNode("x", None), ASTLiteralNode(10), ASTOperatorNode.EQUALS
             ),
-            LogicalOperatorNode.AND,
+            ASTLogicalOperatorNode.AND,
             ASTComparisonNode(
-                ASTReferenceNode("y", None), ASTLiteralNode(20), Operator.EQUALS
+                ASTReferenceNode("y", None), ASTLiteralNode(20), ASTOperatorNode.EQUALS
             ),
         ]
     )
@@ -157,13 +163,13 @@ def test_model_field_query_ast():
             ASTComparisonNode(
                 ASTReferenceNode(TestModel.__fields__["field_a"], TestModel),
                 ASTLiteralNode("test"),
-                Operator.EQUALS,
+                ASTOperatorNode.EQUALS,
             ),
-            LogicalOperatorNode.AND,
+            ASTLogicalOperatorNode.AND,
             ASTComparisonNode(
                 ASTReferenceNode(TestModel.__fields__["field_b"], TestModel),
                 ASTLiteralNode(10),
-                Operator.LESS_THAN,
+                ASTOperatorNode.LESS_THAN,
             ),
         ]
     )
