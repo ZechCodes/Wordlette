@@ -4,7 +4,11 @@ from typing import Any
 from wordlette.utils.apply import apply
 
 
-class LogicalOperator(Enum):
+class ASTNode:
+    pass
+
+
+class LogicalOperatorNode(ASTNode, Enum):
     AND = auto()
     OR = auto()
 
@@ -18,22 +22,18 @@ class Operator(Enum):
     LESS_THAN_OR_EQUAL = auto()
 
 
-class ASTNode:
-    pass
-
-
 class ASTGroupNode(ASTNode):
     def __init__(
-        self, items: "list[ASTComparableNode | LogicalOperator] | None" = None
+        self, items: "list[ASTComparableNode | LogicalOperatorNode] | None" = None
     ):
-        self.items: list[ASTComparableNode | LogicalOperator] = (
+        self.items: list[ASTComparableNode | LogicalOperatorNode] = (
             [] if items is None else items
         )
 
     def __iter__(self):
         yield from iter(self.items)
 
-    def add(self, item, logical_type=LogicalOperator.AND):
+    def add(self, item, logical_type=LogicalOperatorNode.AND):
         if len(self.items) > 0:
             self.items.append(logical_type)
 
@@ -63,7 +63,7 @@ class ASTGroupNode(ASTNode):
                 case (ASTGroupNode() as a, ASTGroupNode() as b) if a == b:
                     continue
 
-                case (LogicalOperator() as a, LogicalOperator() as b) if a == b:
+                case (LogicalOperatorNode() as a, LogicalOperatorNode() as b) if a == b:
                     continue
 
                 case _:
@@ -75,15 +75,15 @@ class ASTGroupNode(ASTNode):
         return f"{type(self).__name__}({self.items!r})"
 
     def And(self, *comparisons: "SearchGroup | ASTComparisonNode | bool"):
-        return self._add_node_or_group(when(*comparisons), LogicalOperator.AND)
+        return self._add_node_or_group(when(*comparisons), LogicalOperatorNode.AND)
 
     def Or(self, *comparisons: "SearchGroup | ASTComparisonNode | bool"):
-        return self._add_node_or_group(when(*comparisons), LogicalOperator.OR)
+        return self._add_node_or_group(when(*comparisons), LogicalOperatorNode.OR)
 
     def _add_node_or_group(
         self,
         comparison: "SearchGroup | ASTComparisonNode",
-        logical_type: LogicalOperator,
+        logical_type: LogicalOperatorNode,
     ):
         match comparison:
             case ASTComparisonNode() if len(comparison.group.items) > 1:

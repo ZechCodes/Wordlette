@@ -12,7 +12,7 @@ from wordlette.databases.query_ast import (
     ASTGroupNode,
     ASTLiteralNode,
     ASTReferenceNode,
-    LogicalOperator,
+    LogicalOperatorNode,
     Operator,
     when,
 )
@@ -97,11 +97,11 @@ def test_query_ast():
             ASTComparisonNode(
                 ASTReferenceNode("x", None), ASTLiteralNode(10), Operator.LESS_THAN
             ),
-            LogicalOperator.AND,
+            LogicalOperatorNode.AND,
             ASTComparisonNode(
                 ASTReferenceNode("x", None), ASTLiteralNode(5), Operator.GREATER_THAN
             ),
-            LogicalOperator.AND,
+            LogicalOperatorNode.AND,
             ASTGroupNode(
                 [
                     ASTComparisonNode(
@@ -109,7 +109,7 @@ def test_query_ast():
                         ASTLiteralNode(10),
                         Operator.LESS_THAN,
                     ),
-                    LogicalOperator.OR,
+                    LogicalOperatorNode.OR,
                     ASTComparisonNode(
                         ASTReferenceNode("y", None),
                         ASTLiteralNode(20),
@@ -117,7 +117,7 @@ def test_query_ast():
                     ),
                 ]
             ),
-            LogicalOperator.OR,
+            LogicalOperatorNode.OR,
             ASTComparisonNode(
                 ASTReferenceNode("z", None), ASTLiteralNode(10), Operator.GREATER_THAN
             ),
@@ -130,7 +130,7 @@ def test_query_ast():
             ASTComparisonNode(
                 ASTReferenceNode("x", None), ASTLiteralNode(10), Operator.EQUALS
             ),
-            LogicalOperator.AND,
+            LogicalOperatorNode.AND,
             ASTComparisonNode(
                 ASTReferenceNode("y", None), ASTLiteralNode(20), Operator.EQUALS
             ),
@@ -159,7 +159,7 @@ def test_model_field_query_ast():
                 ASTLiteralNode("test"),
                 Operator.EQUALS,
             ),
-            LogicalOperator.AND,
+            LogicalOperatorNode.AND,
             ASTComparisonNode(
                 ASTReferenceNode(TestModel.__fields__["field_b"], TestModel),
                 ASTLiteralNode(10),
