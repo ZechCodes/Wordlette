@@ -138,3 +138,26 @@ def test_model_fields():
 
     assert isinstance(TestModel.field, ASTReferenceNode)
     assert TestModel.field.field == TestModel.__fields__["field"]
+
+
+def test_model_field_query_ast():
+    class TestModel(DatabaseModel):
+        field_a: str @ Property()
+        field_b: int @ Property()
+
+    ast = when(TestModel.field_a == "test", TestModel.field_b < 10)
+    assert ast == ASTGroupNode(
+        [
+            ASTComparisonNode(
+                ASTReferenceNode(TestModel.__fields__["field_a"]),
+                ASTLiteralNode("test"),
+                Operator.EQUALS,
+            ),
+            LogicalOperator.AND,
+            ASTComparisonNode(
+                ASTReferenceNode(TestModel.__fields__["field_b"]),
+                ASTLiteralNode(10),
+                Operator.LESS_THAN,
+            ),
+        ]
+    )

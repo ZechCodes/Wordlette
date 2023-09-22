@@ -30,6 +30,9 @@ class ASTGroupNode(ASTNode):
             [] if items is None else items
         )
 
+    def __iter__(self):
+        yield from iter(self.items)
+
     def add(self, item, logical_type=LogicalOperator.AND):
         if len(self.items) > 0:
             self.items.append(logical_type)
@@ -43,7 +46,7 @@ class ASTGroupNode(ASTNode):
         return self._compare_items(other.items)
 
     def _compare_items(self, other_items):
-        for items in zip(self.items, other_items):
+        for items in zip(self, other_items):
             match items:
                 case (ASTLiteralNode(a), ASTLiteralNode(b)) if a == b:
                     continue
