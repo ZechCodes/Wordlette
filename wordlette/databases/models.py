@@ -9,8 +9,12 @@ from wordlette.utils.contextual_methods import contextual_method
 
 class DatabaseModel(Model):
     __models__ = set()
+    __model_name__: str
 
     def __init_subclass__(cls, **kwargs):
+        cls.__model_name__ = kwargs.pop(
+            "name", getattr(cls, "__model_name__", cls.__name__)
+        )
         super().__init_subclass__(**kwargs)
         DatabaseModel.__models__.add(cls)
 
