@@ -72,6 +72,15 @@ class Model(metaclass=ModelMCS):
     def __serialize__(self) -> dict[FieldName, Any]:
         return self.to_dict()
 
+    def __eq__(self, other):
+        if not isinstance(other, Model):
+            raise NotImplementedError()
+
+        if not isinstance(self, type(other)) and not isinstance(other, type(self)):
+            return False
+
+        return self.__serialize__() == other.__serialize__()
+
     def __repr__(self) -> str:
         return f"<{type(self).__qualname__} {self.__serialize__()}>"
 
