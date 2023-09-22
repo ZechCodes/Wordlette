@@ -5,7 +5,7 @@ from wordlette.models import FieldSchema, Field
 class DatabaseProperty(Field):
     def __get__(self, instance, owner):
         if instance is None:
-            return ASTReferenceNode(self)
+            return ASTReferenceNode(self, owner)
 
         return super().__get__(instance, owner)
 

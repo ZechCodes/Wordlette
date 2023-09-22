@@ -85,48 +85,54 @@ async def test_connect():
 
 def test_query_ast():
     ast = (
-        when(10 > ASTReferenceNode("x") > 5)
-        .And(when(ASTReferenceNode("y") < 10).Or(ASTReferenceNode("y") > 20))
-        .Or(ASTReferenceNode("z") > 10)
+        when(10 > ASTReferenceNode("x", None) > 5)
+        .And(
+            when(ASTReferenceNode("y", None) < 10).Or(ASTReferenceNode("y", None) > 20)
+        )
+        .Or(ASTReferenceNode("z", None) > 10)
     )
 
     assert ast == ASTGroupNode(
         [
             ASTComparisonNode(
-                ASTReferenceNode("x"), ASTLiteralNode(10), Operator.LESS_THAN
+                ASTReferenceNode("x", None), ASTLiteralNode(10), Operator.LESS_THAN
             ),
             LogicalOperator.AND,
             ASTComparisonNode(
-                ASTReferenceNode("x"), ASTLiteralNode(5), Operator.GREATER_THAN
+                ASTReferenceNode("x", None), ASTLiteralNode(5), Operator.GREATER_THAN
             ),
             LogicalOperator.AND,
             ASTGroupNode(
                 [
                     ASTComparisonNode(
-                        ASTReferenceNode("y"), ASTLiteralNode(10), Operator.LESS_THAN
+                        ASTReferenceNode("y", None),
+                        ASTLiteralNode(10),
+                        Operator.LESS_THAN,
                     ),
                     LogicalOperator.OR,
                     ASTComparisonNode(
-                        ASTReferenceNode("y"), ASTLiteralNode(20), Operator.GREATER_THAN
+                        ASTReferenceNode("y", None),
+                        ASTLiteralNode(20),
+                        Operator.GREATER_THAN,
                     ),
                 ]
             ),
             LogicalOperator.OR,
             ASTComparisonNode(
-                ASTReferenceNode("z"), ASTLiteralNode(10), Operator.GREATER_THAN
+                ASTReferenceNode("z", None), ASTLiteralNode(10), Operator.GREATER_THAN
             ),
         ]
     )
 
-    ast = when(ASTReferenceNode("x") == 10, ASTReferenceNode("y") == 20)
+    ast = when(ASTReferenceNode("x", None) == 10, ASTReferenceNode("y", None) == 20)
     assert ast == ASTGroupNode(
         [
             ASTComparisonNode(
-                ASTReferenceNode("x"), ASTLiteralNode(10), Operator.EQUALS
+                ASTReferenceNode("x", None), ASTLiteralNode(10), Operator.EQUALS
             ),
             LogicalOperator.AND,
             ASTComparisonNode(
-                ASTReferenceNode("y"), ASTLiteralNode(20), Operator.EQUALS
+                ASTReferenceNode("y", None), ASTLiteralNode(20), Operator.EQUALS
             ),
         ]
     )
@@ -149,13 +155,13 @@ def test_model_field_query_ast():
     assert ast == ASTGroupNode(
         [
             ASTComparisonNode(
-                ASTReferenceNode(TestModel.__fields__["field_a"]),
+                ASTReferenceNode(TestModel.__fields__["field_a"], TestModel),
                 ASTLiteralNode("test"),
                 Operator.EQUALS,
             ),
             LogicalOperator.AND,
             ASTComparisonNode(
-                ASTReferenceNode(TestModel.__fields__["field_b"]),
+                ASTReferenceNode(TestModel.__fields__["field_b"], TestModel),
                 ASTLiteralNode(10),
                 Operator.LESS_THAN,
             ),
