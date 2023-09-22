@@ -164,6 +164,8 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         if where:
             query.extend(["WHERE", " ".join(where)])
 
+        query.append(";")
+
         return " ".join(query), values, model
 
     def _create_table(self, model: Type[DatabaseModel], session: sqlite3.Cursor):
