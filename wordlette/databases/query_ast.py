@@ -23,6 +23,11 @@ class ASTOperatorNode(ASTNode, Enum):
     LESS_THAN_OR_EQUAL = auto()
 
 
+class ASTGroupFlagNode(ASTNode, Enum):
+    OPEN = auto()
+    CLOSE = auto()
+
+
 class ASTGroupNode(ASTNode):
     def __init__(
         self, items: "list[ASTComparableNode | ASTLogicalOperatorNode] | None" = None
@@ -32,7 +37,9 @@ class ASTGroupNode(ASTNode):
         )
 
     def __iter__(self):
+        yield ASTGroupFlagNode.OPEN
         yield from iter(self.items)
+        yield ASTGroupFlagNode.CLOSE
 
     def add(self, item, logical_type=ASTLogicalOperatorNode.AND):
         if len(self.items) > 0:
@@ -72,6 +79,9 @@ class ASTGroupNode(ASTNode):
                     ASTLogicalOperatorNode() as a,
                     ASTLogicalOperatorNode() as b,
                 ) if a == b:
+                    continue
+
+                case (ASTGroupFlagNode() as a, ASTGroupFlagNode() as b) if a == b:
                     continue
 
                 case _:
