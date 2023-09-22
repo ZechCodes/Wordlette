@@ -72,6 +72,9 @@ class Model(metaclass=ModelMCS):
     def __serialize__(self) -> dict[FieldName, Any]:
         return self.to_dict()
 
+    def __repr__(self) -> str:
+        return f"<{type(self).__qualname__} {self.__serialize__()}>"
+
     def get(self, name: str) -> Any:
         if name in self.__field_values__:
             return self.__field_values__[name]
