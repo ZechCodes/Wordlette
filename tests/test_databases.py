@@ -4,6 +4,7 @@ import pytest
 from bevy import get_repository, Repository
 
 from wordlette.configs.managers import ConfigManager
+from wordlette.databases.driver_sqlite import SQLiteDriver, SQLiteConfig
 from wordlette.databases.drivers import DatabaseDriver
 from wordlette.databases.models import DatabaseModel
 from wordlette.databases.properties import Property
@@ -68,6 +69,11 @@ def reset_bevy_repository():
     repo.add_providers(AtProvider())
     repo.set(ConfigManager, DummyConfigManager())
     Repository.set_repository(repo)
+
+
+@pytest.fixture(scope="function", autouse=True)
+def reset_database_models():
+    DatabaseModel.__models__.clear()
 
 
 @pytest.mark.asyncio
@@ -173,3 +179,31 @@ def test_model_field_query_ast():
             ),
         ]
     )
+
+
+@pytest.mark.asyncio
+async def test_sqlite_driver():
+    class TestModel(DatabaseModel):
+        id: int @ Property()
+        string: str @ Property()
+
+    driver = SQLiteDriver()
+    assert driver.driver_name == "sqlite"
+
+    config = SQLiteConfig(filename=":memory:")
+    await driver.connect(config)
+    assert driver.connected
+
+    await driver.disconnect()
+    assert not driver.connected
+
+    await driver.connect(config)
+    status = await driver.sync_schema(TestModel.__models__)
+    assert isinstance(status, DatabaseSuccessStatus)
+
+    status = await driver.add(TestModel(id=10, string="test"))
+    assert isinstance(status, DatabaseSuccessStatus)
+
+    result = await driver.fetch(when(TestModel.string == "test"))
+    assert isinstance(result, DatabaseSuccessStatus)
+    assert result.result == [TestModel(id=10, string="test")]
