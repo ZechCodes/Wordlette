@@ -18,6 +18,15 @@ class DatabaseErrorStatus(DatabaseStatus):
     def __bool__(self):
         return False
 
+    def __eq__(self, other):
+        if not isinstance(other, DatabaseStatus):
+            raise NotImplementedError()
+
+        if not isinstance(other, DatabaseErrorStatus):
+            return False
+
+        return self.error == other.error
+
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.error!r})"
 
@@ -30,6 +39,15 @@ class DatabaseSuccessStatus(DatabaseStatus):
 
     def __bool__(self):
         return True
+
+    def __eq__(self, other):
+        if not isinstance(other, DatabaseStatus):
+            raise NotImplementedError()
+
+        if not isinstance(other, DatabaseSuccessStatus):
+            return False
+
+        return self.result == other.result
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.result!r})"
