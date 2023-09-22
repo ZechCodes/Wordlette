@@ -115,7 +115,12 @@ class Field(Generic[T]):
         instance.set(self.name, value)
 
     def __repr__(self):
-        return f"<{type(self).__qualname__} {self.name}>"
+        return (
+            f"<{type(self).__qualname__}"
+            f" name={self.name!r}"
+            f" type={self.type.__qualname__}"
+            f" default={self.default!r}>"
+        )
 
 
 class FieldSchema(AbstractFieldSchema, field_type=Field):
