@@ -241,8 +241,8 @@ class ASTComparisonNode(ASTComparableNode):
         return (
             f"{type(self).__name__}("
             f"{self._left!r}, "
-            f"{self._right!r},"
-            f"{self._operator}) "
+            f"{self._right!r}, "
+            f"{self._operator})"
         )
 
     def And(self, *comparisons: "ASTComparisonNode | SearchGroup | bool"):
