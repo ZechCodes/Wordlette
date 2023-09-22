@@ -1,7 +1,9 @@
-from typing import Any
+from typing import Any, Generic, TypeVar
+
+T = TypeVar("T")
 
 
-class DatabaseStatus:
+class DatabaseStatus(Generic[T]):
     def __eq__(self, other):
         if not isinstance(other, DatabaseStatus):
             raise NotImplementedError()
