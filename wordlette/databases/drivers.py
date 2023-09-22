@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Type, TypeAlias
 
 from wordlette.databases.models import DatabaseModel
-from wordlette.databases.predicates import DatabasePredicate
+from wordlette.databases.query_ast import ASTGroupNode
 from wordlette.databases.statuses import DatabaseStatus
 
 DriverName: TypeAlias = str
@@ -44,7 +44,7 @@ class AbstractDatabaseDriver(ABC):
         ...
 
     @abstractmethod
-    async def get(self, *predicates: DatabasePredicate) -> DatabaseStatus:
+    async def get(self, *predicates: ASTGroupNode) -> DatabaseStatus:
         ...
 
     @abstractmethod

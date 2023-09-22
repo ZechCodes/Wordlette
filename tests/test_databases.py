@@ -6,7 +6,15 @@ from bevy import get_repository, Repository
 from wordlette.configs.managers import ConfigManager
 from wordlette.databases.drivers import DatabaseDriver
 from wordlette.databases.models import DatabaseModel
-from wordlette.databases.predicates import DatabasePredicate
+from wordlette.databases.query_ast import (
+    ASTComparisonNode,
+    ASTGroupNode,
+    ASTLiteralNode,
+    ASTReferenceNode,
+    LogicalOperator,
+    Operator,
+    when,
+)
 from wordlette.databases.statuses import DatabaseSuccessStatus, DatabaseStatus
 from wordlette.utils.at_annotateds import AtProvider
 
@@ -22,7 +30,7 @@ class DummyDriver(DatabaseDriver, driver_name="dummy"):
     async def add(self, *items: DatabaseModel) -> DatabaseStatus:
         pass
 
-    async def get(self, *predicates: DatabasePredicate) -> DatabaseStatus:
+    async def get(self, *predicates: ASTGroupNode) -> DatabaseStatus:
         pass
 
     async def delete(self, *items: DatabaseModel) -> DatabaseStatus:
@@ -72,3 +80,52 @@ async def test_connect():
     assert status == DatabaseSuccessStatus(None)
     assert controller.connected
     assert isinstance(get_repository().get(DatabaseDriver), DummyDriver)
+
+
+def test_predicates():
+    ast = (
+        when(10 > ASTReferenceNode("x") > 5)
+        .And(when(ASTReferenceNode("y") < 10).Or(ASTReferenceNode("y") > 20))
+        .Or(ASTReferenceNode("z") > 10)
+    )
+
+    assert ast == ASTGroupNode(
+        [
+            ASTComparisonNode(
+                ASTReferenceNode("x"), ASTLiteralNode(10), Operator.LESS_THAN
+            ),
+            LogicalOperator.AND,
+            ASTComparisonNode(
+                ASTReferenceNode("x"), ASTLiteralNode(5), Operator.GREATER_THAN
+            ),
+            LogicalOperator.AND,
+            ASTGroupNode(
+                [
+                    ASTComparisonNode(
+                        ASTReferenceNode("y"), ASTLiteralNode(10), Operator.LESS_THAN
+                    ),
+                    LogicalOperator.OR,
+                    ASTComparisonNode(
+                        ASTReferenceNode("y"), ASTLiteralNode(20), Operator.GREATER_THAN
+                    ),
+                ]
+            ),
+            LogicalOperator.OR,
+            ASTComparisonNode(
+                ASTReferenceNode("z"), ASTLiteralNode(10), Operator.GREATER_THAN
+            ),
+        ]
+    )
+
+    ast = when(ASTReferenceNode("x") == 10, ASTReferenceNode("y") == 20)
+    assert ast == ASTGroupNode(
+        [
+            ASTComparisonNode(
+                ASTReferenceNode("x"), ASTLiteralNode(10), Operator.EQUALS
+            ),
+            LogicalOperator.AND,
+            ASTComparisonNode(
+                ASTReferenceNode("y"), ASTLiteralNode(20), Operator.EQUALS
+            ),
+        ]
+    )
