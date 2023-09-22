@@ -151,6 +151,9 @@ class ASTReferenceNode(ASTComparableNode):
         self._field = field
         self._model = model
 
+    def __iter__(self):
+        yield from (self._field, self._model)
+
     @property
     def field(self):
         return self._field
@@ -169,6 +172,9 @@ class ASTLiteralNode(ASTComparableNode):
     def __init__(self, value):
         super().__init__(ASTGroupNode())
         self._value = value
+
+    def __iter__(self):
+        yield self._value
 
     @property
     def value(self):
@@ -192,6 +198,9 @@ class ASTComparisonNode(ASTComparableNode):
         self._left = self._make_node(left)
         self._right = self._make_node(right)
         self._operator = operator
+
+    def __iter__(self):
+        yield from (self._left, self._right, self._operator)
 
     @property
     def left(self):
