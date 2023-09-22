@@ -91,7 +91,6 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         with SuppressWithCapture(Exception) as error:
             session = self._db.cursor()
             result = self._select(ast, session)
-            print(result)
 
         return DatabaseErrorStatus(*error) if error else DatabaseSuccessStatus(result)
 
@@ -119,7 +118,6 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         model = None
         where = []
         tables = []
-
         values = []
         node_stack = [iter(ast)]
         while node_stack:
