@@ -1,4 +1,5 @@
 from enum import auto, Enum
+from itertools import zip_longest
 from typing import Any
 
 from wordlette.utils.apply import apply
@@ -43,10 +44,11 @@ class ASTGroupNode(ASTNode):
         if not isinstance(other, ASTGroupNode):
             raise NotImplementedError()
 
-        return self._compare_items(other.items)
+        return self._compare_items(other)
 
-    def _compare_items(self, other_items):
-        for items in zip(self, other_items):
+    def _compare_items(self, other):
+        # Use zip_longest to ensure there aren't additional items in either group
+        for items in zip_longest(self, other):
             match items:
                 case (ASTLiteralNode(a), ASTLiteralNode(b)) if a == b:
                     continue
@@ -57,7 +59,7 @@ class ASTGroupNode(ASTNode):
                 case (
                     ASTComparisonNode(al, ar, ao),
                     ASTComparisonNode(bl, br, bo),
-                ) if al == bl and ar == br and ao == bo:
+                ) if al._eq(bl) and ar._eq(br) and ao == bo:
                     continue
 
                 case (ASTGroupNode() as a, ASTGroupNode() as b) if a == b:
@@ -160,6 +162,9 @@ class ASTReferenceNode(ASTComparableNode):
         self._field = field
         self._model = model
 
+    def _eq(self, other):
+        return self.field == other.field and self.model == other.model
+
     def __iter__(self):
         yield from (self._field, self._model)
 
@@ -181,6 +186,9 @@ class ASTLiteralNode(ASTComparableNode):
     def __init__(self, value):
         super().__init__(ASTGroupNode())
         self._value = value
+
+    def _eq(self, other):
+        return self.value == other.value
 
     def __iter__(self):
         yield self._value
