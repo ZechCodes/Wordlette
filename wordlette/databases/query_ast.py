@@ -180,7 +180,10 @@ class ASTReferenceNode(ASTComparableNode):
         return self._model
 
     def __repr__(self):
-        return f"<{type(self).__qualname__} {self.model.__qualname__}.{self._field.name!r}>"
+        return (
+            f"<{type(self).__qualname__}"
+            f" {self.model.__qualname__ if self.model else None}.{getattr(self._field, 'name', self._field)!r}>"
+        )
 
 
 class ASTLiteralNode(ASTComparableNode):
