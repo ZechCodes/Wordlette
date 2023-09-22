@@ -6,6 +6,7 @@ from bevy import get_repository, Repository
 from wordlette.configs.managers import ConfigManager
 from wordlette.databases.drivers import DatabaseDriver
 from wordlette.databases.models import DatabaseModel
+from wordlette.databases.properties import Property
 from wordlette.databases.query_ast import (
     ASTComparisonNode,
     ASTGroupNode,
@@ -129,3 +130,11 @@ def test_predicates():
             ),
         ]
     )
+
+
+def test_model_fields():
+    class TestModel(DatabaseModel):
+        field: str @ Property()
+
+    assert isinstance(TestModel.field, ASTReferenceNode)
+    assert TestModel.field.field == TestModel.__fields__["field"]
