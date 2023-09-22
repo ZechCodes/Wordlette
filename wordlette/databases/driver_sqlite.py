@@ -13,6 +13,7 @@ from wordlette.databases.query_ast import (
     ASTLogicalOperatorNode,
     ASTComparisonNode,
     ASTOperatorNode,
+    ASTGroupFlagNode,
 )
 from wordlette.databases.statuses import (
     DatabaseStatus,
@@ -124,9 +125,15 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         while node_stack:
             match next(node_stack[~0], None):
                 case ASTGroupNode() as group:
-                    where.append("(")
-                    node_stack.append(iter(("CLOSE GROUP",)))
                     node_stack.append(iter(group))
+
+                case ASTGroupFlagNode.OPEN:
+                    if len(node_stack) > 1:
+                        where.append("(")
+
+                case ASTGroupFlagNode.CLOSE:
+                    if len(node_stack) > 1:
+                        where.append(")")
 
                 case ASTReferenceNode(field, model):
                     name = f"{model.__model_name__}.{field.name}"
@@ -146,9 +153,6 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
 
                 case ASTComparisonNode(left, right, op):
                     node_stack.append(iter((left, op, right)))
-
-                case "CLOSE_GROUP":
-                    where.append(")")
 
                 case None:
                     node_stack.pop()
