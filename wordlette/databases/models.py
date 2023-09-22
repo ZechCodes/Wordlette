@@ -26,6 +26,11 @@ class DatabaseModel(Model):
         driver = get_repository().get(drivers.DatabaseDriver)
         return await driver.add(cls, *items)
 
+    @classmethod
+    async def fetch(cls, predicate: ASTGroupNode) -> DatabaseStatus:
+        driver = get_repository().get(drivers.DatabaseDriver)
+        return await driver.fetch(cls, predicate)
+
     @delete.classmethod
     async def delete(cls, *items: "DatabaseModel") -> DatabaseStatus:
         driver = get_repository().get(drivers.DatabaseDriver)
@@ -35,8 +40,3 @@ class DatabaseModel(Model):
     async def update(cls, *items: "DatabaseModel") -> DatabaseStatus:
         driver = get_repository().get(drivers.DatabaseDriver)
         return await driver.update(cls, *items)
-
-    @classmethod
-    async def get(cls, predicate: ASTGroupNode) -> DatabaseStatus:
-        driver = get_repository().get(drivers.DatabaseDriver)
-        return await driver.get(cls, predicate)

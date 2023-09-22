@@ -31,7 +31,7 @@ class DummyDriver(DatabaseDriver, driver_name="dummy"):
     async def add(self, *items: DatabaseModel) -> DatabaseStatus:
         pass
 
-    async def get(self, *predicates: ASTGroupNode) -> DatabaseStatus:
+    async def fetch(self, *predicates: ASTGroupNode) -> DatabaseStatus:
         pass
 
     async def delete(self, *items: DatabaseModel) -> DatabaseStatus:
