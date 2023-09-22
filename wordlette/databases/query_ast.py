@@ -141,18 +141,18 @@ class ASTComparableNode(ASTNode):
 
 
 class ASTReferenceNode(ASTComparableNode):
-    __match_args__ = ("name",)
+    __match_args__ = ("field",)
 
-    def __init__(self, name):
+    def __init__(self, field):
         super().__init__(ASTGroupNode())
-        self._name = name
+        self._field = field
 
     @property
-    def name(self):
-        return self._name
+    def field(self):
+        return self._field
 
     def __repr__(self):
-        return f"{type(self).__name__}({self._name!r})"
+        return f"{type(self).__name__}({self._field!r})"
 
 
 class ASTLiteralNode(ASTComparableNode):
