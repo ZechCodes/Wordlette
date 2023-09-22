@@ -7,6 +7,9 @@ class SuppressWithCapture:
     def captured(self) -> Exception | None:
         return self._captured
 
+    def __bool__(self) -> bool:
+        return self._captured is not None
+
     def __enter__(self):
         return self
 
