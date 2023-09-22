@@ -10,6 +10,9 @@ class SuppressWithCapture:
     def __bool__(self) -> bool:
         return self._captured is not None
 
+    def __iter__(self):
+        yield self._captured
+
     def __enter__(self):
         return self
 
