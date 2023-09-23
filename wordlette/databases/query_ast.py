@@ -35,13 +35,23 @@ class ASTGroupNode(ASTNode):
         self.items: list[ASTComparableNode | ASTLogicalOperatorNode] = (
             [] if items is None else items
         )
+        self.frozen = False
 
     def __iter__(self):
+        self.frozen = True
         yield ASTGroupFlagNode.OPEN
-        yield from iter(self.items)
+
+        try:
+            yield from iter(self.items)
+        finally:
+            self.frozen = False
+
         yield ASTGroupFlagNode.CLOSE
 
     def add(self, item, logical_type=ASTLogicalOperatorNode.AND):
+        if self.frozen:
+            return
+
         if len(self.items) > 0:
             self.items.append(logical_type)
 
@@ -120,12 +130,24 @@ class ASTComparableNode(ASTNode):
     def __init__(self, group):
         self.group = group
 
+    @staticmethod
+    def _safe_compare(func):
+        def wrapper(self, *args):
+            if self.group.frozen:
+                return False
+
+            return func(self, *args)
+
+        return wrapper
+
+    @_safe_compare
     def __eq__(self, other) -> "ASTComparisonNode":
         self.group.add(
             node := ASTComparisonNode(self, other, ASTOperatorNode.EQUALS, self.group)
         )
         return node
 
+    @_safe_compare
     def __ne__(self, other) -> "ASTComparisonNode":
         self.group.add(
             node := ASTComparisonNode(
