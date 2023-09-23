@@ -125,14 +125,6 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
                 case ASTGroupNode() as group:
                     node_stack.append(iter(group))
 
-                case ASTGroupFlagNode.OPEN:
-                    if len(node_stack) > 1:
-                        where.append("(")
-
-                case ASTGroupFlagNode.CLOSE:
-                    if len(node_stack) > 1:
-                        where.append(")")
-
                 case ASTReferenceNode(field, model):
                     name = f"{model.__model_name__}.{field.name}"
                     where.append(name)
@@ -151,6 +143,14 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
 
                 case ASTComparisonNode(left, right, op):
                     node_stack.append(iter((left, op, right)))
+
+                case ASTGroupFlagNode.OPEN:
+                    if len(node_stack) > 1:
+                        where.append("(")
+
+                case ASTGroupFlagNode.CLOSE:
+                    if len(node_stack) > 1:
+                        where.append(")")
 
                 case None:
                     node_stack.pop()
