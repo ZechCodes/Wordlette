@@ -61,7 +61,7 @@ class ASTGroupNode(ASTNode):
 
     def __eq__(self, other):
         if not isinstance(other, ASTGroupNode):
-            raise NotImplementedError()
+            return NotImplemented
 
         return self._compare_items(other)
 
@@ -228,6 +228,9 @@ class ASTLiteralNode(ASTComparableNode):
         self._value = value
 
     def _eq(self, other):
+        if not isinstance(other, ASTLiteralNode):
+            return NotImplemented
+
         return self.value == other.value
 
     def __iter__(self):
