@@ -39,14 +39,16 @@ class ASTGroupNode(ASTNode):
 
     def __iter__(self):
         self.frozen = True
-        yield ASTGroupFlagNode.OPEN
+        if len(self.items) > 1:
+            yield ASTGroupFlagNode.OPEN
 
         try:
             yield from iter(self.items)
         finally:
             self.frozen = False
 
-        yield ASTGroupFlagNode.CLOSE
+        if len(self.items) > 1:
+            yield ASTGroupFlagNode.CLOSE
 
     def add(self, item, logical_type=ASTLogicalOperatorNode.AND):
         if self.frozen:
