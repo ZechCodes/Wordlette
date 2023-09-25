@@ -1,6 +1,7 @@
 from typing import Type
 
 import pytest
+import pytest_asyncio
 from bevy import get_repository, Repository
 
 from wordlette.configs.managers import ConfigManager
@@ -74,6 +75,20 @@ def reset_bevy_repository():
 @pytest.fixture(scope="function", autouse=True)
 def reset_database_models():
     DatabaseModel.__models__.clear()
+
+
+class TestModel(DatabaseModel):
+    id: int @ Property()
+    string: str | None @ Property()
+
+
+@pytest_asyncio.fixture()
+async def sqlite_driver():
+    driver = SQLiteDriver()
+    config = SQLiteConfig(filename=":memory:")
+    await driver.connect(config)
+    await driver.sync_schema({TestModel})
+    return driver
 
 
 @pytest.mark.asyncio
@@ -182,39 +197,41 @@ def test_model_field_query_ast():
 
 
 @pytest.mark.asyncio
-async def test_sqlite_driver():
-    class TestModel(DatabaseModel):
-        id: int @ Property()
-        string: str | None @ Property()
+async def test_sqlite_driver_connects(sqlite_driver: SQLiteDriver):
+    assert sqlite_driver.connected
 
-    driver = SQLiteDriver()
-    assert driver.driver_name == "sqlite"
 
-    config = SQLiteConfig(filename=":memory:")
-    await driver.connect(config)
-    assert driver.connected
+@pytest.mark.asyncio
+async def test_sqlite_driver_disconnects(sqlite_driver: SQLiteDriver):
+    await sqlite_driver.disconnect()
+    assert not sqlite_driver.connected
 
-    await driver.disconnect()
-    assert not driver.connected
 
-    await driver.connect(config)
-    status = await driver.sync_schema(TestModel.__models__)
+@pytest.mark.asyncio
+async def test_sqlite_driver_add(sqlite_driver: SQLiteDriver):
+    status = await sqlite_driver.add(TestModel(id=10, string="test"))
     assert isinstance(status, DatabaseSuccessStatus)
 
-    status = await driver.add(TestModel(id=10, string="test"))
-    assert isinstance(status, DatabaseSuccessStatus)
 
-    result = await driver.fetch(when(TestModel.string == "test"))
+@pytest.mark.asyncio
+async def test_sqlite_driver_fetch(sqlite_driver: SQLiteDriver):
+    await sqlite_driver.add(TestModel(id=10, string="test"))
+    result = await sqlite_driver.fetch(when(TestModel.string == "test"))
     assert isinstance(result, DatabaseSuccessStatus)
     assert result.result == [TestModel(id=10, string="test")]
 
-    await driver.add(
+
+@pytest.mark.asyncio
+async def test_sqlite_driver_delete(sqlite_driver: SQLiteDriver):
+    await sqlite_driver.add(
         TestModel(id=1, string="test_delete"),
         TestModel(id=2, string="test_delete"),
         TestModel(id=3, string="test_delete"),
     )
-    result = await driver.delete(TestModel(id=1), TestModel(id=2), TestModel(id=3))
+    result = await sqlite_driver.delete(
+        TestModel(id=1), TestModel(id=2), TestModel(id=3)
+    )
     assert isinstance(result, DatabaseSuccessStatus)
-    result = await driver.fetch(when(TestModel.string == "test_delete"))
+    result = await sqlite_driver.fetch(when(TestModel.string == "test_delete"))
     assert isinstance(result, DatabaseSuccessStatus)
     assert len(result.result) == 0
