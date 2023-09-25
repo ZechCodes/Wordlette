@@ -12,8 +12,8 @@ P = ParamSpec("P")
 R = TypeVar("R")
 
 
-class AutoSet(Generic[P, R]):
-    def __init__(self, func: Callable[P, R]):
+class Auto(Generic[P, R]):
+    def __init__(self, func: Callable[P, R] | None):
         self.func = func
 
     def __call__(self, *args: P.args, **kwargs: P.kwargs) -> R:
@@ -23,9 +23,4 @@ class AutoSet(Generic[P, R]):
         return Union[other, self]
 
     def __repr__(self) -> str:
-        return f"<AutoSet: {self.func}>"
-
-
-class Auto:
-    def __class_getitem__(cls, func: Callable[P, R]) -> AutoSet[P, R]:
-        return AutoSet(func)
+        return f"<Auto: {self.func}>"

@@ -166,15 +166,3 @@ def test_auto_fields_types():
         for model in models
         for value, type_ in zip(model.__field_values__.values(), types)
     )
-
-
-def test_auto_fields_with_function():
-    def make_counter():
-        counter = count()
-        return partial(next, counter)
-
-    class TestModel(Model):
-        id: int | Auto[make_counter()] @ FieldSchema
-
-    models = (TestModel(), TestModel(), TestModel())
-    assert tuple(model.id for model in models) == (0, 1, 2)

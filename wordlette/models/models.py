@@ -15,7 +15,7 @@ from typing import (
 )
 
 from wordlette.base_exceptions import BaseWordletteException
-from wordlette.models.auto import AutoSet, Auto
+from wordlette.models.auto import Auto
 from wordlette.models.auto_factories import (
     create_get_current_datetime_func,
     create_get_current_date_func,
@@ -76,13 +76,13 @@ class ModelMCS(type):
                         hint = type_hint
                         default = None
 
-                    case (type_hint, AutoSet() as auto):
+                    case (type_hint, Auto() as auto):
                         hint = type_hint
                         default = auto
 
                     case (type_hint, type() as auto) if issubclass(auto, Auto):
                         hint = type_hint
-                        default = AutoSet
+                        default = Auto
 
             if isinstance(field, FieldSchema):
                 yield name, field.create_field(name, hint, default)
@@ -219,7 +219,7 @@ class Model(metaclass=ModelMCS):
                     f"Missing required argument {name!r} for {type(self).__qualname__}"
                 )
 
-            elif isinstance(field.default, AutoSet):
+            elif isinstance(field.default, Auto):
                 value = field.default()
 
             else:
