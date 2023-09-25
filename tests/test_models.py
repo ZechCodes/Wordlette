@@ -1,8 +1,11 @@
+from functools import partial
+from itertools import count
 from typing import Annotated
 
 import pytest
 
 from wordlette.models import FieldSchema, Model, ValidationError
+from wordlette.models.auto import Auto
 
 
 def test_model_schemas():
@@ -135,3 +138,15 @@ def test_joined_models():
 
     model = JoinedModel(**data)
     assert model.to_dict() == data
+
+
+def test_auto_fields():
+    def make_counter():
+        counter = count()
+        return partial(next, counter)
+
+    class TestModel(Model):
+        id: int | Auto[make_counter()] @ FieldSchema
+
+    models = (TestModel(), TestModel(), TestModel())
+    assert tuple(model.id for model in models) == (0, 1, 2)

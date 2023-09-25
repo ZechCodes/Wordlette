@@ -1,7 +1,16 @@
-from types import UnionType
-from typing import Annotated, Any, Type, TypeAlias, get_origin, get_args, Generator
+from typing import (
+    Annotated,
+    Any,
+    Type,
+    TypeAlias,
+    get_origin,
+    get_args,
+    Generator,
+    Union,
+)
 
 from wordlette.base_exceptions import BaseWordletteException
+from wordlette.models.auto import AutoSet
 from wordlette.models.fields import Field, FieldSchema, _not_set_
 from wordlette.utils.suppress_with_capture import SuppressWithCapture
 
@@ -36,14 +45,21 @@ class ModelMCS(type):
 
             default = namespace.get(name, _not_set_)
             hint, field = get_args(annotation)
-            if get_origin(hint) is UnionType and type(None) in (args := get_args(hint)):
-                hint = args[0]
-                default = None if default is _not_set_ else default
+            if default is _not_set_ and get_origin(hint) is Union:
+                match get_args(hint):
+                    case (type_hint, None):
+                        hint = type_hint
+                        default = None
+
+                    case (type_hint, AutoSet() as auto):
+                        hint = type_hint
+                        default = auto
+
+                    case _:
+                        print("no match")
 
             if isinstance(field, FieldSchema):
-                yield name, field.create_field(
-                    name, hint, default
-                )
+                yield name, field.create_field(name, hint, default)
 
     @staticmethod
     def inherit_fields(
@@ -134,6 +150,9 @@ class Model(metaclass=ModelMCS):
                 raise TypeError(
                     f"Missing required argument {name!r} for {type(self).__qualname__}"
                 )
+
+            elif isinstance(field.default, AutoSet):
+                value = field.default()
 
             else:
                 continue
