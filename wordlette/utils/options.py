@@ -61,6 +61,9 @@ class Null(Option[T]):
     def __bool__(self):
         return False
 
+    def __repr__(self):
+        return f"{type(self).__name__}({self._exception!r})"
+
     def _create_exception(self) -> NoValueException:
         exception = NoValueException("Null options have no value")
         if self._exception:
@@ -94,6 +97,9 @@ class Value(Option[T]):
 
     def __bool__(self):
         return True
+
+    def __repr__(self):
+        return f"{type(self).__name__}({self._value!r})"
 
 
 Option.Value = Value
