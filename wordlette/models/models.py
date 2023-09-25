@@ -148,12 +148,11 @@ class Model(metaclass=ModelMCS):
 
         self._build_values(*args, **kwargs)
 
-    @classmethod
-    def __get_auto_value__(cls, field: Field) -> Any:
+    def __get_auto_value__(self, field: Field) -> Any:
         type_hint = get_origin(field.type) or field.type
-        for auto_type, func in cls.__auto_field_factories__.items():
+        for auto_type, func in self.__auto_field_factories__.items():
             if issubclass(type_hint, auto_type):
-                return func(cls)
+                return func(self)
 
         raise TypeError(f"Cannot create auto value for {field.type!r}")
 
