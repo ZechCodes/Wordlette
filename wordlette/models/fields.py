@@ -55,7 +55,7 @@ class Field(Generic[T]):
         self._type = type_
         self._default = default
 
-        self._validators: list[Validator] = [getattr(type_, "__validate__", type_)]
+        self._validators: list[Validator] = []
         self._serializer: Serializer | None = None
 
     def add_validator(self, validator: Validator):
@@ -118,6 +118,11 @@ class Field(Generic[T]):
     def __set_name__(self, owner: Type[ModelType], name: str):
         if isinstance(self.default, type) and issubclass(self.default, AutoSet):
             self._default = AutoSet(owner.__create_auto_value_function__(self.type))
+
+        if validator := next(
+            v for t, v in owner.__type_validators__.items() if issubclass(self.type, t)
+        ):
+            self.add_validator(validator)
 
     def __repr__(self):
         return (
