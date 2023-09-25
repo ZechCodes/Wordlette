@@ -1,3 +1,4 @@
+from datetime import datetime, date, time
 from functools import partial
 from itertools import count
 from typing import Annotated
@@ -141,6 +142,33 @@ def test_joined_models():
 
 
 def test_auto_fields():
+    class TestModel(Model):
+        __auto_field_factories__ = {int: lambda *_: partial(next, count())}
+        id: int | Auto @ FieldSchema
+
+    models = (TestModel(), TestModel(), TestModel())
+    assert tuple(model.id for model in models) == (0, 1, 2)
+
+
+def test_auto_fields_types():
+    class TestModel(Model):
+        datetime_field: datetime | Auto @ FieldSchema
+        date_field: date | Auto @ FieldSchema
+        time_field: time | Auto @ FieldSchema
+        int_field: int | Auto @ FieldSchema
+        float_field: float | Auto @ FieldSchema
+        str_field: str | Auto @ FieldSchema
+
+    models = (TestModel(), TestModel(), TestModel())
+    types = [field.type for field in TestModel.__fields__.values()]
+    assert all(
+        isinstance(value, type_)
+        for model in models
+        for value, type_ in zip(model.__field_values__.values(), types)
+    )
+
+
+def test_auto_fields_with_function():
     def make_counter():
         counter = count()
         return partial(next, counter)

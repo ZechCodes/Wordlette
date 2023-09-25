@@ -11,6 +11,7 @@ from typing import (
     overload,
 )
 
+from wordlette.models.auto import AutoSet
 from wordlette.utils.at_annotateds import AtAnnotation
 from wordlette.utils.sentinel import sentinel
 
@@ -113,6 +114,10 @@ class Field(Generic[T]):
 
     def __set__(self, instance: ModelType, value: Any):
         instance.set(self.name, value)
+
+    def __set_name__(self, owner: Type[ModelType], name: str):
+        if isinstance(self.default, type) and issubclass(self.default, AutoSet):
+            self._default = AutoSet(owner.__create_auto_value_function__(self.type))
 
     def __repr__(self):
         return (
