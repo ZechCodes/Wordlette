@@ -9,6 +9,7 @@ from typing import (
     TypeVar,
     NewType,
     overload,
+    get_origin,
 )
 
 from wordlette.models.auto import AutoSet
@@ -119,8 +120,9 @@ class Field(Generic[T]):
         if isinstance(self.default, type) and issubclass(self.default, AutoSet):
             self._default = AutoSet(owner.__create_auto_value_function__(self.type))
 
+        type_hint = get_origin(self.type) or self.type
         matching_validators = (
-            v for t, v in owner.__type_validators__.items() if issubclass(self.type, t)
+            v for t, v in owner.__type_validators__.items() if issubclass(type_hint, t)
         )
         if validator := next(matching_validators, False):
             self.add_validator(validator)
