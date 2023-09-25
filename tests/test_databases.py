@@ -185,7 +185,7 @@ def test_model_field_query_ast():
 async def test_sqlite_driver():
     class TestModel(DatabaseModel):
         id: int @ Property()
-        string: str @ Property()
+        string: str | None @ Property()
 
     driver = SQLiteDriver()
     assert driver.driver_name == "sqlite"
@@ -207,3 +207,14 @@ async def test_sqlite_driver():
     result = await driver.fetch(when(TestModel.string == "test"))
     assert isinstance(result, DatabaseSuccessStatus)
     assert result.result == [TestModel(id=10, string="test")]
+
+    await driver.add(
+        TestModel(id=1, string="test_delete"),
+        TestModel(id=2, string="test_delete"),
+        TestModel(id=3, string="test_delete"),
+    )
+    result = await driver.delete(TestModel(id=1), TestModel(id=2), TestModel(id=3))
+    assert isinstance(result, DatabaseSuccessStatus)
+    result = await driver.fetch(when(TestModel.string == "test_delete"))
+    assert isinstance(result, DatabaseSuccessStatus)
+    assert len(result.result) == 0

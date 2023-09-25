@@ -82,7 +82,20 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         return DatabaseErrorStatus(*error) if error else DatabaseSuccessStatus(self)
 
     async def delete(self, *items: DatabaseModel) -> DatabaseStatus:
-        pass
+        models = {}
+        for item in items:
+            models.setdefault(type(item), []).append(item)
+
+        session = self._db.cursor()
+        for model, items in models.items():
+            with SuppressWithCapture(Exception) as error:
+                session = self._db.cursor()
+                self._delete_rows(model, items, session)
+
+            if error:
+                return DatabaseErrorStatus(*error)
+
+        return DatabaseSuccessStatus(self)
 
     async def fetch(
         self, *predicates: ASTGroupNode
@@ -188,6 +201,16 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         qs = ", ".join(["?"] * len(fields))
         session.execute(
             f"INSERT INTO {item.__model_name__} ({columns}) VALUES ({qs});", values
+        )
+
+    def _delete_rows(
+        self, model: DatabaseModel, items: list[DatabaseModel], session: sqlite3.Cursor
+    ):
+        pk = self._find_primary_key(model)
+        keys = [getattr(item, pk) for item in items]
+        qs = ", ".join(["?"] * len(items))
+        session.execute(
+            f"DELETE FROM {model.__model_name__} WHERE {pk} IN ({qs});", keys
         )
 
     def _select(self, predicates: ASTGroupNode, session: sqlite3.Cursor):
