@@ -1,5 +1,6 @@
 import sqlite3
-from typing import Type, Any
+from datetime import datetime, date, time
+from typing import Type, Any, TypeVar, TypeGuard, Callable, get_origin, Generator
 
 from wordlette.configs import ConfigModel
 from wordlette.databases.drivers import DatabaseDriver
@@ -20,9 +21,31 @@ from wordlette.databases.statuses import (
     DatabaseSuccessStatus,
     DatabaseErrorStatus,
 )
-from wordlette.models import FieldSchema
+from wordlette.models import FieldSchema, Auto
 from wordlette.utils.dependency_injection import inject
 from wordlette.utils.suppress_with_capture import SuppressWithCapture
+
+T = TypeVar("T")
+
+
+class SQLConstraint(Auto):
+    def __init__(self, name: str, value: str):
+        self.name = name
+        self.value = value
+
+    def __call__(self, *args, **kwargs):
+        return self
+
+    def __repr__(self):
+        return f"SQL{self.name.title()}Constraint[{self.value}]"
+
+
+class SQLAutoIncrement(SQLConstraint):
+    def __init__(self):
+        super().__init__("", "AUTOINCREMENT")
+
+    def __repr__(self):
+        return type(self).__name__
 
 
 class SQLiteConfig(ConfigModel):
@@ -42,6 +65,13 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         ASTOperatorNode.GREATER_THAN_OR_EQUAL: ">=",
         ASTOperatorNode.LESS_THAN: "<",
         ASTOperatorNode.LESS_THAN_OR_EQUAL: "<=",
+    }
+
+    auto_value_factories = {
+        int: SQLAutoIncrement(),
+        datetime: SQLConstraint("DEFAULT", "datetime()"),
+        date: SQLConstraint("DEFAULT", "date()"),
+        time: SQLConstraint("DEFAULT", "time()"),
     }
 
     type_mapping = {
@@ -148,6 +178,15 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         if pk:
             column.append("PRIMARY KEY")
 
+        if is_auto(field.default):
+            match self.get_value_factory(field):
+                case SQLAutoIncrement():
+                    column.append("AUTOINCREMENT")
+
+                case SQLConstraint() as constraint:
+                    column.append(constraint.name)
+                    column.append(f"({constraint.value})")
+
         return " ".join(column)
 
     def _process_ast(
@@ -221,10 +260,14 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
 
     def _insert(self, item: DatabaseModel, session: sqlite3.Cursor):
         fields = list(item.__fields__.values())
-        columns = ", ".join(field.name for field in fields)
-        values = [getattr(item, field.name) for field in fields]
-        qs = ", ".join(["?"] * len(fields))
-        print(f"INSERT INTO {item.__model_name__} ({columns}) VALUES ({qs});", values)
+        data = {
+            field.name: value
+            for field in fields
+            if not is_auto(value := getattr(item, field.name))
+        }
+        qs = ", ".join(["?"] * len(data))
+        columns = ", ".join(data.keys())
+        values = tuple(data.values())
         session.execute(
             f"INSERT INTO {item.__model_name__} ({columns}) VALUES ({qs});", values
         )
@@ -272,3 +315,7 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
 
     def _build_select_query(self, tables: list[DatabaseModel], where: str):
         return f"SELECT * FROM {tables[0].__model_name__} WHERE {where};"
+
+
+def is_auto(obj: Any) -> TypeGuard[Auto]:
+    return isinstance(obj, Auto)
