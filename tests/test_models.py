@@ -20,6 +20,16 @@ def test_model_schemas():
     assert TestModel.name.type is str
 
 
+def test_model_optional_fields():
+    class TestModel(Model):
+        id: int @ FieldSchema()
+        name: str | None @ FieldSchema()
+
+    model = TestModel(id=1)
+    assert model.id == 1
+    assert model.name is None
+
+
 def test_model_init():
     class TestModel(Model):
         id: int @ FieldSchema()
