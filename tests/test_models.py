@@ -1,5 +1,4 @@
 from datetime import datetime, date, time
-from functools import partial
 from itertools import count
 from typing import Annotated
 
@@ -142,8 +141,10 @@ def test_joined_models():
 
 
 def test_auto_fields():
+    counter = count()
+
     class TestModel(Model):
-        __auto_field_factories__ = {int: lambda *_: partial(next, count())}
+        __auto_field_factories__ = {int: lambda *_: next(counter)}
         id: int | Auto @ FieldSchema
 
     models = (TestModel(), TestModel(), TestModel())

@@ -17,13 +17,13 @@ from typing import (
 from wordlette.base_exceptions import BaseWordletteException
 from wordlette.models.auto import Auto
 from wordlette.models.auto_factories import (
-    create_get_current_datetime_func,
-    create_get_current_date_func,
-    create_get_current_time_func,
-    create_unique_int_generator,
-    create_unique_float_generator,
-    create_unique_string_generator,
-    create_factory_func,
+    get_current_datetime,
+    get_current_date,
+    get_current_time,
+    get_unique_int,
+    get_unique_float,
+    get_unique_string,
+    create_factory,
 )
 from wordlette.models.fields import Field, FieldSchema, _not_set_
 from wordlette.models.validators import (
@@ -82,7 +82,7 @@ class ModelMCS(type):
 
                     case (type_hint, type() as auto) if issubclass(auto, Auto):
                         hint = type_hint
-                        default = Auto
+                        default = Auto()
 
             if isinstance(field, FieldSchema):
                 yield name, field.create_field(name, hint, default)
@@ -105,19 +105,19 @@ class ModelMCS(type):
 class Model(metaclass=ModelMCS):
     __fields__: dict[FieldName, Field]
     __auto_field_factories__: dict[Type, Callable[P, R]] = {
-        datetime: create_get_current_datetime_func,
-        date: create_get_current_date_func,
-        time: create_get_current_time_func,
-        int: create_unique_int_generator,
-        float: create_unique_float_generator,
-        str: create_unique_string_generator,
-        list: create_factory_func(list),
-        dict: create_factory_func(dict),
-        set: create_factory_func(set),
-        frozenset: create_factory_func(frozenset),
-        tuple: create_factory_func(tuple),
-        bytes: create_factory_func(bytes),
-        bytearray: create_factory_func(bytearray),
+        datetime: get_current_datetime,
+        date: get_current_date,
+        time: get_current_time,
+        int: get_unique_int,
+        float: get_unique_float,
+        str: get_unique_string,
+        list: create_factory(list),
+        dict: create_factory(dict),
+        set: create_factory(set),
+        frozenset: create_factory(frozenset),
+        tuple: create_factory(tuple),
+        bytes: create_factory(bytes),
+        bytearray: create_factory(bytearray),
     }
     __type_validators__: dict[Type, Callable[[Any], Any]] = {
         datetime: datetime_validator,
@@ -143,12 +143,13 @@ class Model(metaclass=ModelMCS):
         self._build_values(*args, **kwargs)
 
     @classmethod
-    def __create_auto_value_function__(cls, value_type: Type) -> Any:
+    def __get_auto_value__(cls, field: Field) -> Any:
+        type_hint = get_origin(field.type) or field.type
         for auto_type, func in cls.__auto_field_factories__.items():
-            if issubclass(value_type, auto_type):
+            if issubclass(type_hint, auto_type):
                 return func(cls)
 
-        raise TypeError(f"Cannot create auto value for {value_type!r}")
+        raise TypeError(f"Cannot create auto value for {field.type!r}")
 
     @classmethod
     def __validate__(cls, value: Any):
@@ -220,7 +221,7 @@ class Model(metaclass=ModelMCS):
                 )
 
             elif isinstance(field.default, Auto):
-                value = field.default()
+                value = self.__get_auto_value__(field)
 
             else:
                 continue

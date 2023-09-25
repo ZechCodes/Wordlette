@@ -1,60 +1,45 @@
 from base64 import urlsafe_b64encode
 from datetime import datetime, timezone
-from typing import Type, Callable, Any, TypeVar
+from functools import wraps
+from typing import TypeVar, Callable, Any
 from uuid import uuid4
-
 
 T = TypeVar("T")
 
 
-def create_unique_int_generator(*_):
-    def get_unique_int():
-        return uuid4().int
+def create_factory(func_or_class: Callable[[], T]) -> Callable[[Any], T]:
+    @wraps(func_or_class)
+    def create(*_):
+        return func_or_class()
 
-    return get_unique_int
-
-
-def create_unique_float_generator(*_):
-    def get_unique_float():
-        return float.fromhex(uuid4().hex)
-
-    return get_unique_float
+    return create
 
 
-def create_unique_string_generator(*_):
-    def get_unique_string():
-        return urlsafe_b64encode(str(uuid4()).encode()).decode()
-
-    return get_unique_string
+@create_factory
+def get_unique_int():
+    return uuid4().int
 
 
-def create_get_current_datetime_func(*_):
-    def get_current_datetime():
-        return datetime.now(timezone.utc)
-
-    return get_current_datetime
+@create_factory
+def get_unique_float():
+    return float.fromhex(uuid4().hex)
 
 
-def create_get_current_date_func(*_):
-    get_now = create_get_current_datetime_func()
-
-    def get_current_date():
-        return get_now().date()
-
-    return get_current_date
+@create_factory
+def get_unique_string():
+    return urlsafe_b64encode(str(uuid4()).encode()).decode()
 
 
-def create_get_current_time_func(*_):
-    get_now = create_get_current_datetime_func()
-
-    def get_current_time():
-        return get_now().time()
-
-    return get_current_time
+@create_factory
+def get_current_datetime():
+    return datetime.now(timezone.utc)
 
 
-def create_factory_func(type_: Type[T]) -> Callable[[Any], T]:
-    def create_type() -> T:
-        return type_()
+@create_factory
+def get_current_date():
+    return get_current_datetime().date()
 
-    return create_type
+
+@create_factory
+def get_current_time():
+    return get_current_datetime().time()

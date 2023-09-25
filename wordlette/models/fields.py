@@ -12,7 +12,6 @@ from typing import (
     get_origin,
 )
 
-from wordlette.models.auto import Auto
 from wordlette.utils.at_annotateds import AtAnnotation
 from wordlette.utils.sentinel import sentinel
 
@@ -117,9 +116,6 @@ class Field(Generic[T]):
         instance.set(self.name, value)
 
     def __set_name__(self, owner: Type[ModelType], name: str):
-        if isinstance(self.default, type) and issubclass(self.default, Auto):
-            self._default = Auto(owner.__create_auto_value_function__(self.type))
-
         type_hint = get_origin(self.type) or self.type
         matching_validators = (
             v for t, v in owner.__type_validators__.items() if issubclass(type_hint, t)
