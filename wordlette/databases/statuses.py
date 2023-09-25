@@ -1,4 +1,4 @@
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar, NoReturn
 
 T = TypeVar("T")
 
@@ -31,6 +31,10 @@ class DatabaseErrorStatus(DatabaseStatus):
 
     def __repr__(self) -> str:
         return f"{type(self).__name__}({self.error!r})"
+
+    @property
+    def result(self) -> NoReturn:
+        raise self.error
 
 
 class DatabaseSuccessStatus(DatabaseStatus):
