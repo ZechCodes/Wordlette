@@ -16,4 +16,4 @@ class Auto(Generic[P, R]):
         return Union[other, self]
 
     def __repr__(self) -> str:
-        return f"<Auto: {self.func}>"
+        return f"<{type(self).__name__}>"
