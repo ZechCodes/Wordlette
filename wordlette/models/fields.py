@@ -38,7 +38,7 @@ class AbstractFieldSchema(ABC, AtAnnotation):
         return self.__field_type__(self, *args, **kwargs)
 
     def __repr__(self):
-        return f"<{type(self).__qualname__} {self.name} {self.type}>"
+        return f"<{type(self).__qualname__}>"
 
 
 class Field(Generic[T]):
