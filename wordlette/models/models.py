@@ -1,3 +1,4 @@
+from types import UnionType
 from typing import Annotated, Any, Type, TypeAlias, get_origin, get_args, Generator
 
 from wordlette.base_exceptions import BaseWordletteException
@@ -33,10 +34,15 @@ class ModelMCS(type):
             if get_origin(annotation) is not Annotated:
                 continue
 
+            default = namespace.get(name, _not_set_)
             hint, field = get_args(annotation)
+            if get_origin(hint) is UnionType and type(None) in (args := get_args(hint)):
+                hint = args[0]
+                default = None if default is _not_set_ else default
+
             if isinstance(field, FieldSchema):
                 yield name, field.create_field(
-                    name, hint, namespace.get(name, _not_set_)
+                    name, hint, default
                 )
 
     @staticmethod
