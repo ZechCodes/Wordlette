@@ -3,6 +3,7 @@ from typing import Callable, Type, TypeVar
 from bevy import get_repository
 
 import wordlette.databases.drivers as drivers
+from wordlette.databases.properties import DatabaseProperty
 from wordlette.databases.query_ast import ASTGroupNode
 from wordlette.databases.statuses import DatabaseStatus
 from wordlette.models import Model
@@ -12,6 +13,7 @@ T = TypeVar("T")
 
 
 class DatabaseModel(Model):
+    __fields__: dict[str, DatabaseProperty]
     __models__ = set()
     __model_name__: str
 
