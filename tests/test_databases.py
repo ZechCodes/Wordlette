@@ -1,3 +1,4 @@
+from datetime import datetime, timezone, timedelta
 from typing import Type
 
 import pytest
@@ -19,6 +20,7 @@ from wordlette.databases.query_ast import (
     when,
 )
 from wordlette.databases.statuses import DatabaseSuccessStatus, DatabaseStatus
+from wordlette.models import Auto
 from wordlette.utils.at_annotateds import AtProvider
 
 
@@ -251,3 +253,28 @@ async def test_sqlite_driver_update(sqlite_driver: SQLiteDriver):
     assert len(result.result) == 1
 
     assert result.result[0] == TestModel(id=1, string="updated")
+
+
+@pytest.mark.asyncio
+async def test_sqlite_driver_auto_fields():
+    class TestModel(DatabaseModel):
+        id: int | Auto @ Property
+        dt: datetime | Auto @ Property
+        value: str @ Property
+
+    driver = SQLiteDriver()
+    config = SQLiteConfig(filename=":memory:")
+    await driver.connect(config)
+    result = await driver.sync_schema({TestModel})
+    result.result
+
+    get_repository().set(DatabaseDriver, driver)
+
+    await driver.add(TestModel(value="test"), TestModel(value="test"))
+    result = await driver.fetch(when(TestModel.value == "test"))
+    a, b = result.result
+    assert a.id != b.id
+    assert isinstance(a.id, int)
+    assert isinstance(a.dt, datetime)
+    print(a.dt)
+    assert datetime.now(timezone.utc) - a.dt < timedelta(seconds=1)
