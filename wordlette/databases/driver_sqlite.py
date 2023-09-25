@@ -19,7 +19,7 @@ from wordlette.databases.query_ast import (
 from wordlette.databases.statuses import (
     DatabaseStatus,
     DatabaseSuccessStatus,
-    DatabaseErrorStatus,
+    DatabaseExceptionStatus,
 )
 from wordlette.models import FieldSchema, Auto
 from wordlette.utils.dependency_injection import inject
@@ -99,14 +99,14 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
             self._db = sqlite3.connect(config.filename)
             self._connected = True
 
-        return DatabaseErrorStatus(*error) if error else DatabaseSuccessStatus(self)
+        return DatabaseExceptionStatus(*error) if error else DatabaseSuccessStatus(self)
 
     async def disconnect(self) -> DatabaseStatus:
         with SuppressWithCapture(Exception) as error:
             self._db.close()
             self._connected = False
 
-        return DatabaseErrorStatus(*error) if error else DatabaseSuccessStatus(self)
+        return DatabaseExceptionStatus(*error) if error else DatabaseSuccessStatus(self)
 
     async def add(self, *items: DatabaseModel) -> DatabaseStatus:
         session = self._db.cursor()
@@ -116,7 +116,7 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
 
         if error:
             self._db.rollback()
-            return DatabaseErrorStatus(*error)
+            return DatabaseExceptionStatus(*error)
 
         session.close()
         return DatabaseSuccessStatus(self)
@@ -133,7 +133,7 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
 
             if error:
                 self._db.rollback()
-                return DatabaseErrorStatus(*error)
+                return DatabaseExceptionStatus(*error)
 
         session.close()
         return DatabaseSuccessStatus(self)
@@ -146,7 +146,9 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
             session = self._db.cursor()
             result = self._select(ast, session)
 
-        return DatabaseErrorStatus(*error) if error else DatabaseSuccessStatus(result)
+        return (
+            DatabaseExceptionStatus(*error) if error else DatabaseSuccessStatus(result)
+        )
 
     async def sync_schema(self, models: set[Type[DatabaseModel]]) -> DatabaseStatus:
         session = self._db.cursor()
@@ -156,7 +158,7 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
 
         if error:
             self._db.rollback()
-            return DatabaseErrorStatus(*error)
+            return DatabaseExceptionStatus(*error)
 
         session.close()
         return DatabaseSuccessStatus(self)
@@ -173,7 +175,7 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
 
             if error:
                 self._db.rollback()
-                return DatabaseErrorStatus(*error)
+                return DatabaseExceptionStatus(*error)
 
         session.close()
         return DatabaseSuccessStatus(self)

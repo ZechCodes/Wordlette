@@ -221,7 +221,7 @@ async def test_sqlite_driver_fetch(sqlite_driver: SQLiteDriver):
     await sqlite_driver.add(TestModel(id=10, string="test"))
     result = await sqlite_driver.fetch(when(TestModel.string == "test"))
     assert isinstance(result, DatabaseSuccessStatus)
-    assert result.result == [TestModel(id=10, string="test")]
+    assert result.value == [TestModel(id=10, string="test")]
 
 
 @pytest.mark.asyncio
@@ -231,11 +231,10 @@ async def test_sqlite_driver_delete(sqlite_driver: SQLiteDriver):
         TestModel(id=2, string="test_delete"),
         TestModel(id=3, string="test_delete"),
     )
-    result = await sqlite_driver.delete(TestModel(id=1), TestModel(id=2))
-    assert isinstance(result, DatabaseSuccessStatus)
+    assert await sqlite_driver.delete(TestModel(id=1), TestModel(id=2))
+
     result = await sqlite_driver.fetch(when(TestModel.string == "test_delete"))
-    assert isinstance(result, DatabaseSuccessStatus)
-    assert len(result.result) == 1
+    assert len(result.value) == 1
 
 
 @pytest.mark.asyncio
@@ -248,11 +247,12 @@ async def test_sqlite_driver_update(sqlite_driver: SQLiteDriver):
     result = await sqlite_driver.update(TestModel(id=1, string="updated"))
     assert isinstance(result, DatabaseSuccessStatus)
 
-    result = await sqlite_driver.fetch(when(TestModel.string == "updated"))
-    assert isinstance(result, DatabaseSuccessStatus)
-    assert len(result.result) == 1
+    match await sqlite_driver.fetch(when(TestModel.string == "updated")):
+        case DatabaseSuccessStatus([result]):
+            assert result == TestModel(id=1, string="updated")
 
-    assert result.result[0] == TestModel(id=1, string="updated")
+        case result:
+            assert len(result.value) == 1
 
 
 @pytest.mark.asyncio
@@ -264,17 +264,18 @@ async def test_sqlite_driver_auto_fields():
 
     driver = SQLiteDriver()
     config = SQLiteConfig(filename=":memory:")
-    await driver.connect(config)
-    result = await driver.sync_schema({TestModel})
-    result.result
+    assert await driver.connect(config)
+    assert await driver.sync_schema({TestModel})
 
     get_repository().set(DatabaseDriver, driver)
 
-    await driver.add(TestModel(value="test"), TestModel(value="test"))
-    result = await driver.fetch(when(TestModel.value == "test"))
-    a, b = result.result
-    assert a.id != b.id
-    assert isinstance(a.id, int)
-    assert isinstance(a.dt, datetime)
-    print(a.dt)
-    assert datetime.now(timezone.utc) - a.dt < timedelta(seconds=1)
+    assert await driver.add(TestModel(value="test"), TestModel(value="test"))
+    match await driver.fetch(when(TestModel.value == "test")):
+        case DatabaseSuccessStatus([a, b]):
+            assert a.id != b.id
+            assert isinstance(a.id, int)
+            assert isinstance(a.dt, datetime)
+            assert datetime.now(timezone.utc) - a.dt < timedelta(seconds=1)
+
+        case result:
+            assert len(result.value) == 2

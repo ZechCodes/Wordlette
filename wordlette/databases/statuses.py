@@ -1,59 +1,35 @@
-from typing import Any, Generic, TypeVar, NoReturn
+from abc import ABC
+from typing import TypeVar
+
+from wordlette.utils.options import Value, Null, Option
 
 T = TypeVar("T")
 
 
-class DatabaseStatus(Generic[T]):
+class DatabaseStatus(Option[T], ABC):
+    pass
+
+
+class DatabaseExceptionStatus(DatabaseStatus, Null):
     def __eq__(self, other):
         if not isinstance(other, DatabaseStatus):
             raise NotImplementedError()
 
-        return bool(self) == bool(other)
-
-
-class DatabaseErrorStatus(DatabaseStatus):
-    __match_args__ = ("error",)
-
-    def __init__(self, error: Exception):
-        self.error = error
-
-    def __bool__(self):
-        return False
-
-    def __eq__(self, other):
-        if not isinstance(other, DatabaseStatus):
-            raise NotImplementedError()
-
-        if not isinstance(other, DatabaseErrorStatus):
+        if not isinstance(other, DatabaseExceptionStatus):
             return False
 
-        return self.error == other.error
-
-    def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.error!r})"
-
-    @property
-    def result(self) -> NoReturn:
-        raise self.error
+        return self.exception == self.exception
 
 
-class DatabaseSuccessStatus(DatabaseStatus):
-    __match_args__ = ("result",)
-
-    def __init__(self, result: Any):
-        self.result = result
-
-    def __bool__(self):
-        return True
-
+class DatabaseSuccessStatus(DatabaseStatus, Value):
     def __eq__(self, other):
         if not isinstance(other, DatabaseStatus):
-            raise NotImplementedError()
+            return NotImplemented
 
         if not isinstance(other, DatabaseSuccessStatus):
             return False
 
-        return self.result == other.result
+        return self.value == other.value
 
     def __repr__(self) -> str:
-        return f"{type(self).__name__}({self.result!r})"
+        return f"{type(self).__name__}({self.value!r})"
