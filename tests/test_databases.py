@@ -88,6 +88,7 @@ async def sqlite_driver():
     config = SQLiteConfig(filename=":memory:")
     await driver.connect(config)
     await driver.sync_schema({TestModel})
+    get_repository().set(DatabaseDriver, driver)
     return driver
 
 
