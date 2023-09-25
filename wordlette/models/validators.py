@@ -10,7 +10,7 @@ def datetime_validator(value: str | int | float | datetime) -> datetime:
             return value
 
         case str():
-            return datetime.fromisoformat(value)
+            return datetime.fromisoformat(value).replace(tzinfo=timezone.utc)
 
         case int():
             return datetime.fromtimestamp(value, timezone.utc)
