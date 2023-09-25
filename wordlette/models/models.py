@@ -126,6 +126,14 @@ class Model(metaclass=ModelMCS):
         int: builtin_type_validator(int),
         float: builtin_type_validator(float),
         str: builtin_type_validator(str),
+        list: builtin_type_validator(list),
+        dict: builtin_type_validator(dict),
+        set: builtin_type_validator(set),
+        frozenset: builtin_type_validator(frozenset),
+        tuple: builtin_type_validator(tuple),
+        bytes: builtin_type_validator(bytes),
+        bytearray: builtin_type_validator(bytearray),
+        memoryview: builtin_type_validator(memoryview),
     }
 
     def __init__(self, *args, **kwargs):
