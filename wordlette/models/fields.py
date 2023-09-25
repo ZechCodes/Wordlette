@@ -119,9 +119,10 @@ class Field(Generic[T]):
         if isinstance(self.default, type) and issubclass(self.default, AutoSet):
             self._default = AutoSet(owner.__create_auto_value_function__(self.type))
 
-        if validator := next(
+        matching_validators = (
             v for t, v in owner.__type_validators__.items() if issubclass(self.type, t)
-        ):
+        )
+        if validator := next(matching_validators, False):
             self.add_validator(validator)
 
     def __repr__(self):
