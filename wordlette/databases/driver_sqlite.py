@@ -74,6 +74,11 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         time: SQLConstraint("DEFAULT", "time()"),
     }
 
+    type_validators = {
+        datetime: lambda value: value,  # No-op to avoid type conflict with date
+        date: lambda value: value.split()[0],
+    }
+
     type_mapping = {
         int: "INTEGER",
         str: "TEXT",
@@ -308,7 +313,26 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         query = self._build_select_query(tables, where)
         session.execute(query, values)
         result = session.fetchall()
-        return [model(*row) for row in result]
+        return [model(*self._validate_row_values(model, row)) for row in result]
+
+    def _validate_row_values(
+        self, model: Type[DatabaseModel], row: tuple[Any]
+    ) -> Generator[Any, None, None]:
+        for field, value in zip(model.__fields__.values(), row):
+            if validator := self._find_type_validator(field.type, value):
+                yield validator(value)
+            else:
+                yield value
+
+    def _find_type_validator(
+        self, type_hint: Type[T], value: Any
+    ) -> Callable[[Any], T] | None:
+        hint = get_origin(type_hint) or type_hint
+        for validator_type, validator in self.type_validators.items():
+            if issubclass(hint, validator_type):
+                return validator
+
+        return None
 
     def _get_sqlite_type(self, type_: Type) -> str:
         return self.type_mapping.get(type_, "TEXT")
