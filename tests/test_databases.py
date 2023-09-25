@@ -228,10 +228,25 @@ async def test_sqlite_driver_delete(sqlite_driver: SQLiteDriver):
         TestModel(id=2, string="test_delete"),
         TestModel(id=3, string="test_delete"),
     )
-    result = await sqlite_driver.delete(
-        TestModel(id=1), TestModel(id=2), TestModel(id=3)
-    )
+    result = await sqlite_driver.delete(TestModel(id=1), TestModel(id=2))
     assert isinstance(result, DatabaseSuccessStatus)
     result = await sqlite_driver.fetch(when(TestModel.string == "test_delete"))
     assert isinstance(result, DatabaseSuccessStatus)
-    assert len(result.result) == 0
+    assert len(result.result) == 1
+
+
+@pytest.mark.asyncio
+async def test_sqlite_driver_update(sqlite_driver: SQLiteDriver):
+    await sqlite_driver.add(
+        TestModel(id=1, string="test_update"),
+        TestModel(id=2, string="test_update"),
+        TestModel(id=3, string="test_update"),
+    )
+    result = await sqlite_driver.update(TestModel(id=1, string="updated"))
+    assert isinstance(result, DatabaseSuccessStatus)
+
+    result = await sqlite_driver.fetch(when(TestModel.string == "updated"))
+    assert isinstance(result, DatabaseSuccessStatus)
+    assert len(result.result) == 1
+
+    assert result.result[0] == TestModel(id=1, string="updated")

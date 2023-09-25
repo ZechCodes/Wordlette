@@ -74,12 +74,17 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         return DatabaseErrorStatus(*error) if error else DatabaseSuccessStatus(self)
 
     async def add(self, *items: DatabaseModel) -> DatabaseStatus:
+        session = self._db.cursor()
         with SuppressWithCapture(Exception) as error:
-            session = self._db.cursor()
             for item in items:
                 self._insert(item, session)
 
-        return DatabaseErrorStatus(*error) if error else DatabaseSuccessStatus(self)
+        if error:
+            self._db.rollback()
+            return DatabaseErrorStatus(*error)
+
+        session.close()
+        return DatabaseSuccessStatus(self)
 
     async def delete(self, *items: DatabaseModel) -> DatabaseStatus:
         models = {}
@@ -89,12 +94,13 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         session = self._db.cursor()
         for model, items in models.items():
             with SuppressWithCapture(Exception) as error:
-                session = self._db.cursor()
                 self._delete_rows(model, items, session)
 
             if error:
+                self._db.rollback()
                 return DatabaseErrorStatus(*error)
 
+        session.close()
         return DatabaseSuccessStatus(self)
 
     async def fetch(
@@ -108,15 +114,34 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         return DatabaseErrorStatus(*error) if error else DatabaseSuccessStatus(result)
 
     async def sync_schema(self, models: set[Type[DatabaseModel]]) -> DatabaseStatus:
+        session = self._db.cursor()
         with SuppressWithCapture(Exception) as error:
-            session = self._db.cursor()
             for model in models:
                 self._create_table(model, session)
 
-        return DatabaseErrorStatus(*error) if error else DatabaseSuccessStatus(self)
+        if error:
+            self._db.rollback()
+            return DatabaseErrorStatus(*error)
+
+        session.close()
+        return DatabaseSuccessStatus(self)
 
     async def update(self, *items: DatabaseModel) -> DatabaseStatus:
-        pass
+        models = {}
+        for item in items:
+            models.setdefault(type(item), []).append(item)
+
+        session = self._db.cursor()
+        for model, items in models.items():
+            with SuppressWithCapture(Exception) as error:
+                self._update_rows(model, items, session)
+
+            if error:
+                self._db.rollback()
+                return DatabaseErrorStatus(*error)
+
+        session.close()
+        return DatabaseSuccessStatus(self)
 
     def _build_column(self, field: DatabaseProperty, pk: bool) -> str:
         column = [field.name, self._get_sqlite_type(field.type)]
@@ -199,12 +224,34 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         columns = ", ".join(field.name for field in fields)
         values = [getattr(item, field.name) for field in fields]
         qs = ", ".join(["?"] * len(fields))
+        print(f"INSERT INTO {item.__model_name__} ({columns}) VALUES ({qs});", values)
         session.execute(
             f"INSERT INTO {item.__model_name__} ({columns}) VALUES ({qs});", values
         )
 
+    def _update_rows(
+        self,
+        model: Type[DatabaseModel],
+        items: list[DatabaseModel],
+        session: sqlite3.Cursor,
+    ):
+        pk = self._find_primary_key(model)
+        fields = list(model.__fields__.values())
+        for item in items:
+            values = (getattr(item, field.name) for field in fields if field.name != pk)
+            assignments = ", ".join(
+                f"{field.name} = ?" for field in fields if field.name != pk
+            )
+            session.execute(
+                f"UPDATE {model.__model_name__} SET {assignments} WHERE {pk} = ?;",
+                (*values, getattr(item, pk)),
+            )
+
     def _delete_rows(
-        self, model: DatabaseModel, items: list[DatabaseModel], session: sqlite3.Cursor
+        self,
+        model: Type[DatabaseModel],
+        items: list[DatabaseModel],
+        session: sqlite3.Cursor,
     ):
         pk = self._find_primary_key(model)
         keys = [getattr(item, pk) for item in items]
