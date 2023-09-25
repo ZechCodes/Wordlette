@@ -17,11 +17,11 @@ class Option(Generic[T], ABC):
 
     @property
     @abstractmethod
-    def exception(self) -> BaseWordletteException | NoReturn:
+    def exception(self) -> Exception | NoReturn:
         ...
 
     @abstractmethod
-    def exception_or(self, default: E) -> BaseWordletteException | E:
+    def exception_or(self, default: E) -> Exception | E:
         ...
 
     @property
@@ -41,14 +41,14 @@ class Option(Generic[T], ABC):
 class Null(Option[T]):
     __match_args__ = ("exception",)
 
-    def __init__(self, exception: BaseWordletteException | None = None):
+    def __init__(self, exception: Exception | None = None):
         self._exception = exception
 
     @property
-    def exception(self) -> BaseWordletteException:
+    def exception(self) -> Exception:
         return self._exception or self._create_exception()
 
-    def exception_or(self, _) -> BaseWordletteException:
+    def exception_or(self, _) -> Exception:
         return self.exception
 
     @property
