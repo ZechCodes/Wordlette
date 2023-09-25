@@ -112,12 +112,12 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
 
         return " ".join(column)
 
-    def _build_select_query(
+    def _process_ast(
         self, ast: ASTGroupNode
-    ) -> tuple[str, list[Any], Type[DatabaseModel]]:
+    ) -> tuple[Type[DatabaseModel], list[DatabaseModel], str, list[Any]]:
         model = None
-        where = []
         tables = []
+        where = []
         values = []
         node_stack = [iter(ast)]
         while node_stack:
@@ -128,7 +128,7 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
                 case ASTReferenceNode(field, model):
                     name = f"{model.__model_name__}.{field.name}"
                     where.append(name)
-                    tables.append(model.__model_name__)
+                    tables.append(model)
                     model = model
 
                 case ASTLiteralNode(value):
@@ -158,13 +158,7 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
                 case node:
                     raise TypeError(f"Unexpected node type: {node}")
 
-        query = ["SELECT * FROM", ", ".join(tables)]
-        if where:
-            query.extend(["WHERE", " ".join(where)])
-
-        query.append(";")
-
-        return " ".join(query), values, model
+        return model, tables, " ".join(where), values
 
     def _create_table(self, model: Type[DatabaseModel], session: sqlite3.Cursor):
         pk = self._find_primary_key(model)
@@ -197,10 +191,14 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         )
 
     def _select(self, predicates: ASTGroupNode, session: sqlite3.Cursor):
-        query, values, model = self._build_select_query(predicates)
+        model, tables, where, values = self._process_ast(predicates)
+        query = self._build_select_query(tables, where)
         session.execute(query, values)
         result = session.fetchall()
         return [model(*row) for row in result]
 
     def _get_sqlite_type(self, type_: Type) -> str:
         return self.type_mapping.get(type_, "TEXT")
+
+    def _build_select_query(self, tables: list[DatabaseModel], where: str):
+        return f"SELECT * FROM {tables[0].__model_name__} WHERE {where};"
