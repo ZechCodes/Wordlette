@@ -3,6 +3,7 @@ from typing import Type, TypeAlias, TypeVar, Callable, get_origin
 
 from wordlette.configs import ConfigModel
 from wordlette.databases.models import DatabaseModel
+from wordlette.databases.properties import DatabaseProperty
 from wordlette.databases.query_ast import ASTGroupNode
 from wordlette.databases.statuses import DatabaseStatus
 
@@ -50,12 +51,6 @@ class AbstractDatabaseDriver(ABC):
         ...
 
     @abstractmethod
-    def get_auto_value_factory(
-        self, model: Type[DatabaseModel], type_hint: Type[T]
-    ) -> T:
-        ...
-
-    @abstractmethod
     async def sync_schema(self, models: set[Type[DatabaseModel]]) -> DatabaseStatus:
         ...
 
@@ -67,7 +62,7 @@ class AbstractDatabaseDriver(ABC):
 class DatabaseDriver(AbstractDatabaseDriver, ABC):
     __drivers__ = {}
     driver_name: DriverName
-    auto_value_mapping: dict[Type, Callable[[], Callable[[DatabaseModel], T]]] = {}
+    auto_value_factories: dict[Type[T], Callable[[DatabaseModel], T]] = {}
 
     def __init_subclass__(cls, **kwargs):
         cls.driver_name = kwargs.pop(
@@ -85,11 +80,12 @@ class DatabaseDriver(AbstractDatabaseDriver, ABC):
     def disable_driver(cls, name: DriverName):
         cls.__drivers__.pop(name, None)
 
-    def get_auto_value_factory(
-        self, model: Type[DatabaseModel], type_hint: Type[T]
-    ) -> T:
-        hint = get_origin(type_hint) or type_hint
-        matching_types = (
-            f for t, f in self.auto_value_mapping.items() if issubclass(t, hint)
-        )
-        return auto() if (auto := next(matching_types, False)) else None
+    def get_value_factory(
+        self, field: DatabaseProperty
+    ) -> Callable[[DatabaseModel], T] | None:
+        field_type = get_origin(field.type) or field.type
+        for factory_type, factory in self.auto_value_factories.items():
+            if issubclass(field_type, factory_type):
+                return factory
+
+        return None

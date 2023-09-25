@@ -1,4 +1,5 @@
-from typing import Callable, Type, TypeVar
+from datetime import date
+from typing import Callable, TypeVar
 
 from bevy import get_repository
 
@@ -24,10 +25,12 @@ class DatabaseModel(Model):
         super().__init_subclass__(**kwargs)
         DatabaseModel.__models__.add(cls)
 
-    @classmethod
-    def __create_auto_value_function__(cls, type_hint: Type[T]) -> Callable[[], T]:
+    def __get_auto_value__(self, field: DatabaseProperty) -> Callable[[], T]:
         driver = get_repository().get(drivers.DatabaseDriver)
-        return driver.get_auto_value_factory(cls, type_hint)
+        if factory := driver.get_value_factory(field):
+            return factory
+
+        return super().__get_auto_value__(field)
 
     async def sync(self) -> DatabaseStatus:
         return await type(self).update(self)
