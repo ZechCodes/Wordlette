@@ -85,6 +85,11 @@ class ModelMCS(type):
                         hint = type_hint
                         default = None
 
+                    case _:
+                        raise TypeError(
+                            f"Unsupported type hint '{hint!r}' for {name!r}"
+                        )
+
             if isinstance(field, FieldSchema):
                 yield name, field.create_field(name, hint, default)
 
