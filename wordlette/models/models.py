@@ -12,6 +12,7 @@ from typing import (
     Callable,
     ParamSpec,
     TypeVar,
+    TypeGuard,
 )
 
 from wordlette.base_exceptions import BaseWordletteException
@@ -72,10 +73,6 @@ class ModelMCS(type):
             hint, field = get_args(annotation)
             if default is _not_set_ and get_origin(hint) in {Union, UnionType}:
                 match get_args(hint):
-                    case (type_hint, None):
-                        hint = type_hint
-                        default = None
-
                     case (type_hint, Auto() as auto):
                         hint = type_hint
                         default = auto
@@ -83,6 +80,10 @@ class ModelMCS(type):
                     case (type_hint, type() as auto) if issubclass(auto, Auto):
                         hint = type_hint
                         default = Auto()
+
+                    case (type_hint, none) if is_none(none):
+                        hint = type_hint
+                        default = None
 
             if isinstance(field, FieldSchema):
                 yield name, field.create_field(name, hint, default)
@@ -228,3 +229,7 @@ class Model(metaclass=ModelMCS):
 
             if error := self.set_quiet(name, value):
                 self.__validation_errors__[name] = error
+
+
+def is_none(value: Any) -> TypeGuard[None]:
+    return value in {None, type(None)}
