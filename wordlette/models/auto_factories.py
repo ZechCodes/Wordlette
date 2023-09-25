@@ -1,6 +1,10 @@
 from base64 import urlsafe_b64encode
 from datetime import datetime, timezone
+from typing import Type, Callable, Any, TypeVar
 from uuid import uuid4
+
+
+T = TypeVar("T")
 
 
 def create_unique_int_generator(*_):
@@ -47,3 +51,10 @@ def create_get_current_time_func(*_):
         return get_now().time()
 
     return get_current_time
+
+
+def create_factory_func(type_: Type[T]) -> Callable[[Any], T]:
+    def create_type() -> T:
+        return type_()
+
+    return create_type

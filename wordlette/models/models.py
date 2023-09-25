@@ -23,6 +23,7 @@ from wordlette.models.auto_factories import (
     create_unique_int_generator,
     create_unique_float_generator,
     create_unique_string_generator,
+    create_factory_func,
 )
 from wordlette.models.fields import Field, FieldSchema, _not_set_
 from wordlette.models.validators import (
@@ -110,6 +111,13 @@ class Model(metaclass=ModelMCS):
         int: create_unique_int_generator,
         float: create_unique_float_generator,
         str: create_unique_string_generator,
+        list: create_factory_func(list),
+        dict: create_factory_func(dict),
+        set: create_factory_func(set),
+        frozenset: create_factory_func(frozenset),
+        tuple: create_factory_func(tuple),
+        bytes: create_factory_func(bytes),
+        bytearray: create_factory_func(bytearray),
     }
     __type_validators__: dict[Type, Callable[[Any], Any]] = {
         datetime: datetime_validator,
