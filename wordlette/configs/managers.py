@@ -5,10 +5,13 @@ from typing import Type, TypeVar, Any, Callable, Iterable, BinaryIO
 from wordlette.configs.exceptions import ConfigCannotCreateFiles
 from wordlette.configs.handlers import ConfigHandler
 from wordlette.core.exceptions import ConfigFileNotFound
+from wordlette.utils.sentinel import sentinel
 
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger("Config")
 T = TypeVar("T")
+
+NotSet, _not_set_ = sentinel("NotSet")
 
 
 class ConfigManager:
@@ -20,13 +23,27 @@ class ConfigManager:
         self._register_handlers(handlers)
 
     @property
+    def config(self) -> dict[str, Any]:
+        return self._config
+
+    @property
     def valid_extensions(self) -> set[str]:
         return set(self._handler_extensions.keys())
 
     def get(
-        self, key: str = "", constructor: Callable[[dict[str, Any]], T] | None = None
+        self,
+        key: str = "",
+        constructor: Callable[[dict[str, Any]], T] | None = None,
+        default: T | Any | NotSet = _not_set_,
     ) -> T | Any:
-        value = self._config[key] if key else self._config
+        try:
+            value = self._config[key] if key else self._config
+        except KeyError:
+            if default is not _not_set_:
+                return default
+
+            raise
+
         if constructor:
             value = constructor(**value)
 
@@ -50,6 +67,9 @@ class ConfigManager:
             self._config = handler.load(open_file)
 
         logger.debug(f"Loaded config file '{path}'.")
+
+    def save_to_config_file(self, name: str, directory: Path) -> Path:
+        return self.write_config_file(name, directory, self._config)
 
     def write_config_file(self, name: str, directory: Path, data: T) -> Path:
         if path := self.find_config_file(name, directory):
