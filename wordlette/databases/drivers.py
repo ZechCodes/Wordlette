@@ -39,6 +39,12 @@ class AbstractDatabaseDriver(ABC):
         ...
 
     @abstractmethod
+    async def count(
+        *predicates: ASTGroupNode | Type[DatabaseModel],
+    ) -> DatabaseStatus[int]:
+        ...
+
+    @abstractmethod
     async def delete(self, *items: DatabaseModel) -> DatabaseStatus:
         ...
 
