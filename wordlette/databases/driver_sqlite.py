@@ -215,7 +215,7 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
     def _process_ast(self, ast: ASTGroupNode) -> SelectQuery:
         query = SelectQuery(
             limit=ast.max_results,
-            offset=ast.offset_results,
+            offset=ast.results_page * ast.max_results,
             order_by=self._process_ordering(ast.sorting),
         )
         where = []
