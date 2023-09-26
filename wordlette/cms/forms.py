@@ -40,6 +40,7 @@ class Form(_Form):
             self.buttons,
             self.__field_values__,
             self._validate_fields(),
+            self.__request_method__,
         )
 
     @view.classmethod
@@ -50,4 +51,5 @@ class Form(_Form):
             cls.buttons,
             {},
             {},
+            cls.__request_method__,
         )

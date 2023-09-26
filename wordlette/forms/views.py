@@ -1,8 +1,9 @@
-from typing import Iterable, Any
+from typing import Iterable, Any, Type
 
 from wordlette.forms import Field
 from wordlette.forms.elements import Element, LabelElement
 from wordlette.forms.field_types import Button, not_set
+from wordlette.requests import Request
 
 
 class FormView:
@@ -12,10 +13,12 @@ class FormView:
         buttons: Iterable[Button],
         values: dict[str, Any],
         errors: dict[str, Exception],
+        method: Type[Request] = Request.Post,
     ):
         self._buttons = None
         self._fields = None
         self._labels = None
+        self._method = method
 
         self.errors = errors
         self.values = {
@@ -45,6 +48,10 @@ class FormView:
             self._labels = self._compose_labels(self.raw_fields)
 
         return self._labels
+
+    @property
+    def method(self) -> str:
+        return self._method.name.lower()
 
     def _compose_buttons(self, buttons: Iterable[Button]) -> list[Element]:
         return [button.compose() for button in buttons]

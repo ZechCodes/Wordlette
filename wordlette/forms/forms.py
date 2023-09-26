@@ -26,6 +26,7 @@ from wordlette.forms.fields import Field, NotSet, not_set
 from wordlette.forms.views import FormView
 from wordlette.requests import Request
 from wordlette.utils.contextual_methods import contextual_method
+from wordlette.utils.hybrid_property import HybridProperty
 
 P = ParamSpec("P")
 F = TypeVar("F", bound="Form")
@@ -176,6 +177,11 @@ class Form:
         field = self.__form_fields__[field_name]
         return self.__field_values__.get(field_name, field.default)
 
+    @classmethod
+    @HybridProperty
+    def method(cls) -> str:
+        return cls.__request_method__.name.lower()
+
     @contextual_method
     def view(self) -> FormView:
         return self.__form_view_type__(
@@ -183,15 +189,13 @@ class Form:
             self.buttons,
             self.__field_values__,
             self._validate_fields(),
+            self.__request_method__,
         )
 
     @view.classmethod
     def view(cls) -> FormView:
         return cls.__form_view_type__(
-            cls.__form_fields__,
-            cls.buttons,
-            {},
-            {},
+            cls.__form_fields__, cls.buttons, {}, {}, cls.__request_method__
         )
 
     def _load_fields(self, *args, **kwargs):
