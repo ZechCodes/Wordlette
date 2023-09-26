@@ -37,6 +37,7 @@ class ASTGroupNode(ASTNode):
             [] if items is None else items
         )
         self.frozen = False
+        self.max_results = -1
 
     def __iter__(self):
         self.frozen = True
@@ -62,6 +63,10 @@ class ASTGroupNode(ASTNode):
             item = ASTReferenceNode(None, item)
 
         self.items.append(item)
+
+    def limit(self, limit: int) -> Self:
+        self.max_results = limit
+        return self
 
     def __eq__(self, other):
         if not isinstance(other, ASTGroupNode):
