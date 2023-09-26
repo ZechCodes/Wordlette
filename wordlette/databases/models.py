@@ -46,7 +46,14 @@ class DatabaseModel(Model):
         return await driver.add(cls, *items)
 
     @classmethod
+    async def count(
+        cls, *predicates: "ASTGroupNode | DatabaseModel | bool", columns: Any = None
+    ) -> DatabaseStatus[int]:
         driver = get_repository().get(drivers.DatabaseDriver)
+        return await driver.count(
+            cls, *predicates, *cls._build_colum_predicates(columns)
+        )
+
     @classmethod
     async def fetch(
         cls, *predicates: "ASTGroupNode | DatabaseModel | bool", **columns: Any
