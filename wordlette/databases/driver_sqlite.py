@@ -221,7 +221,6 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
             match next(node_stack[~0], None):
                 case ASTGroupNode() as group:
                     node_stack.append(iter(group))
-                    order_by |= self._process_ordering(group.sorting)
 
                 case ASTReferenceNode(None, model):
                     tables.append(model)
