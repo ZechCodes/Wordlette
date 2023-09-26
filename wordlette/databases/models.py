@@ -1,11 +1,10 @@
-from datetime import date
-from typing import Callable, TypeVar
+from typing import Callable, TypeVar, Any, Generator
 
 from bevy import get_repository
 
 import wordlette.databases.drivers as drivers
 from wordlette.databases.properties import DatabaseProperty
-from wordlette.databases.query_ast import ASTGroupNode
+from wordlette.databases.query_ast import ASTComparisonNode
 from wordlette.databases.statuses import DatabaseStatus
 from wordlette.models import Model
 from wordlette.utils.contextual_methods import contextual_method
@@ -47,9 +46,15 @@ class DatabaseModel(Model):
         return await driver.add(cls, *items)
 
     @classmethod
-    async def fetch(cls, predicate: ASTGroupNode) -> DatabaseStatus:
         driver = get_repository().get(drivers.DatabaseDriver)
-        return await driver.fetch(cls, predicate)
+    @classmethod
+    async def fetch(
+        cls, *predicates: "ASTGroupNode | DatabaseModel | bool", **columns: Any
+    ) -> "DatabaseStatus[list[DatabaseModel]]":
+        driver = get_repository().get(drivers.DatabaseDriver)
+        return await driver.fetch(
+            cls, *predicates, *cls._build_colum_predicates(columns)
+        )
 
     @delete.classmethod
     async def delete(
@@ -64,3 +69,13 @@ class DatabaseModel(Model):
     ) -> "DatabaseStatus[drivers.DatabaseDriver]":
         driver = get_repository().get(drivers.DatabaseDriver)
         return await driver.update(cls, *items)
+
+    @classmethod
+    def _build_colum_predicates(
+        cls, columns: dict[str, Any]
+    ) -> Generator[ASTComparisonNode | bool, None, None]:
+        for name, value in columns.items():
+            if name not in cls.__fields__:
+                raise ValueError(f"Invalid column {name!r} for model {cls.__name__}")
+
+            yield getattr(cls, name) == value
