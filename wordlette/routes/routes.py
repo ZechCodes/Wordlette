@@ -178,8 +178,14 @@ class Route(
 
         handler_registry = self.__metadata__.request_handlers
         request_type = type(request)
-        response = await handler_registry[request_type](self, request)
-        await response(scope, receive, send)
+        repo = get_repository()
+        repo.set_repository(repo.branch())
+        repo.set(Request, request)
+        try:
+            response = await handler_registry[request_type](self, request)
+            await response(scope, receive, send)
+        finally:
+            repo.set_repository(repo)
 
     @classmethod
     def url(cls, **path_params):
