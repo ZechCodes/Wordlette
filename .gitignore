@@ -3,4 +3,4 @@
 secret.*
 postgres-data
 __pycache__
-wordlette.config.*
+settings.wordlette.*
