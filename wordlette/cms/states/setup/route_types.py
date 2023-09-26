@@ -1,5 +1,7 @@
 from typing import Iterable
 
+from starlette.responses import RedirectResponse
+
 from wordlette.cms.states.setup.enums import SetupStatus, SetupCategory
 from wordlette.routes import Route
 from wordlette.utils.dependency_injection import inject
@@ -104,6 +106,9 @@ class SetupRoute(Route):
 
     async def setup_status(self, *_) -> SetupStatus:
         return SetupStatus.Waiting
+
+    async def complete(self):
+        return RedirectResponse((await self.get_next_page()).url())
 
     async def get_next_page(self) -> "SetupRoute":
         return await self.controller.get_next_route()
