@@ -120,3 +120,30 @@ class ButtonElement(ContainerElement):
 
 class LabelElement(ContainerElement):
     tag = "label"
+
+
+class OptionElement(ContainerElement):
+    tag = "option"
+
+
+class SelectElement(ContainerElement):
+    tag = "select"
+
+    def __init__(self, body, *args, placeholder: str | None = None, **kwargs):
+        if placeholder:
+            body = (
+                OptionElement(
+                    placeholder, disabled=True, selected=True, value="--default--"
+                ),
+                *body,
+            )
+            kwargs.setdefault("value", "--default--")
+
+        super().__init__(body, *args, **kwargs)
+
+    def render(self):
+        return Markup(
+            f"<{self.tag} {self._build_attrs()}>"
+            f"{''.join(map(OptionElement.render, self.body))}"
+            f"</{self.tag}>"
+        )

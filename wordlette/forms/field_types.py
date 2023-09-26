@@ -4,6 +4,7 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Annotated
 
+import wordlette.forms.elements as elements
 from wordlette.forms import Field
 from wordlette.forms.elements import ButtonElement, AElement
 from wordlette.forms.fields import NotSet, not_set
@@ -33,6 +34,31 @@ class Label:
     def __init__(self, text: str, for_: str = ""):
         self.text = text
         self.for_ = for_
+
+
+class SelectField(Field):
+    def __init__(
+        self,
+        options: dict[str, Any],
+        placeholder: str | None = None,
+        value: Any | NotSet = not_set,
+        **kwargs,
+    ):
+        super().__init__(value=value, **kwargs)
+        self.options = options
+        self.value = value
+        self.placeholder = placeholder
+
+    def compose(self, value: Any | NotSet = not_set) -> "elements.SelectElement":
+        params = self.attrs.copy()
+        if self.required:
+            params["required"] = True
+
+        options = [
+            elements.OptionElement(text, value=value, selected=value == self.value)
+            for text, value in self.options.items()
+        ]
+        return elements.SelectElement(options, placeholder=self.placeholder, **params)
 
 
 class InputField(Field):
