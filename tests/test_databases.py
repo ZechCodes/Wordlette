@@ -308,6 +308,12 @@ async def test_sqlite_select_limit(sqlite_driver: SQLiteDriver):
         TestModel(id=2, string="test_limit"),
     ]
 
+    result = await sqlite_driver.fetch(when(TestModel).limit(2, 1))
+    assert result.value == [
+        TestModel(id=2, string="test_limit"),
+        TestModel(id=3, string="test_limit"),
+    ]
+
 
 @pytest.mark.asyncio
 async def test_sqlite_select_ordered(sqlite_driver: SQLiteDriver):

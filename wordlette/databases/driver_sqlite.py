@@ -207,7 +207,7 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         list[DatabaseModel],
         str,
         list[Any],
-        int,
+        tuple[int, int],
         dict[str, ResultOrdering],
     ]:
         model = None
@@ -215,7 +215,7 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         where = []
         values = []
         node_stack = [iter(ast)]
-        limit = ast.max_results
+        limit = (ast.max_results, ast.offset_results)
         order_by = self._process_ordering(ast.sorting)
         while node_stack:
             match next(node_stack[~0], None):
@@ -368,15 +368,19 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         self,
         tables: list[DatabaseModel],
         where: str,
-        limit: int,
+        limit: tuple[int, int],
         order_by: dict[str, ResultOrdering],
     ):
         query = [f"SELECT * FROM {tables[0].__model_name__}"]
         if where:
             query.append(f"WHERE {where}")
 
+        limit, offset = limit
         if limit > 0:
             query.append(f"LIMIT {limit}")
+
+            if offset > 0:
+                query.append(f"OFFSET {offset}")
 
         if order_by:
             ordering = ", ".join(
