@@ -2,6 +2,7 @@ from enum import auto, Enum
 from itertools import zip_longest
 from typing import Any
 
+import wordlette.databases.models as models
 from wordlette.utils.apply import apply
 
 
@@ -56,6 +57,9 @@ class ASTGroupNode(ASTNode):
 
         if len(self.items) > 0:
             self.items.append(logical_type)
+
+        if isinstance(item, type) and issubclass(item, models.DatabaseModel):
+            item = ASTReferenceNode(None, item)
 
         self.items.append(item)
 
@@ -297,7 +301,9 @@ class ASTComparisonNode(ASTComparableNode):
                 return ASTLiteralNode(value)
 
 
-def when(*comparisons: ASTComparisonNode | bool) -> ASTGroupNode:
+def when(
+    *comparisons: "ASTComparisonNode | Type[models.DatabaseModel] | bool",
+) -> ASTGroupNode:
     match comparisons:
         case (ASTComparisonNode() as comparison,):
             return comparison.group

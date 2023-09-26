@@ -140,7 +140,7 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         return DatabaseSuccessStatus(self)
 
     async def fetch(
-        self, *predicates: ASTGroupNode
+        self, *predicates: ASTGroupNode | Type[DatabaseModel]
     ) -> DatabaseStatus[list[DatabaseModel]]:
         ast = when(*predicates)
         with SuppressWithCapture(Exception) as error:

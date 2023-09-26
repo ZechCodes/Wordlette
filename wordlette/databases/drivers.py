@@ -47,7 +47,9 @@ class AbstractDatabaseDriver(ABC):
         ...
 
     @abstractmethod
-    async def fetch(self, *predicates: ASTGroupNode) -> DatabaseStatus:
+    async def fetch(
+        self, *predicates: ASTGroupNode | Type[DatabaseModel]
+    ) -> DatabaseStatus:
         ...
 
     @abstractmethod

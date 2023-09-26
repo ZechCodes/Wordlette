@@ -277,3 +277,18 @@ async def test_sqlite_driver_auto_fields():
 
     assert (result := await driver.fetch(when(TestModel.id == a.id)))
     assert result.value[0].id == a.id
+
+
+@pytest.mark.asyncio
+async def test_sqlite_select_all(sqlite_driver: SQLiteDriver):
+    await sqlite_driver.add(
+        TestModel(id=1, string="test_update"),
+        TestModel(id=2, string="test_update"),
+        TestModel(id=3, string="test_update"),
+    )
+    result = await sqlite_driver.fetch(TestModel)
+    assert result.value == [
+        TestModel(id=1, string="test_update"),
+        TestModel(id=2, string="test_update"),
+        TestModel(id=3, string="test_update"),
+    ]
