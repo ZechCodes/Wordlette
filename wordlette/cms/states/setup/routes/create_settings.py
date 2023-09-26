@@ -80,7 +80,7 @@ class CreateSettingsFile(SetupRoute, setup_category=SetupCategory.Config):
     def _create_page_template(self, **kwargs):
         subtitle = "Configure Your Website"
         return Template(
-            "create-settings-file.html",
+            "setup-page.html",
             title=f"Wordlette: {subtitle}",
             heading="Setup",
             subtitle=subtitle,
