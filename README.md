@@ -9,7 +9,7 @@ Simple and easy content management system that anyone can use.
 Currently, there is only a simple setup process for the CMS. And a basic hello world landing page once it's all
 configured.
 
-To run it just follow these steps:
+To run it just do the following:
 
 ```bash
 pip install wordlette[cms]
