@@ -63,11 +63,11 @@ class ASTGroupNode(ASTNode):
         if self.frozen:
             return
 
-        if len(self.items) > 0:
-            self.items.append(logical_type)
-
         if isinstance(item, type) and issubclass(item, models.DatabaseModel):
             item = ASTReferenceNode(None, item)
+
+        elif len(self.items) > 0 and getattr(self.items[~0], "field", True) is not None:
+            self.items.append(logical_type)
 
         self.items.append(item)
 
