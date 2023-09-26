@@ -44,7 +44,7 @@ class CreateSettingsFile(SetupRoute, setup_category=SetupCategory.Config):
         settings_filename: str @ AppSetting("settings-filename"),
         working_directory: str @ AppSetting("working-directory"),
     ) -> SetupStatus:
-        if config.find_config_file(settings_filename, working_directory):
+        if config.get("site", default=None):
             return SetupStatus.Complete
 
         return SetupStatus.Ready
