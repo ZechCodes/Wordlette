@@ -343,7 +343,11 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         return self.type_mapping.get(type_, "TEXT")
 
     def _build_select_query(self, tables: list[DatabaseModel], where: str):
-        return f"SELECT * FROM {tables[0].__model_name__} WHERE {where};"
+        query = [f"SELECT * FROM {tables[0].__model_name__}"]
+        if where:
+            query.append(f"WHERE {where}")
+
+        return " ".join(query) + ";"
 
     def _sync_with_last_inserted(self, item: DatabaseModel, session: sqlite3.Cursor):
         pk = self._find_primary_key(type(item))
