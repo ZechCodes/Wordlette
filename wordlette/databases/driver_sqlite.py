@@ -1,6 +1,6 @@
 import sqlite3
 from datetime import datetime, date, time
-from typing import Type, Any, TypeVar, TypeGuard, Callable, get_origin, Generator
+from typing import Type, Any, TypeVar, TypeGuard, Callable, get_origin, Generator, Self
 
 from wordlette.configs import ConfigModel
 from wordlette.databases.drivers import DatabaseDriver
@@ -113,6 +113,7 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         with SuppressWithCapture(Exception) as error:
             for item in items:
                 self._insert(item, session)
+                self._sync_with_last_inserted(item, session)
 
         if error:
             self._db.rollback()
@@ -150,7 +151,9 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
             DatabaseExceptionStatus(*error) if error else DatabaseSuccessStatus(result)
         )
 
-    async def sync_schema(self, models: set[Type[DatabaseModel]]) -> DatabaseStatus:
+    async def sync_schema(
+        self, models: set[Type[DatabaseModel]]
+    ) -> DatabaseStatus[Self]:
         session = self._db.cursor()
         with SuppressWithCapture(Exception) as error:
             for model in models:
@@ -163,7 +166,7 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         session.close()
         return DatabaseSuccessStatus(self)
 
-    async def update(self, *items: DatabaseModel) -> DatabaseStatus:
+    async def update(self, *items: DatabaseModel) -> DatabaseStatus[Self]:
         models = {}
         for item in items:
             models.setdefault(type(item), []).append(item)
@@ -341,6 +344,13 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
 
     def _build_select_query(self, tables: list[DatabaseModel], where: str):
         return f"SELECT * FROM {tables[0].__model_name__} WHERE {where};"
+
+    def _sync_with_last_inserted(self, item: DatabaseModel, session: sqlite3.Cursor):
+        pk = self._find_primary_key(type(item))
+        result = session.execute("SELECT last_insert_rowid();").fetchone()
+        result = self._validate_row_values(type(item), result)
+        for field, value in zip(item.__fields__.values(), result):
+            item.__field_values__[field.name] = value
 
 
 def is_auto(obj: Any) -> TypeGuard[Auto]:

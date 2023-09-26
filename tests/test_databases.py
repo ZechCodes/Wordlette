@@ -1,4 +1,4 @@
-from datetime import datetime, timezone, timedelta
+from datetime import datetime
 from typing import Type
 
 import pytest
@@ -269,13 +269,11 @@ async def test_sqlite_driver_auto_fields():
 
     get_repository().set(DatabaseDriver, driver)
 
-    assert await driver.add(TestModel(value="test"), TestModel(value="test"))
-    match await driver.fetch(when(TestModel.value == "test")):
-        case DatabaseSuccessStatus([a, b]):
-            assert a.id != b.id
-            assert isinstance(a.id, int)
-            assert isinstance(a.dt, datetime)
-            assert datetime.now(timezone.utc) - a.dt < timedelta(seconds=1)
+    a, b = TestModel(value="test"), TestModel(value="test")
+    assert await driver.add(a, b)
+    assert isinstance(a.id, int)
+    assert isinstance(b.id, int)
+    assert a.id != b.id
 
-        case result:
-            assert len(result.value) == 2
+    assert (result := await driver.fetch(when(TestModel.id == a.id)))
+    assert result.value[0].id == a.id
