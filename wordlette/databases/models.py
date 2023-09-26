@@ -32,15 +32,17 @@ class DatabaseModel(Model):
 
         return super().__get_auto_value__(field)
 
-    async def sync(self) -> DatabaseStatus:
+    async def sync(self) -> "DatabaseStatus[drivers.DatabaseDriver]":
         return await type(self).update(self)
 
     @contextual_method
-    async def delete(self) -> DatabaseStatus:
+    async def delete(self) -> "DatabaseStatus[drivers.DatabaseDriver]":
         return await type(self).delete(self)
 
     @classmethod
-    async def add(cls, *items: "DatabaseModel") -> DatabaseStatus:
+    async def add(
+        cls, *items: "DatabaseModel"
+    ) -> "DatabaseStatus[drivers.DatabaseDriver]":
         driver = get_repository().get(drivers.DatabaseDriver)
         return await driver.add(cls, *items)
 
@@ -50,11 +52,15 @@ class DatabaseModel(Model):
         return await driver.fetch(cls, predicate)
 
     @delete.classmethod
-    async def delete(cls, *items: "DatabaseModel") -> DatabaseStatus:
+    async def delete(
+        cls, *items: "DatabaseModel"
+    ) -> "DatabaseStatus[drivers.DatabaseDriver]":
         driver = get_repository().get(drivers.DatabaseDriver)
         return await driver.delete(cls, *items)
 
     @classmethod
-    async def update(cls, *items: "DatabaseModel") -> DatabaseStatus:
+    async def update(
+        cls, *items: "DatabaseModel"
+    ) -> "DatabaseStatus[drivers.DatabaseDriver]":
         driver = get_repository().get(drivers.DatabaseDriver)
         return await driver.update(cls, *items)
