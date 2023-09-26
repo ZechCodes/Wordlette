@@ -44,7 +44,7 @@ class ASTGroupNode(ASTNode):
         self.frozen = False
         self.max_results = -1
         self.offset_results = 0
-        self.sorting: set[ASTReferenceNode] = set()
+        self.sorting: list[ASTReferenceNode] = []
 
     def __iter__(self):
         self.frozen = True
@@ -77,7 +77,7 @@ class ASTGroupNode(ASTNode):
         return self
 
     def sort(self, *on_fields: "ASTReferenceNode") -> Self:
-        self.sorting |= set(on_fields)
+        self.sorting.extend(field for field in on_fields if field not in self.sorting)
         return self
 
     def __eq__(self, other):
