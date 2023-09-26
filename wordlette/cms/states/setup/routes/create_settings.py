@@ -61,17 +61,13 @@ class CreateSettingsFile(SetupRoute, setup_category=SetupCategory.Config):
         settings_filename: str @ AppSetting("settings-filename"),
         working_directory: str @ AppSetting("working-directory"),
     ):
-        path = config.write_config_file(
-            settings_filename,
-            working_directory,
-            {
-                "site": {
-                    "domain": form.domain_name,
-                    "https": form.force_https,
-                    "name": form.site_name,
-                }
-            },
-        )
+        settings = config.config.setdefault("site", {})
+        settings |= {
+            "name": form.site_name,
+            "domain": form.domain_name,
+            "https": form.force_https,
+        }
+        config.save_to_config_file(settings_filename, working_directory)
         return self.complete()
 
     async def handle_form_validation_errors(
