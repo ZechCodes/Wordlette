@@ -1,6 +1,7 @@
 import sqlite3
 from dataclasses import dataclass, field
 from datetime import datetime, date, time
+from os.path import sep
 from typing import Type, Any, TypeVar, TypeGuard, Callable, get_origin, Generator, Self
 
 from wordlette.configs import ConfigModel
@@ -18,16 +19,33 @@ from wordlette.databases.query_ast import (
     ASTGroupFlagNode,
     ResultOrdering,
 )
+from wordlette.databases.settings_forms import DatabaseSettingsForm
 from wordlette.databases.statuses import (
     DatabaseStatus,
     DatabaseSuccessStatus,
     DatabaseExceptionStatus,
 )
+from wordlette.forms.field_types import TextField, Link, SubmitButton
 from wordlette.models import FieldSchema, Auto
 from wordlette.utils.dependency_injection import inject
 from wordlette.utils.suppress_with_capture import SuppressWithCapture
 
 T = TypeVar("T")
+
+
+placeholder_example_path = "/path/to/database.db" if sep == "/" else r"C:\\path\to\database.db"
+
+
+class SQLiteSettingsForm(DatabaseSettingsForm):
+    filename: str @ TextField(
+        placeholder=placeholder_example_path,
+        label="Where should your SQLite database be located?",
+    )
+
+    buttons = (
+        Link("Back", href="/configure-database"),
+        SubmitButton("Next", type="submit"),
+    )
 
 
 @dataclass
@@ -65,7 +83,9 @@ class SQLiteConfig(ConfigModel):
     filename: str @ FieldSchema
 
 
-class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
+class SQLiteDriver(DatabaseDriver, driver_name="sqlite", nice_name="SQLite"):
+    __settings_form__ = SQLiteSettingsForm
+
     logical_operator_mapping = {
         ASTLogicalOperatorNode.AND: "AND",
         ASTLogicalOperatorNode.OR: "OR",
