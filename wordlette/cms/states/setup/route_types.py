@@ -1,6 +1,7 @@
 from typing import Iterable
 
 from starlette.responses import RedirectResponse
+from starlette.types import Scope, Receive, Send
 
 from wordlette.cms.states.setup.enums import SetupStatus, SetupCategory
 from wordlette.requests import Request
@@ -116,3 +117,12 @@ class SetupRoute(Route):
 
     async def get_next_page(self) -> "SetupRoute":
         return await self.controller.get_next_route()
+
+    async def _handle(self, scope: Scope, receive: Receive, send: Send):
+        request = Request.factory(scope, receive, send)
+        if next_step := request.query_params.get("nextstep"):
+            redirect = RedirectResponse(next_step)
+            await redirect(scope, receive, send)
+            return
+
+        return await super()._handle(scope, receive, send)

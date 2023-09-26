@@ -54,12 +54,8 @@ class ConfigureDatabase(SetupRoute, setup_category=SetupCategory.Database):
     async def get_setup_page(
         self,
         _: Request.Get,
-        database_type: str @ QueryArg("database-type", None),
-        next_page: str @ QueryArg("nextstep", None),
+        database_type: str @ QueryArg("database-type", None)
     ):
-        if next_page:
-            return RedirectResponse(next_page)
-
         form = SelectDatabaseTypeForm
         db_type_field: SelectField = cast(
             SelectField, form.__form_fields__["database_type"]
