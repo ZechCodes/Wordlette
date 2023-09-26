@@ -15,6 +15,7 @@ from wordlette.databases.query_ast import (
     ASTComparisonNode,
     ASTOperatorNode,
     ASTGroupFlagNode,
+    ResultOrdering,
 )
 from wordlette.databases.statuses import (
     DatabaseStatus,
@@ -201,17 +202,26 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
 
     def _process_ast(
         self, ast: ASTGroupNode
-    ) -> tuple[Type[DatabaseModel], list[DatabaseModel], str, list[Any], int]:
+    ) -> tuple[
+        Type[DatabaseModel],
+        list[DatabaseModel],
+        str,
+        list[Any],
+        int,
+        dict[str, ResultOrdering],
+    ]:
         model = None
         tables = []
         where = []
         values = []
         node_stack = [iter(ast)]
         limit = ast.max_results
+        order_by = self._process_ordering(ast.sorting)
         while node_stack:
             match next(node_stack[~0], None):
                 case ASTGroupNode() as group:
                     node_stack.append(iter(group))
+                    order_by |= self._process_ordering(group.sorting)
 
                 case ASTReferenceNode(None, model):
                     tables.append(model)
@@ -250,7 +260,15 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
                 case node:
                     raise TypeError(f"Unexpected node type: {node}")
 
-        return model, tables, " ".join(where), values, limit
+        return model, tables, " ".join(where), values, limit, order_by
+
+    def _process_ordering(
+        self, sorting: set[ASTReferenceNode]
+    ) -> dict[str, ResultOrdering]:
+        return {
+            f"{ref.model.__model_name__}.{ref.field.name}": ref.ordering
+            for ref in sorting
+        }
 
     def _create_table(self, model: Type[DatabaseModel], session: sqlite3.Cursor):
         pk = self._find_primary_key(model)
@@ -319,8 +337,8 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         )
 
     def _select(self, predicates: ASTGroupNode, session: sqlite3.Cursor):
-        model, tables, where, values, limit = self._process_ast(predicates)
-        query = self._build_select_query(tables, where, limit)
+        model, tables, where, values, limit, order_by = self._process_ast(predicates)
+        query = self._build_select_query(tables, where, limit, order_by)
         session.execute(query, values)
         result = session.fetchall()
         return [model(*self._validate_row_values(model, row)) for row in result]
@@ -347,13 +365,27 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
     def _get_sqlite_type(self, type_: Type) -> str:
         return self.type_mapping.get(type_, "TEXT")
 
-    def _build_select_query(self, tables: list[DatabaseModel], where: str, limit: int):
+    def _build_select_query(
+        self,
+        tables: list[DatabaseModel],
+        where: str,
+        limit: int,
+        order_by: dict[str, ResultOrdering],
+    ):
         query = [f"SELECT * FROM {tables[0].__model_name__}"]
         if where:
             query.append(f"WHERE {where}")
 
         if limit > 0:
             query.append(f"LIMIT {limit}")
+
+        if order_by:
+            ordering = ", ".join(
+                f"{column} {'ASC' if ordering is ResultOrdering.ASCENDING else 'DESC'}"
+                for column, ordering in order_by.items()
+            )
+            query.append("ORDER BY")
+            query.append(ordering)
 
         return " ".join(query) + ";"
 
