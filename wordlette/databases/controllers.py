@@ -9,6 +9,7 @@ from wordlette.utils.dependency_injection import inject, AutoInject
 class DatabaseController(AutoInject):
     def __init__(self):
         self._driver: AbstractDatabaseDriver | None = None
+        self._repo = get_repository()
 
     @property
     def connected(self) -> bool:
@@ -27,7 +28,7 @@ class DatabaseController(AutoInject):
             )
 
         self._driver = driver()
-        get_repository().set(DatabaseDriver, self._driver)
+        self._repo.set(DatabaseDriver, self._driver)
         return await self._driver.connect()
 
     async def disconnect(self) -> DatabaseStatus:
