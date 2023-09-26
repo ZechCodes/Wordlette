@@ -329,17 +329,19 @@ async def test_sqlite_select_ordered(sqlite_driver: SQLiteDriver):
     await sqlite_driver.add(
         TestModel(id=1, string="a"),
         TestModel(id=2, string="b"),
-        TestModel(id=3, string="d"),
-        TestModel(id=4, string="d"),
-        TestModel(id=5, string="c"),
+        TestModel(id=3, string="c"),
+        TestModel(id=4, string="c"),
+        TestModel(id=5, string="b"),
+        TestModel(id=6, string="a"),
     )
     result = await sqlite_driver.fetch(
         when(TestModel).sort(TestModel.string.desc, TestModel.id)
     )
     assert result.value == [
-        TestModel(id=3, string="d"),
-        TestModel(id=4, string="d"),
-        TestModel(id=5, string="c"),
+        TestModel(id=3, string="c"),
+        TestModel(id=4, string="c"),
         TestModel(id=2, string="b"),
+        TestModel(id=5, string="b"),
         TestModel(id=1, string="a"),
+        TestModel(id=6, string="a"),
     ]
