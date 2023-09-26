@@ -35,6 +35,11 @@ class DummyDriver(DatabaseDriver, driver_name="dummy"):
     async def add(self, *items: DatabaseModel) -> DatabaseStatus:
         pass
 
+    async def count(
+        *predicates: ASTGroupNode | Type[DatabaseModel],
+    ) -> DatabaseStatus[int]:
+        pass
+
     async def fetch(self, *predicates: ASTGroupNode) -> DatabaseStatus:
         pass
 
@@ -345,3 +350,18 @@ async def test_sqlite_select_ordered(sqlite_driver: SQLiteDriver):
         TestModel(id=1, string="a"),
         TestModel(id=6, string="a"),
     ]
+
+
+@pytest.mark.asyncio
+async def test_sqlite_count(sqlite_driver: SQLiteDriver):
+    await sqlite_driver.add(
+        TestModel(id=1, string="test_count"),
+        TestModel(id=2, string="test_count_2"),
+        TestModel(id=3, string="test_count_2"),
+    )
+
+    result = await sqlite_driver.count(when(TestModel))
+    assert result.value == 3
+
+    result = await sqlite_driver.count(when(TestModel.string == "test_count_2"))
+    assert result.value == 2

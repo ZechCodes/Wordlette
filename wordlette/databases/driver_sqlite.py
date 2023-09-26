@@ -135,6 +135,18 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         session.close()
         return DatabaseSuccessStatus(self)
 
+    async def count(
+        self, *predicates: ASTGroupNode | Type[DatabaseModel]
+    ) -> DatabaseStatus[int]:
+        ast = when(*predicates)
+        with SuppressWithCapture(Exception) as error:
+            session = self._db.cursor()
+            result = self._count(ast, session)
+
+        return (
+            DatabaseExceptionStatus(*error) if error else DatabaseSuccessStatus(result)
+        )
+
     async def delete(self, *items: DatabaseModel) -> DatabaseStatus:
         models = {}
         for item in items:
@@ -348,6 +360,13 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
             query.model(*self._validate_row_values(query.model, row)) for row in result
         ]
 
+    def _count(self, predicates: ASTGroupNode, session: sqlite3.Cursor):
+        query = self._process_ast(predicates)
+        query_str = self._build_count_query(query)
+        session.execute(query_str, query.values)
+        result = session.fetchone()
+        return result[0]
+
     def _validate_row_values(
         self, model: Type[DatabaseModel], row: tuple[Any]
     ) -> Generator[Any, None, None]:
@@ -388,6 +407,19 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
             )
             query_builder.append("ORDER BY")
             query_builder.append(ordering)
+
+        return " ".join(query_builder) + ";"
+
+    def _build_count_query(self, query: SelectQuery):
+        query_builder = [f"SELECT Count(*) FROM {query.model.__model_name__}"]
+        if query.where:
+            query_builder.append(f"WHERE {query.where}")
+
+        if query.limit > 0:
+            query_builder.append(f"LIMIT {query.limit}")
+
+            if query.offset > 0:
+                query_builder.append(f"OFFSET {query.offset}")
 
         return " ".join(query_builder) + ";"
 
