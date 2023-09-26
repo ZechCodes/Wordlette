@@ -4,6 +4,7 @@ from typing import Annotated
 from bevy import get_repository
 
 from wordlette.cms.extensions.error_pages import ErrorPages
+from wordlette.cms.states.serving import Serving
 from wordlette.cms.states.setup import Setup
 from wordlette.configs.managers import ConfigManager
 from wordlette.core import WordletteApp
@@ -39,6 +40,6 @@ def create_app(**settings):
     return WordletteApp(
         extensions=[ErrorPages],
         middleware=[RouterMiddleware],
-        state_machine=StateMachine(Setup),
+        state_machine=StateMachine(Setup.goes_to(Serving)),
         settings=settings,
     )

@@ -1,0 +1,18 @@
+{% include 'head.html' %}
+<header>
+    <div class="container">
+        <div class="column">
+            <h1>{{ title }}</h1>
+            {% if subtitle %}
+            <h3>{{ subtitle }}</h3>
+            {% endif %}
+        </div>
+    </div>
+</header>
+<div class="container">
+    <div class="column">
+        <h4>Welcome to <i>Wordlette</i>!</h4>
+        <p>Your site is ready to use!!!</p>
+    </div>
+</div>
+{% include "foot.html" %}
