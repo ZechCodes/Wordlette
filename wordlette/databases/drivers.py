@@ -8,6 +8,7 @@ from wordlette.databases.query_ast import ASTGroupNode
 from wordlette.databases.statuses import DatabaseStatus
 
 DriverName: TypeAlias = str
+DriverNiceName: TypeAlias = str
 T = TypeVar("T")
 
 
@@ -70,12 +71,14 @@ class AbstractDatabaseDriver(ABC):
 class DatabaseDriver(AbstractDatabaseDriver, ABC):
     __drivers__ = {}
     driver_name: DriverName
+    nice_name: DriverNiceName
     auto_value_factories: dict[Type[T], Callable[[DatabaseModel], T]] = {}
 
     def __init_subclass__(cls, **kwargs):
         cls.driver_name = kwargs.pop(
             "driver_name", getattr(cls, "driver_name", cls.__name__)
         )
+        cls.nice_name = kwargs.pop("nice_name", getattr(cls, "nice_name", cls.__name__))
 
         super().__init_subclass__(**kwargs)
         cls.add_driver(cls)
