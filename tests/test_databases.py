@@ -282,29 +282,30 @@ async def test_sqlite_driver_auto_fields():
 @pytest.mark.asyncio
 async def test_sqlite_select_all(sqlite_driver: SQLiteDriver):
     await sqlite_driver.add(
-        TestModel(id=1, string="test_update"),
-        TestModel(id=2, string="test_update"),
-        TestModel(id=3, string="test_update"),
+        TestModel(id=1, string="test_select_all"),
+        TestModel(id=2, string="test_select_all"),
+        TestModel(id=3, string="test_select_all"),
     )
     result = await sqlite_driver.fetch(TestModel)
     assert result.value == [
-        TestModel(id=1, string="test_update"),
-        TestModel(id=2, string="test_update"),
-        TestModel(id=3, string="test_update"),
+        TestModel(id=1, string="test_select_all"),
+        TestModel(id=2, string="test_select_all"),
+        TestModel(id=3, string="test_select_all"),
     ]
 
 
 @pytest.mark.asyncio
 async def test_sqlite_select_limit(sqlite_driver: SQLiteDriver):
     await sqlite_driver.add(
-        TestModel(id=1, string="test_update"),
-        TestModel(id=2, string="test_update"),
-        TestModel(id=3, string="test_update"),
+        TestModel(id=1, string="test_limit"),
+        TestModel(id=2, string="test_limit"),
+        TestModel(id=3, string="test_limit"),
     )
+
     result = await sqlite_driver.fetch(when(TestModel).limit(2))
     assert result.value == [
-        TestModel(id=1, string="test_update"),
-        TestModel(id=2, string="test_update"),
+        TestModel(id=1, string="test_limit"),
+        TestModel(id=2, string="test_limit"),
     ]
 
 
