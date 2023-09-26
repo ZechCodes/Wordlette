@@ -65,7 +65,7 @@ class SetupRouteCategoryController:
         elif route.setup_category == SetupCategory.NoCategory:
             self.completed_route = route
 
-        else:
+        elif route.setup_category != SetupCategory.Page:
             self.categories[route.setup_category].add_route(route)
 
     async def get_next_route(self) -> "SetupRoute":
@@ -78,10 +78,11 @@ class SetupRouteCategoryController:
 
         return self.completed_route
 
-    def _build_categories(self) -> dict[SetupCategory, CategoryController]:
+    def _build_categories(self) -> dict[str | SetupCategory, CategoryController]:
         categories = {}
         for category in SetupCategory:
-            categories[category] = CategoryController()
+            if category not in {SetupCategory.NoCategory, SetupCategory.Page}:
+                categories[category] = CategoryController()
 
         return categories
 
