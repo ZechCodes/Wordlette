@@ -43,7 +43,7 @@ class ASTGroupNode(ASTNode):
         )
         self.frozen = False
         self.max_results = -1
-        self.offset_results = 0
+        self.results_page = 0
         self.sorting: list[ASTReferenceNode] = []
 
     def __iter__(self):
@@ -71,9 +71,9 @@ class ASTGroupNode(ASTNode):
 
         self.items.append(item)
 
-    def limit(self, limit: int, offset: int = 0) -> Self:
+    def limit(self, limit: int, page: int = 0) -> Self:
         self.max_results = limit
-        self.offset_results = offset
+        self.results_page = page
         return self
 
     def sort(self, *on_fields: "ASTReferenceNode") -> Self:
