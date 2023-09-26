@@ -201,16 +201,21 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
 
     def _process_ast(
         self, ast: ASTGroupNode
-    ) -> tuple[Type[DatabaseModel], list[DatabaseModel], str, list[Any]]:
+    ) -> tuple[Type[DatabaseModel], list[DatabaseModel], str, list[Any], int]:
         model = None
         tables = []
         where = []
         values = []
         node_stack = [iter(ast)]
+        limit = ast.max_results
         while node_stack:
             match next(node_stack[~0], None):
                 case ASTGroupNode() as group:
                     node_stack.append(iter(group))
+
+                case ASTReferenceNode(None, model):
+                    tables.append(model)
+                    model = model
 
                 case ASTReferenceNode(field, model):
                     name = f"{model.__model_name__}.{field.name}"
@@ -245,7 +250,7 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
                 case node:
                     raise TypeError(f"Unexpected node type: {node}")
 
-        return model, tables, " ".join(where), values
+        return model, tables, " ".join(where), values, limit
 
     def _create_table(self, model: Type[DatabaseModel], session: sqlite3.Cursor):
         pk = self._find_primary_key(model)
@@ -314,8 +319,8 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         )
 
     def _select(self, predicates: ASTGroupNode, session: sqlite3.Cursor):
-        model, tables, where, values = self._process_ast(predicates)
-        query = self._build_select_query(tables, where)
+        model, tables, where, values, limit = self._process_ast(predicates)
+        query = self._build_select_query(tables, where, limit)
         session.execute(query, values)
         result = session.fetchall()
         return [model(*self._validate_row_values(model, row)) for row in result]
@@ -342,10 +347,13 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
     def _get_sqlite_type(self, type_: Type) -> str:
         return self.type_mapping.get(type_, "TEXT")
 
-    def _build_select_query(self, tables: list[DatabaseModel], where: str):
+    def _build_select_query(self, tables: list[DatabaseModel], where: str, limit: int):
         query = [f"SELECT * FROM {tables[0].__model_name__}"]
         if where:
             query.append(f"WHERE {where}")
+
+        if limit > 0:
+            query.append(f"LIMIT {limit}")
 
         return " ".join(query) + ";"
 

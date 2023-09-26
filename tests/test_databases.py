@@ -292,3 +292,17 @@ async def test_sqlite_select_all(sqlite_driver: SQLiteDriver):
         TestModel(id=2, string="test_update"),
         TestModel(id=3, string="test_update"),
     ]
+
+
+@pytest.mark.asyncio
+async def test_sqlite_select_limit(sqlite_driver: SQLiteDriver):
+    await sqlite_driver.add(
+        TestModel(id=1, string="test_update"),
+        TestModel(id=2, string="test_update"),
+        TestModel(id=3, string="test_update"),
+    )
+    result = await sqlite_driver.fetch(when(TestModel).limit(2))
+    assert result.value == [
+        TestModel(id=1, string="test_update"),
+        TestModel(id=2, string="test_update"),
+    ]
