@@ -45,6 +45,10 @@ class ThemeManager:
             )
 
         self._theme = theme_location
+        self._jinja.cache.clear()
+        if self._jinja.bytecode_cache:
+            self._jinja.bytecode_cache.clear()
+
         logger.debug(f"Set theme to {theme_location.resolve()}")
 
     def add_secondary_theme(self, theme_location: Path):
