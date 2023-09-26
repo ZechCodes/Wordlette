@@ -1,9 +1,10 @@
+from wordlette.cms.states.setup.enums import SetupCategory
 from wordlette.cms.states.setup.route_types import SetupRoute
 from wordlette.cms.themes import Template
 from wordlette.requests import Request
 
 
-class Index(SetupRoute):
+class Index(SetupRoute, setup_category=SetupCategory.Page):
     path = "/"
 
     async def get(self, request: Request.Get):
