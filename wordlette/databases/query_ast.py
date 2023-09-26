@@ -1,9 +1,14 @@
 from enum import auto, Enum
 from itertools import zip_longest
-from typing import Any
+from typing import Any, Self
 
 import wordlette.databases.models as models
 from wordlette.utils.apply import apply
+
+
+class ResultOrdering(Enum):
+    ASCENDING = auto()
+    DESCENDING = auto()
 
 
 class ASTNode:
@@ -38,6 +43,7 @@ class ASTGroupNode(ASTNode):
         )
         self.frozen = False
         self.max_results = -1
+        self.sorting: set[ASTReferenceNode] = set()
 
     def __iter__(self):
         self.frozen = True
@@ -66,6 +72,10 @@ class ASTGroupNode(ASTNode):
 
     def limit(self, limit: int) -> Self:
         self.max_results = limit
+        return self
+
+    def sort(self, *on_fields: "ASTReferenceNode") -> Self:
+        self.sorting |= set(on_fields)
         return self
 
     def __eq__(self, other):
@@ -207,6 +217,7 @@ class ASTReferenceNode(ASTComparableNode):
         super().__init__(ASTGroupNode())
         self._field = field
         self._model = model
+        self._ordering = ResultOrdering.ASCENDING
 
     def _eq(self, other):
         return self.field == other.field and self.model == other.model
@@ -221,6 +232,21 @@ class ASTReferenceNode(ASTComparableNode):
     @property
     def model(self):
         return self._model
+
+    @property
+    def ordering(self):
+        return self._ordering
+
+    def asc(self):
+        self._ordering = ResultOrdering.ASCENDING
+        return self
+
+    def desc(self):
+        self._ordering = ResultOrdering.DESCENDING
+        return self
+
+    def __hash__(self):
+        return hash((self._field, self._model, self._ordering))
 
     def __repr__(self):
         return (
