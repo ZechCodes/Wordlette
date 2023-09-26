@@ -1,4 +1,5 @@
 import sqlite3
+from dataclasses import dataclass, field
 from datetime import datetime, date, time
 from typing import Type, Any, TypeVar, TypeGuard, Callable, get_origin, Generator, Self
 
@@ -27,6 +28,17 @@ from wordlette.utils.dependency_injection import inject
 from wordlette.utils.suppress_with_capture import SuppressWithCapture
 
 T = TypeVar("T")
+
+
+@dataclass
+class SelectQuery:
+    limit: int = 0
+    model: Type[DatabaseModel] | None = None
+    offset: int = 0
+    order_by: dict[str, ResultOrdering] = field(default_factory=dict)
+    tables: list[DatabaseModel] = field(default_factory=list)
+    values: list[Any] = field(default_factory=list)
+    where: str = ""
 
 
 class SQLConstraint(Auto):
@@ -200,41 +212,32 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
 
         return " ".join(column)
 
-    def _process_ast(
-        self, ast: ASTGroupNode
-    ) -> tuple[
-        Type[DatabaseModel],
-        list[DatabaseModel],
-        str,
-        list[Any],
-        tuple[int, int],
-        dict[str, ResultOrdering],
-    ]:
-        model = None
-        tables = []
+    def _process_ast(self, ast: ASTGroupNode) -> SelectQuery:
+        query = SelectQuery(
+            limit=ast.max_results,
+            offset=ast.offset_results,
+            order_by=self._process_ordering(ast.sorting),
+        )
         where = []
-        values = []
         node_stack = [iter(ast)]
-        limit = (ast.max_results, ast.offset_results)
-        order_by = self._process_ordering(ast.sorting)
         while node_stack:
             match next(node_stack[~0], None):
                 case ASTGroupNode() as group:
                     node_stack.append(iter(group))
 
                 case ASTReferenceNode(None, model):
-                    tables.append(model)
-                    model = model
+                    query.tables.append(model)
+                    query.model = query.model or model
 
                 case ASTReferenceNode(field, model):
                     name = f"{model.__model_name__}.{field.name}"
                     where.append(name)
-                    tables.append(model)
-                    model = model
+                    query.tables.append(model)
+                    query.model = query.model or model
 
                 case ASTLiteralNode(value):
                     where.append("?")
-                    values.append(value)
+                    query.values.append(value)
 
                 case ASTLogicalOperatorNode() as op:
                     where.append(self.logical_operator_mapping[op])
@@ -259,7 +262,8 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
                 case node:
                     raise TypeError(f"Unexpected node type: {node}")
 
-        return model, tables, " ".join(where), values, limit, order_by
+        query.where = " ".join(where)
+        return query
 
     def _process_ordering(
         self, sorting: set[ASTReferenceNode]
@@ -336,11 +340,13 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         )
 
     def _select(self, predicates: ASTGroupNode, session: sqlite3.Cursor):
-        model, tables, where, values, limit, order_by = self._process_ast(predicates)
-        query = self._build_select_query(tables, where, limit, order_by)
-        session.execute(query, values)
+        query = self._process_ast(predicates)
+        query_str = self._build_select_query(query)
+        session.execute(query_str, query.values)
         result = session.fetchall()
-        return [model(*self._validate_row_values(model, row)) for row in result]
+        return [
+            query.model(*self._validate_row_values(query.model, row)) for row in result
+        ]
 
     def _validate_row_values(
         self, model: Type[DatabaseModel], row: tuple[Any]
@@ -364,33 +370,26 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
     def _get_sqlite_type(self, type_: Type) -> str:
         return self.type_mapping.get(type_, "TEXT")
 
-    def _build_select_query(
-        self,
-        tables: list[DatabaseModel],
-        where: str,
-        limit: tuple[int, int],
-        order_by: dict[str, ResultOrdering],
-    ):
-        query = [f"SELECT * FROM {tables[0].__model_name__}"]
-        if where:
-            query.append(f"WHERE {where}")
+    def _build_select_query(self, query: SelectQuery):
+        query_builder = [f"SELECT * FROM {query.model.__model_name__}"]
+        if query.where:
+            query_builder.append(f"WHERE {query.where}")
 
-        limit, offset = limit
-        if limit > 0:
-            query.append(f"LIMIT {limit}")
+        if query.limit > 0:
+            query_builder.append(f"LIMIT {query.limit}")
 
-            if offset > 0:
-                query.append(f"OFFSET {offset}")
+            if query.offset > 0:
+                query_builder.append(f"OFFSET {query.offset}")
 
-        if order_by:
+        if query.order_by:
             ordering = ", ".join(
                 f"{column} {'ASC' if ordering is ResultOrdering.ASCENDING else 'DESC'}"
-                for column, ordering in order_by.items()
+                for column, ordering in query.order_by.items()
             )
-            query.append("ORDER BY")
-            query.append(ordering)
+            query_builder.append("ORDER BY")
+            query_builder.append(ordering)
 
-        return " ".join(query) + ";"
+        return " ".join(query_builder) + ";"
 
     def _sync_with_last_inserted(self, item: DatabaseModel, session: sqlite3.Cursor):
         pk = self._find_primary_key(type(item))
