@@ -365,3 +365,21 @@ async def test_sqlite_count(sqlite_driver: SQLiteDriver):
 
     result = await sqlite_driver.count(when(TestModel.string == "test_count_2"))
     assert result.value == 2
+
+
+@pytest.mark.asyncio
+async def test_model_query_methods(sqlite_driver: SQLiteDriver):
+    await sqlite_driver.add(
+        TestModel(id=1, string="model a"),
+        TestModel(id=2, string="foobar"),
+        TestModel(id=3, string="foobar"),
+    )
+
+    result = await TestModel.fetch()
+    assert len(result.value) == 3
+
+    result = await TestModel.fetch(string="model a")
+    assert len(result.value) == 1
+
+    result = await TestModel.fetch(TestModel.id > 2, string="foobar")
+    assert len(result.value) == 1
