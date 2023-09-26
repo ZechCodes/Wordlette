@@ -1,0 +1,15 @@
+{% include 'head.html' %}
+<header class="short">
+    <div class="container">
+        <div class="column">
+            <h1>Setup</h1>
+            {% if subtitle %}
+            <h3>{{ subtitle }}</h3>
+            {% endif %}
+        </div>
+    </div>
+</header>
+<div class="container">
+    {{ form.render() }}
+</div>
+{% include "foot.html" %}
