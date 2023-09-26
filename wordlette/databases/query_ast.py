@@ -215,11 +215,11 @@ class ASTComparableNode(ASTNode):
 class ASTReferenceNode(ASTComparableNode):
     __match_args__ = ("field", "model")
 
-    def __init__(self, field, model):
+    def __init__(self, field, model, ordering=ResultOrdering.ASCENDING):
         super().__init__(ASTGroupNode())
         self._field = field
         self._model = model
-        self._ordering = ResultOrdering.ASCENDING
+        self._ordering = ordering
 
     def _eq(self, other):
         return self.field == other.field and self.model == other.model
@@ -239,13 +239,13 @@ class ASTReferenceNode(ASTComparableNode):
     def ordering(self):
         return self._ordering
 
-    def asc(self):
-        self._ordering = ResultOrdering.ASCENDING
-        return self
+    @property
+    def asc(self) -> "ASTReferenceNode":
+        return ASTReferenceNode(self._field, self._model, ResultOrdering.ASCENDING)
 
-    def desc(self):
-        self._ordering = ResultOrdering.DESCENDING
-        return self
+    @property
+    def desc(self) -> "ASTReferenceNode":
+        return ASTReferenceNode(self._field, self._model, ResultOrdering.DESCENDING)
 
     def __hash__(self):
         return hash((self._field, self._model, self._ordering))

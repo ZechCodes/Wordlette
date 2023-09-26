@@ -334,7 +334,7 @@ async def test_sqlite_select_ordered(sqlite_driver: SQLiteDriver):
         TestModel(id=5, string="c"),
     )
     result = await sqlite_driver.fetch(
-        when(TestModel).sort(TestModel.string.desc(), TestModel.id)
+        when(TestModel).sort(TestModel.string.desc, TestModel.id)
     )
     assert result.value == [
         TestModel(id=3, string="d"),
