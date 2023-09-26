@@ -266,7 +266,7 @@ class SQLiteDriver(DatabaseDriver, driver_name="sqlite"):
         return query
 
     def _process_ordering(
-        self, sorting: set[ASTReferenceNode]
+        self, sorting: list[ASTReferenceNode]
     ) -> dict[str, ResultOrdering]:
         return {
             f"{ref.model.__model_name__}.{ref.field.name}": ref.ordering
