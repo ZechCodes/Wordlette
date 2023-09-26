@@ -62,7 +62,7 @@ class WordletteApp(Observable):
         settings: dict[str, Any] | None = None,
         state_machine: StateMachine,
     ):
-        self._setup_repository()
+        self._setup_repository(state_machine)
         self._extensions: dict[str, Extension] = {}
         self._middleware_stack: ASGIApp = self._build_middleware_stack(middleware)
         self._state_machine = state_machine
@@ -167,10 +167,11 @@ class WordletteApp(Observable):
             cast(ASGIApp, self._500_response),
         )
 
-    def _setup_repository(self):
+    def _setup_repository(self, state_machine: StateMachine):
         repo = get_repository()
         repo.add_providers(AtProvider())
         repo.set(WordletteApp, self)
+        repo.set(StateMachine, state_machine)
 
     def _add_extension(self, name: str, extension: Extension):
         self._extensions[name] = extension
