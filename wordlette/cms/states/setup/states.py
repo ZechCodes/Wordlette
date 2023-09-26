@@ -27,11 +27,12 @@ class Setup(State, AutoInject):
             config.load_config_file(settings_filename, working_directory)
 
         self._load_route_modules()
-        if await controller.get_next_route() == controller.completed_route:
+        SetupRoute.register_routes(route_manager.router)
+        next_route = await controller.get_next_route()
+        if next_route == controller.completed_route:
             return self.cycle()
 
         theme_manager.set_theme(theme_manager.wordlette_res / "themes" / "setup")
-        SetupRoute.register_routes(route_manager.router)
 
     def _load_route_modules(self):
         # noinspection PyUnresolvedReferences
