@@ -13,3 +13,4 @@ class SetupCategory(str, Enum):
     Database = "setup_database"
     Admin = "setup_admin"
     General = "setup_general"
+    Page = "setup_page"
