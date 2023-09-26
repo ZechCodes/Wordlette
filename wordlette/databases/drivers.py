@@ -5,6 +5,7 @@ from wordlette.configs import ConfigModel
 from wordlette.databases.models import DatabaseModel
 from wordlette.databases.properties import DatabaseProperty
 from wordlette.databases.query_ast import ASTGroupNode
+from wordlette.databases.settings_forms import DatabaseSettingsForm
 from wordlette.databases.statuses import DatabaseStatus
 
 DriverName: TypeAlias = str
@@ -14,6 +15,7 @@ T = TypeVar("T")
 
 class AbstractDatabaseDriver(ABC):
     __drivers__: "dict[DriverName, Type[AbstractDatabaseDriver]]"
+    __settings_form__: Type[DatabaseSettingsForm]
     driver_name: DriverName
 
     @classmethod
