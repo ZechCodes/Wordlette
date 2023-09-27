@@ -9,6 +9,21 @@
         </div>
     </div>
 </header>
+{% if errors %}
+<div class="error-section">
+    <div class="container">
+        <div class="column">
+            <blockquote>
+                <ul>
+                    {% for error in errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </blockquote>
+        </div>
+    </div>
+</div>
+{% endif %}
 <div class="container">
     {{ form.render() }}
 </div>
