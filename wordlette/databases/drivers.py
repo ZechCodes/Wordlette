@@ -7,6 +7,7 @@ from wordlette.databases.properties import DatabaseProperty
 from wordlette.databases.query_ast import ASTGroupNode
 from wordlette.databases.settings_forms import DatabaseSettingsForm
 from wordlette.databases.statuses import DatabaseStatus
+from wordlette.utils.dependency_injection import AutoInject
 
 DriverName: TypeAlias = str
 DriverNiceName: TypeAlias = str
@@ -70,7 +71,7 @@ class AbstractDatabaseDriver(ABC):
         ...
 
 
-class DatabaseDriver(AbstractDatabaseDriver, ABC):
+class DatabaseDriver(AbstractDatabaseDriver, ABC, AutoInject):
     __drivers__ = {}
     driver_name: DriverName
     nice_name: DriverNiceName
