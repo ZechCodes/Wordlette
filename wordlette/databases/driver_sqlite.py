@@ -33,7 +33,9 @@ from wordlette.utils.suppress_with_capture import SuppressWithCapture
 T = TypeVar("T")
 
 
-placeholder_example_path = "/path/to/database.db" if sep == "/" else r"C:\\path\to\database.db"
+placeholder_example_path = (
+    "/path/to/database.db" if sep == "/" else r"C:\\path\to\database.db"
+)
 
 
 class SQLiteSettingsForm(DatabaseSettingsForm):
@@ -80,6 +82,8 @@ class SQLAutoIncrement(SQLConstraint):
 
 
 class SQLiteConfig(ConfigModel):
+    __config_key__ = "database"
+
     filename: str @ FieldSchema
 
 
