@@ -7,6 +7,7 @@ from wordlette.cms.extensions.error_pages import ErrorPages
 from wordlette.cms.states.serving import Serving
 from wordlette.cms.states.setup import Setup
 from wordlette.configs.managers import ConfigManager
+from wordlette.configs.providers import ConfigProvider
 from wordlette.core import WordletteApp
 from wordlette.middlewares.router_middleware import RouterMiddleware
 from wordlette.state_machines import StateMachine
@@ -28,6 +29,7 @@ def _get_config_handlers():
 
 def _setup_repository():
     repository = get_repository()
+    repository.add_providers(ConfigProvider())
     repository.set(
         Annotated[Path, "package-resources"], Path(__file__).parent / "resources"
     )
