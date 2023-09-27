@@ -39,6 +39,10 @@ class SelectDatabaseTypeForm(Form, method=Request.Get):
 class ConfigureDatabase(SetupRoute, setup_category=SetupCategory.Database):
     path = "/configure-database"
 
+    def __init__(self):
+        super().__init__()
+        self._exception = None
+
     async def setup_status(
         self,
         config: ConfigManager @ inject = None,
@@ -50,7 +54,7 @@ class ConfigureDatabase(SetupRoute, setup_category=SetupCategory.Database):
 
         match await db_controller.connect(settings):
             case DatabaseExceptionStatus(exception):
-                print("Failed to connect to database", exception, settings)
+                self._exception = exception
                 return SetupStatus.Ready
 
         return SetupStatus.Complete
@@ -69,7 +73,12 @@ class ConfigureDatabase(SetupRoute, setup_category=SetupCategory.Database):
         if driver := DatabaseDriver.__drivers__.get(database_type):
             form = driver.__settings_form__
 
-        return self._create_template(form=form)
+        params = {}
+        if self._exception:
+            params["errors"] = [str(self._exception).capitalize()]
+            self._exception = None
+
+        return self._create_template(form=form, **params)
 
     async def save_database_settings(
         self,
