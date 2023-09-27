@@ -1,4 +1,3 @@
-import logging
 from typing import cast
 
 from starlette.responses import RedirectResponse
@@ -9,6 +8,8 @@ from wordlette.cms.states.setup.route_types import SetupRoute
 from wordlette.cms.themes import Template
 from wordlette.configs.managers import ConfigManager
 from wordlette.core.app import AppSetting
+from wordlette.databases import DatabaseExceptionStatus
+from wordlette.databases.controllers import DatabaseController
 from wordlette.databases.drivers import DatabaseDriver
 from wordlette.databases.settings_models import DatabaseSettings
 from wordlette.forms.exceptions import FormValidationError
@@ -20,8 +21,6 @@ from wordlette.forms.field_types import (
 from wordlette.requests import Request
 from wordlette.routes.query_vars import QueryArg
 from wordlette.utils.dependency_injection import inject
-
-logger = logging.getLogger(__name__)
 
 
 class SelectDatabaseTypeForm(Form, method=Request.Get):
@@ -43,18 +42,21 @@ class ConfigureDatabase(SetupRoute, setup_category=SetupCategory.Database):
     async def setup_status(
         self,
         config: ConfigManager @ inject = None,
+        db_controller: DatabaseController @ inject = None,
     ) -> SetupStatus:
-        if config.get("database", DatabaseSettings, None):
-            logger.info("Database is configured")
-            return SetupStatus.Complete
+        settings = config.get("database", DatabaseSettings, None)
+        if settings is None:
+            return SetupStatus.Ready
 
-        logger.info("Database is not configured")
-        return SetupStatus.Ready
+        match await db_controller.connect(settings):
+            case DatabaseExceptionStatus(exception):
+                print("Failed to connect to database", exception, settings)
+                return SetupStatus.Ready
+
+        return SetupStatus.Complete
 
     async def get_setup_page(
-        self,
-        _: Request.Get,
-        database_type: str @ QueryArg("database-type", None)
+        self, _: Request.Get, database_type: str @ QueryArg("database-type", None)
     ):
         form = SelectDatabaseTypeForm
         db_type_field: SelectField = cast(
@@ -86,11 +88,7 @@ class ConfigureDatabase(SetupRoute, setup_category=SetupCategory.Database):
         except FormValidationError as exc:
             return self._create_template(form=exc.form)
 
-        db_settings = config.config.setdefault("database", {})
-        db_settings |= {
-            "driver": database_type,
-            "settings": form.convert_to_dict(),
-        }
+        config.config["database"] = {"driver": database_type, **form.convert_to_dict()}
         config.save_to_config_file(settings_filename, working_directory)
         return await self.complete()
 
