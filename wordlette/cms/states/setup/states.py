@@ -5,10 +5,10 @@ from wordlette.cms.states.setup.route_types import (
     SetupRouteCategoryController,
 )
 from wordlette.cms.themes import ThemeManager
-from wordlette.configs.managers import ConfigManager
 from wordlette.core.app import AppSetting
+from wordlette.core.configs import ConfigManager
 from wordlette.core.exceptions import ConfigFileNotFound
-from wordlette.middlewares.router_middleware import RouteManager
+from wordlette.core.middlewares.router_middleware import RouteManager
 from wordlette.state_machines import State
 from wordlette.utils.dependency_injection import AutoInject, inject
 

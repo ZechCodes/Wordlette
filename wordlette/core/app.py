@@ -24,8 +24,8 @@ from wordlette.core.events import (
 )
 from wordlette.core.exceptions import InvalidExtensionOrConstructor
 from wordlette.events import Observer, Observable
-from wordlette.extensions import Extension
-from wordlette.middlewares import Middleware
+from wordlette.core.extensions import Extension
+from wordlette.core.middlewares import Middleware
 from wordlette.state_machines import StateMachine
 from wordlette.utils.apply import apply
 from wordlette.utils.at_annotateds import AtAnnotation, AtProvider

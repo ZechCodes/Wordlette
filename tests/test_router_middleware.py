@@ -3,9 +3,9 @@ from bevy import get_repository
 from starlette.responses import PlainTextResponse
 from starlette.testclient import TestClient
 
-from wordlette.middlewares.router_middleware import RouteManager, RouterMiddleware
-from wordlette.requests import Request
-from wordlette.routes import Route
+from wordlette.core.middlewares.router_middleware import RouteManager, RouterMiddleware
+from wordlette.core.requests import Request
+from wordlette.core.routes import Route
 
 
 @pytest.mark.asyncio

@@ -1,7 +1,7 @@
 from wordlette.cms.themes import ThemeManager, Template
-from wordlette.middlewares.router_middleware import RouteManager
-from wordlette.requests import Request
-from wordlette.routes import Route
+from wordlette.core.middlewares.router_middleware import RouteManager
+from wordlette.core.requests import Request
+from wordlette.core.routes import Route
 from wordlette.state_machines import State
 from wordlette.utils.dependency_injection import AutoInject, inject
 

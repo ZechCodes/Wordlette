@@ -1,8 +1,8 @@
 from starlette.responses import PlainTextResponse
 from starlette.testclient import TestClient
 
-from wordlette.requests import Request
-from wordlette.routers import Router
+from wordlette.core.requests import Request
+from wordlette.core.routers import Router
 
 
 def test_build_request_types_request():

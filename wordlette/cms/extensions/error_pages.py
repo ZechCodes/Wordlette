@@ -10,8 +10,8 @@ from starlette.types import Scope
 from wordlette.cms.themes import Template, ThemeManager
 from wordlette.core.events import LifespanStartupEvent
 from wordlette.events import Observer
-from wordlette.extensions import Extension
-from wordlette.middlewares.router_middleware import RouteManager
+from wordlette.core.extensions import Extension
+from wordlette.core.middlewares.router_middleware import RouteManager
 from wordlette.utils.options import Value
 
 logger = logging.getLogger(__name__)

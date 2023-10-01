@@ -1,4 +1,4 @@
-from wordlette.routes import Route
+from wordlette.core.routes import Route
 
 
 class SetupRoute(Route):

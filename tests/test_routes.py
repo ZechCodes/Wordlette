@@ -3,11 +3,10 @@ from starlette.responses import PlainTextResponse
 from starlette.testclient import TestClient
 
 from wordlette.core.exceptions import MissingRoutePath, NoRouteHandlersFound
-from wordlette.forms import Form
-from wordlette.forms.fields import field
-from wordlette.requests import Request
-from wordlette.routes import Route
-from wordlette.routes.exceptions import NoCompatibleFormError
+from wordlette.core.forms import Form
+from wordlette.core.requests import Request
+from wordlette.core.routes import Route
+from wordlette.core.routes.exceptions import NoCompatibleFormError
 
 
 class DefaultPathRoute(Route):
@@ -178,20 +177,6 @@ def test_post_form_route():
     response = client.post("/", data={"string": "testing", "number": "123"})
     assert response.status_code == 200
     assert response.text == "string: testing number: 123"
-
-
-def test_named_form_fields():
-    class TestForm(Form):
-        string: str = field("test-string")
-
-    class TestRoute(DefaultPathRoute):
-        async def handle_form(self, form: TestForm):
-            return PlainTextResponse(form.string)
-
-    client = TestClient(TestRoute())
-    response = client.post("/", data={"test-string": "testing"})
-    assert response.status_code == 200
-    assert response.text == "testing"
 
 
 def test_incompatible_form_type():

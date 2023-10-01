@@ -5,12 +5,12 @@ import pytest
 import pytest_asyncio
 from bevy import get_repository, Repository
 
-from wordlette.configs.managers import ConfigManager
-from wordlette.databases.driver_sqlite import SQLiteDriver, SQLiteConfig
-from wordlette.databases.drivers import DatabaseDriver
-from wordlette.databases.models import DatabaseModel
-from wordlette.databases.properties import Property
-from wordlette.databases.query_ast import (
+from wordlette.core.configs import ConfigManager
+from wordlette.core.databases.driver_sqlite import SQLiteDriver, SQLiteConfig
+from wordlette.core.databases.drivers import DatabaseDriver
+from wordlette.core.databases.models import DatabaseModel
+from wordlette.core.databases.properties import Property
+from wordlette.core.databases.query_ast import (
     ASTComparisonNode,
     ASTGroupNode,
     ASTLiteralNode,
@@ -19,7 +19,7 @@ from wordlette.databases.query_ast import (
     ASTOperatorNode,
     when,
 )
-from wordlette.databases.statuses import DatabaseSuccessStatus, DatabaseStatus
+from wordlette.core.databases.statuses import DatabaseSuccessStatus, DatabaseStatus
 from wordlette.models import Auto
 from wordlette.utils.at_annotateds import AtProvider
 
@@ -101,7 +101,7 @@ async def sqlite_driver():
 
 @pytest.mark.asyncio
 async def test_connect():
-    from wordlette.databases.controllers import DatabaseController
+    from wordlette.core.databases.controllers import DatabaseController
 
     controller = DatabaseController()
     assert not controller.connected

@@ -4,8 +4,8 @@ from starlette.responses import RedirectResponse
 from starlette.types import Scope, Receive, Send
 
 from wordlette.cms.states.setup.enums import SetupStatus, SetupCategory
-from wordlette.requests import Request
-from wordlette.routes import Route
+from wordlette.core.requests import Request
+from wordlette.core.routes import Route
 from wordlette.utils.dependency_injection import inject
 
 

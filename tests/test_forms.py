@@ -1,9 +1,9 @@
 import pytest
 
-from wordlette.forms import Form, Field
-from wordlette.forms.elements import ButtonElement, InputElement
-from wordlette.forms.exceptions import FormValidationError
-from wordlette.forms.field_types import (
+from wordlette.core.forms import Form, Field
+from wordlette.core.forms.elements import ButtonElement, InputElement
+from wordlette.core.forms import FormValidationError
+from wordlette.core.forms.field_types import (
     TextField,
     NumberField,
     SubmitButton,

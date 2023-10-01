@@ -5,11 +5,11 @@ from starlette.testclient import TestClient
 
 from wordlette.core import WordletteApp
 from wordlette.core.app import AppSetting
-from wordlette.extensions import Extension
-from wordlette.middlewares import Middleware
-from wordlette.middlewares.router_middleware import RouteManager, RouterMiddleware
-from wordlette.requests import Request
-from wordlette.routes import Route
+from wordlette.core.extensions import Extension
+from wordlette.core.middlewares import Middleware
+from wordlette.core.middlewares.router_middleware import RouteManager, RouterMiddleware
+from wordlette.core.requests import Request
+from wordlette.core.routes import Route
 from wordlette.state_machines import State, StateMachine
 
 

@@ -6,15 +6,15 @@ from bevy import get_repository
 from wordlette.cms.extensions.error_pages import ErrorPages
 from wordlette.cms.states.serving import Serving
 from wordlette.cms.states.setup import Setup
-from wordlette.configs.managers import ConfigManager
-from wordlette.configs.providers import ConfigProvider
+from wordlette.core.configs import ConfigManager
+from wordlette.core.configs.providers import ConfigProvider
 from wordlette.core import WordletteApp
-from wordlette.middlewares.router_middleware import RouterMiddleware
+from wordlette.core.middlewares.router_middleware import RouterMiddleware
 from wordlette.state_machines import StateMachine
 
 
 def _get_config_handlers():
-    from wordlette.configs import JsonHandler, TomlHandler, YamlHandler
+    from wordlette.core.configs import JsonHandler, TomlHandler, YamlHandler
 
     yield from (
         handler

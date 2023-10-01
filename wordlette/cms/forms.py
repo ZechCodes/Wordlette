@@ -2,8 +2,8 @@ from bevy import dependency, inject
 from markupsafe import Markup
 
 from wordlette.cms.themes import ThemeManager
-from wordlette.forms import Form as _Form
-from wordlette.forms.views import FormView as _FormView
+from wordlette.core.forms import Form as _Form
+from wordlette.core.forms import FormView as _FormView
 from wordlette.utils.contextual_methods import contextual_method
 
 

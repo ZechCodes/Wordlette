@@ -2,9 +2,9 @@ from bevy import inject, dependency
 from starlette.responses import HTMLResponse
 
 from wordlette.core import WordletteApp
-from wordlette.middlewares.router_middleware import RouterMiddleware, RouteManager
-from wordlette.requests import Request
-from wordlette.routes import Route
+from wordlette.core.middlewares.router_middleware import RouterMiddleware, RouteManager
+from wordlette.core.requests import Request
+from wordlette.core.routes import Route
 from wordlette.state_machines import StateMachine, State
 
 
