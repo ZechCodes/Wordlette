@@ -15,6 +15,7 @@ from starlette.datastructures import FormData
 from starlette.responses import Response
 from starlette.types import Scope, Receive, Send
 
+from wordlette.core import WordletteApp
 from wordlette.core.exceptions import (
     MissingRoutePath,
     NoRouteHandlersFound,
@@ -26,6 +27,7 @@ from wordlette.routers import Router
 from wordlette.routes.exception_contexts import ExceptionHandlerContext
 from wordlette.routes.exceptions import NoCompatibleFormError
 from wordlette.routes.method_collections import MethodsCollection
+from wordlette.routes.request_events import RequestEvent
 from wordlette.routes.route_metadata import RouteMetadataSetup
 from wordlette.utils.apply import apply
 from wordlette.utils.dependency_container_context_managers import fork_context
@@ -179,6 +181,8 @@ class Route(
 
         with fork_context() as branch:
             branch.set(Request, request)
+
+            await WordletteApp.emit(RequestEvent.factory(request))
 
             handler_registry = self.__metadata__.request_handlers
             request_type = type(request)
