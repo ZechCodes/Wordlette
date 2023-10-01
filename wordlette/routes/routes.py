@@ -28,6 +28,7 @@ from wordlette.routes.exceptions import NoCompatibleFormError
 from wordlette.routes.method_collections import MethodsCollection
 from wordlette.routes.route_metadata import RouteMetadataSetup
 from wordlette.utils.apply import apply
+from wordlette.utils.dependency_container_context_managers import fork_context
 from wordlette.utils.dependency_injection import AutoInject
 from wordlette.utils.match_types import TypeMatchable
 from wordlette.utils.options import Option
@@ -176,16 +177,13 @@ class Route(
                 f"Request type {type(request)} not handled by {self.__class__.__qualname__}"
             )
 
-        handler_registry = self.__metadata__.request_handlers
-        request_type = type(request)
-        repo = get_repository()
-        repo.set_repository(repo.branch())
-        repo.set(Request, request)
-        try:
+        with fork_context() as branch:
+            branch.set(Request, request)
+
+            handler_registry = self.__metadata__.request_handlers
+            request_type = type(request)
             response = await handler_registry[request_type](self, request)
             await response(scope, receive, send)
-        finally:
-            repo.set_repository(repo)
 
     @classmethod
     def url(cls, **path_params):
