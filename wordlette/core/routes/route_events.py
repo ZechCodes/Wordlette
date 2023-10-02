@@ -1,14 +1,16 @@
-from wordlette.events import Event
+from starlette.responses import Response
+
 from wordlette.core.requests import Request
+from wordlette.events import Event
+from wordlette.models import Model, FieldSchema
 
 
-class RequestEvent(Event):
-    def __init__(self, request: Request):
-        self._request = request
+class ResponseEvent(Event, Model):
+    response: Response @ FieldSchema
 
-    @property
-    def request(self) -> Request:
-        return self._request
+
+class RequestEvent(Event, Model):
+    request: Request @ FieldSchema
 
     @classmethod
     def factory(cls, request: Request) -> Event:

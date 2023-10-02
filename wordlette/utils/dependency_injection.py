@@ -25,11 +25,15 @@ def inject_dependencies(func: T) -> T:
     def injector(*args, **kwargs):
         params = sig.bind_partial(*args, **kwargs)
         # Get instances from the repo to fill all missing inject parameters
-        params.arguments |= {
-            name: get_repository().get(annotation)
-            for name, annotation in inject_parameters.items()
-            if name not in params.arguments
-        }
+        for name, annotation in inject_parameters.items():
+            if name not in params.arguments:
+                try:
+                    params.arguments[name] = get_repository().get(annotation)
+                except Exception as exc:
+                    raise RuntimeError(
+                        f"Couldn't inject {annotation} into {func.__qualname__}"
+                    ) from exc
+
         return func(*params.args, **params.kwargs)
 
     injector.injected_params = inject_parameters
@@ -77,6 +81,9 @@ class Dependency(AtAnnotation):
 
     def strategy(self, type_, *_):
         return partial(get_repository().get, type_)
+
+    def __repr__(self):
+        return f"Dependency(injector={self.injector})"
 
 
 def _get_annotations(func, ns=None):
