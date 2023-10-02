@@ -27,7 +27,7 @@ from wordlette.core.routers import Router
 from wordlette.core.routes.exception_contexts import ExceptionHandlerContext
 from wordlette.core.routes.exceptions import NoCompatibleFormError
 from wordlette.core.routes.method_collections import MethodsCollection
-from wordlette.core.routes.request_events import RequestEvent
+from wordlette.core.routes.route_events import RequestEvent, ResponseEvent
 from wordlette.core.routes.route_metadata import RouteMetadataSetup
 from wordlette.utils.apply import apply
 from wordlette.utils.dependency_container_context_managers import fork_context
@@ -187,6 +187,9 @@ class Route(
             handler_registry = self.__metadata__.request_handlers
             request_type = type(request)
             response = await handler_registry[request_type](self, request)
+
+            await WordletteApp.emit(ResponseEvent(response))
+
             await response(scope, receive, send)
 
     @classmethod
