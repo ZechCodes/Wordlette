@@ -30,3 +30,34 @@ async def test_session_loading():
 
     assert repo.get(Session).flatten() == {"key": "value"}
 
+
+@pytest.mark.asyncio
+async def test_session_create():
+    class TestCookies:
+        cookies = {}
+
+        def set_cookie(self, key, value):
+            self.cookies[key] = value
+
+    repo = Repository.factory()
+    repo.set(Request, TestCookies())
+    Repository.set_repository(repo)
+
+    session_store = InMemorySessionStore()
+    session_controller = SessionController(session_store)
+
+    dispatch = session_controller.__event_dispatch__
+
+    await dispatch.emit(RequestEvent(TestCookies()))
+    session: Session = repo.get(Session)
+    assert session.flatten() == {}  # No session data yet
+
+    session["key"] = "value"
+    assert session.flatten() == {"key": "value"}  # Session data is set
+    assert session_store.get(session.session_id) == {}  # Session data is not saved yet
+
+    response = TestCookies()
+    await dispatch.emit(ResponseEvent(response))
+
+    assert session_store.get(session.session_id) == {"key": "value"}  # Session data is saved
+    assert session.session_id == response.cookies["session_id"]  # Session ID is set in cookie
