@@ -2,7 +2,7 @@ import asyncio
 from collections import defaultdict
 from functools import partial
 from types import MethodType
-from typing import Type, Callable, Awaitable, cast, TypeAlias, Any, Coroutine
+from typing import Type, Callable, Awaitable, cast, TypeAlias, Any, Coroutine, Generator
 from weakref import WeakMethod, ref
 
 from wordlette.events.events import Event
@@ -73,9 +73,9 @@ class EventDispatch:
         """Emits an event to all listeners and observers."""
         event_type = type(event)
         listener_registries = (
-            self._get_listeners(self.before_listeners, event_type),
-            self._get_listeners(self.listeners, event_type),
-            self._get_listeners(self.after_listeners, event_type),
+            set(self._get_listeners(self.before_listeners, event_type)),
+            set(self._get_listeners(self.listeners, event_type)),
+            set(self._get_listeners(self.after_listeners, event_type)),
             self.observers,
         )
         for listeners in listener_registries:
@@ -131,10 +131,7 @@ class EventDispatch:
 
     def _get_listeners(
         self, registry: Registry, event_type_emitted: Type[Event]
-    ) -> set[Callback]:
-        listeners = set()
+    ) -> Generator[Callback, None, None]:
         for event_type_listened, handlers in registry.items():
             if issubclass(event_type_emitted, event_type_listened):
-                listeners |= handlers
-
-        return listeners
+                yield from handlers
