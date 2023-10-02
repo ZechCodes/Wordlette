@@ -43,7 +43,7 @@ class DatabaseModel(Model):
         cls, *items: "DatabaseModel"
     ) -> "DatabaseStatus[drivers.DatabaseDriver]":
         driver = get_repository().get(drivers.DatabaseDriver)
-        return await driver.add(cls, *items)
+        return await driver.add(*items)
 
     @classmethod
     async def count(
@@ -75,7 +75,7 @@ class DatabaseModel(Model):
         cls, *items: "DatabaseModel"
     ) -> "DatabaseStatus[drivers.DatabaseDriver]":
         driver = get_repository().get(drivers.DatabaseDriver)
-        return await driver.update(cls, *items)
+        return await driver.update(*items)
 
     @classmethod
     def _build_colum_predicates(
