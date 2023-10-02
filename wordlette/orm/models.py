@@ -2,11 +2,11 @@ from typing import Callable, TypeVar, Any, Generator
 
 from bevy import get_repository
 
-import wordlette.databases.drivers as drivers
-from wordlette.databases.properties import DatabaseProperty
-from wordlette.databases.query_ast import ASTComparisonNode
-from wordlette.databases.statuses import DatabaseStatus
+import wordlette.orm.drivers as drivers
 from wordlette.models import Model
+from wordlette.orm.properties import DatabaseProperty
+from wordlette.orm.query_ast import ASTComparisonNode
+from wordlette.orm.statuses import DatabaseStatus
 from wordlette.utils.contextual_methods import contextual_method
 
 T = TypeVar("T")

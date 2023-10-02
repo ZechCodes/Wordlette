@@ -2,11 +2,11 @@ from abc import ABC, abstractmethod
 from typing import Type, TypeAlias, TypeVar, Callable, get_origin
 
 from wordlette.core.configs import ConfigModel
-from wordlette.databases.models import DatabaseModel
-from wordlette.databases.properties import DatabaseProperty
-from wordlette.databases.query_ast import ASTGroupNode
-from wordlette.databases.settings_forms import DatabaseSettingsForm
-from wordlette.databases.statuses import DatabaseStatus
+from wordlette.orm.models import DatabaseModel
+from wordlette.orm.properties import DatabaseProperty
+from wordlette.orm.query_ast import ASTGroupNode
+from wordlette.orm.settings_forms import DatabaseSettingsForm
+from wordlette.orm.statuses import DatabaseStatus
 from wordlette.utils.dependency_injection import AutoInject
 
 DriverName: TypeAlias = str

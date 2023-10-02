@@ -1,5 +1,5 @@
-from wordlette.databases.query_ast import ASTReferenceNode
 from wordlette.models import FieldSchema, Field
+from wordlette.orm.query_ast import ASTReferenceNode
 
 
 class DatabaseProperty(Field):
