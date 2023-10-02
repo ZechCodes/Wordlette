@@ -1,9 +1,4 @@
-class EventMCS(type):
-    def __repr__(self):
-        return f"<class Event:{self.__name__}>"
-
-
-class Event(metaclass=EventMCS):
+class Event:
     __event_count__: int
     __event_name__: str
 
