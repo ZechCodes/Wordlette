@@ -391,3 +391,22 @@ async def test_advanced_emit_propagation():
         mock.call.base(mock_event),
         mock.call.base_type(mock_event),
     ]
+
+
+@pytest.mark.asyncio
+async def test_event_type_sub_class():
+    class TestEvent(Event):
+        ...
+
+    class TestSubEvent(TestEvent):
+        ...
+
+    mock_listener = mock.AsyncMock()
+
+    events = EventDispatch()
+    events.listen(TestEvent, mock_listener)
+
+    mock_listener.reset_mock()
+    await events.emit(event := TestSubEvent())
+
+    assert mock_listener.call_args.args[0] == event

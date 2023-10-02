@@ -73,9 +73,9 @@ class EventDispatch:
         """Emits an event to all listeners and observers."""
         event_type = type(event)
         listener_registries = (
-            self.before_listeners[event_type],
-            self.listeners[event_type],
-            self.after_listeners[event_type],
+            self._get_listeners(self.before_listeners, event_type),
+            self._get_listeners(self.listeners, event_type),
+            self._get_listeners(self.after_listeners, event_type),
             self.observers,
         )
         for listeners in listener_registries:
@@ -128,3 +128,13 @@ class EventDispatch:
             return
 
         registry[event].remove(cast(Listener, callback))
+
+    def _get_listeners(
+        self, registry: Registry, event_type_emitted: Type[Event]
+    ) -> set[Callback]:
+        listeners = set()
+        for event_type_listened, handlers in registry.items():
+            if issubclass(event_type_emitted, event_type_listened):
+                listeners |= handlers
+
+        return listeners
