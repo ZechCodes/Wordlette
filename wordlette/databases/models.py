@@ -2,10 +2,10 @@ from typing import Callable, TypeVar, Any, Generator
 
 from bevy import get_repository
 
-import wordlette.core.databases.drivers as drivers
-from wordlette.core.databases.properties import DatabaseProperty
-from wordlette.core.databases.query_ast import ASTComparisonNode
-from wordlette.core.databases.statuses import DatabaseStatus
+import wordlette.databases.drivers as drivers
+from wordlette.databases.properties import DatabaseProperty
+from wordlette.databases.query_ast import ASTComparisonNode
+from wordlette.databases.statuses import DatabaseStatus
 from wordlette.models import Model
 from wordlette.utils.contextual_methods import contextual_method
 

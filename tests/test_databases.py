@@ -4,10 +4,7 @@ from typing import Type
 import pytest
 import pytest_asyncio
 from bevy import get_repository, Repository
-
-from wordlette.core.configs import ConfigManager
 from wordlette.core.databases.driver_sqlite import SQLiteDriver, SQLiteConfig
-from wordlette.core.databases.drivers import DatabaseDriver
 from wordlette.core.databases.models import DatabaseModel
 from wordlette.core.databases.properties import Property
 from wordlette.core.databases.query_ast import (
@@ -20,6 +17,9 @@ from wordlette.core.databases.query_ast import (
     when,
 )
 from wordlette.core.databases.statuses import DatabaseSuccessStatus, DatabaseStatus
+
+from wordlette.core.configs import ConfigManager
+from wordlette.databases.drivers import DatabaseDriver
 from wordlette.models import Auto
 from wordlette.utils.at_annotateds import AtProvider
 

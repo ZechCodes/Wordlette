@@ -1,4 +1,4 @@
-from wordlette.core.databases.query_ast import ASTReferenceNode
+from wordlette.databases.query_ast import ASTReferenceNode
 from wordlette.models import FieldSchema, Field
 
 
