@@ -6,10 +6,11 @@ from bevy import get_repository
 from wordlette.cms.extensions.error_pages import ErrorPages
 from wordlette.cms.states.serving import Serving
 from wordlette.cms.states.setup import Setup
+from wordlette.core import WordletteApp
 from wordlette.core.configs import ConfigManager
 from wordlette.core.configs.providers import ConfigProvider
-from wordlette.core import WordletteApp
 from wordlette.core.middlewares.router_middleware import RouterMiddleware
+from wordlette.core.sessions import SessionController
 from wordlette.state_machines import StateMachine
 
 
@@ -33,15 +34,18 @@ def _setup_repository():
     repository.set(
         Annotated[Path, "package-resources"], Path(__file__).parent / "resources"
     )
-
     repository.set(ConfigManager, ConfigManager(_get_config_handlers()))
+
+    repository.set(SessionController, SessionController.create())
 
 
 def create_app(**settings):
     _setup_repository()
-    return WordletteApp(
+    app = WordletteApp(
         extensions=[ErrorPages],
         middleware=[RouterMiddleware],
         state_machine=StateMachine(Setup.goes_to(Serving)),
         settings=settings,
     )
+    get_repository().get(SessionController).observe(app)
+    return app
