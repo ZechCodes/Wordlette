@@ -6,7 +6,7 @@ from wordlette.users.auth_security_levels import AuthSecurityLevel
 
 
 class BaseAuthProvider:
-    __auth_provider_registry__ = set()
+    __auth_provider_registry__: "set[Type[BaseAuthProvider]]" = set()
 
     nice_name: str
     route: Type[Route]
