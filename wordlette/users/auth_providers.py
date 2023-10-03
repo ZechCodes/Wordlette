@@ -1,6 +1,5 @@
 from typing import Type, cast
 
-from wordlette.core.forms import Form
 from wordlette.core.routes import Route
 from wordlette.users.auth_security_levels import AuthSecurityLevel
 
@@ -14,6 +13,7 @@ class BaseAuthProvider:
 
     def __init_subclass__(
         cls,
+        auto_register: bool = True,
         name: str | None = None,
         route_type: Type[Route] | None = None,
         security_level: AuthSecurityLevel | None = None,
@@ -23,7 +23,8 @@ class BaseAuthProvider:
         cls.route = cls._determine_route_type(route_type)
         cls.security_level = cls._determine_security_level(security_level)
 
-        cls._register_auth_provider()
+        if auto_register:
+            cls.register_auth_provider()
 
         super().__init_subclass__(**kwargs)
 
