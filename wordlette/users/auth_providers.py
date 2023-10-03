@@ -69,5 +69,5 @@ class BaseAuthProvider:
         return getattr(cls, "setup_form", None)
 
     @classmethod
-    def _register_auth_provider(cls):
+    def register_auth_provider(cls):
         cls.__auth_provider_registry__.add(cls)
