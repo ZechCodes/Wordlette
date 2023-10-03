@@ -1,7 +1,7 @@
 from enum import Enum, auto
 
 
-class AuthSecurityLevel(Enum):
+class AuthSecurityLevel(int, Enum):
     UNSAFE = auto()
     BASIC = auto()
     SECURE = auto()
