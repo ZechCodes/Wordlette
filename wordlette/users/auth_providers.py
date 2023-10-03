@@ -71,3 +71,7 @@ class BaseAuthProvider:
     @classmethod
     def register_auth_provider(cls):
         cls.__auth_provider_registry__.add(cls)
+
+    @classmethod
+    def unregister_auth_provider(cls):
+        cls.__auth_provider_registry__.discard(cls)
