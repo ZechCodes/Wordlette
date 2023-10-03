@@ -10,7 +10,6 @@ class BaseAuthProvider:
 
     nice_name: str
     route: Type[Route]
-    setup_form: Form | None
     security_level: AuthSecurityLevel
 
     def __init_subclass__(
@@ -18,13 +17,11 @@ class BaseAuthProvider:
         name: str | None = None,
         route_type: Type[Route] | None = None,
         security_level: AuthSecurityLevel | None = None,
-        setup_form: Form | None = None,
         **kwargs,
     ):
         cls.nice_name = cls._determine_nice_name(name)
         cls.route = cls._determine_route_type(route_type)
         cls.security_level = cls._determine_security_level(security_level)
-        cls.setup_form = cls._determine_setup_form(setup_form)
 
         cls._register_auth_provider()
 
@@ -60,13 +57,6 @@ class BaseAuthProvider:
             return security_level
 
         return getattr(cls, "security_level", AuthSecurityLevel.UNSAFE)
-
-    @classmethod
-    def _determine_setup_form(cls, setup_form: Form | None) -> Form | None:
-        if setup_form is not None:
-            return setup_form
-
-        return getattr(cls, "setup_form", None)
 
     @classmethod
     def register_auth_provider(cls):
