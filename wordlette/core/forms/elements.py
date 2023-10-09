@@ -235,6 +235,14 @@ class ContainerElement(Element):
         )
         return self
 
+    def select(self, selector: str | Selector) -> Renderable | None:
+        selector = Selector.factory(selector)
+        for element in self.body:
+            if selector == element:
+                return element
+
+        return None
+
     def __eq__(self, other):
         if not super().__eq__(other):
             return False
