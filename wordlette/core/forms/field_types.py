@@ -7,7 +7,7 @@ from typing import Any, Annotated
 import wordlette.core.html.elements as elements
 from wordlette.core.forms import Field
 from wordlette.core.forms.fields import NotSet, not_set
-from wordlette.core.html.elements import Button, Link
+from wordlette.core.html.elements import Button as HtmlButton, Link as HtmlLink
 
 
 class Week:
@@ -454,7 +454,7 @@ class Button:
         self.attrs = attrs | {"type": self.button_type}
 
     def compose(self):
-        return Button(self.text, **self.attrs)
+        return HtmlButton(self.text, **self.attrs)
 
 
 class SubmitButton(Button):
@@ -474,4 +474,4 @@ class Link:
             self.attrs["href"] = href
 
     def compose(self):
-        return Link(self.text, **self.attrs)
+        return HtmlLink(self.text, **self.attrs)
