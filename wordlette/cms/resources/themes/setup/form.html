@@ -1,8 +1,10 @@
 {% macro render_label(label, field) %}
+{% if label %}
 {% if field.attrs["required"] %}
 {{ label.add_class("required").render() }}
 {% else %}
 {{ label.render() }}
+{% endif %}
 {% endif %}
 {% endmacro %}
 <form method="{{ form.method }}">
