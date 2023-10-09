@@ -4,7 +4,7 @@ from wordlette.users.auth_security_levels import AuthSecurityLevel
 
 class BasicPasswordProvider(
     BaseAuthProvider,
-    name="Basic Password Authentication",
+    name="Password",
     security_level=AuthSecurityLevel.UNSAFE,
 ):
     ...
