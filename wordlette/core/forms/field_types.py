@@ -58,7 +58,7 @@ class SelectField(Field):
             elements.OptionElement(text, value=value, selected=value == self.value)
             for text, value in self.options.items()
         ]
-        return elements.SelectElement(options, placeholder=self.placeholder, **params)
+        return elements.SelectElement(*options, placeholder=self.placeholder, **params)
 
 
 class InputField(Field):

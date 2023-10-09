@@ -194,8 +194,8 @@ class Selector:
 
 
 class ContainerElement(Element):
-        self.body = body
-    def __init__(self, body: str | Renderable | Sequence[str | Renderable], **attrs):
+    def __init__(self, *body: str | Renderable | Sequence[str | Renderable], **attrs):
+        self.body = tuple(self._process_nodes(body))
         super().__init__(**attrs)
 
     def __eq__(self, other):
@@ -206,11 +206,25 @@ class ContainerElement(Element):
 
     def render(self) -> Markup:
         return Markup(
-            f"<{self.tag} {self._build_attrs()}>{Markup.escape(self.body)}</{self.tag}>"
+            f"<{self.tag} {self._build_attrs()}>{''.join(element.render() for element in self.body)}</{self.tag}>"
         )
 
     def _create_clone(self, **attrs) -> "ContainerElement":
-        return type(self)(self.body, __clone__=True, **attrs)
+        return type(self)(*self.body, __clone__=True, **attrs)
+
+    def _process_nodes(
+        self, nodes: Sequence[str | Element]
+    ) -> Generator[Renderable, None, None]:
+        for node in nodes:
+            match node:
+                case str():
+                    yield Text(node)
+
+                case Renderable():
+                    yield node
+
+                case _:
+                    raise TypeError(f"Invalid body node type: {type(node)}")
 
 
 class AElement(ContainerElement):
@@ -236,7 +250,7 @@ class OptionElement(ContainerElement):
 class SelectElement(ContainerElement):
     tag = "select"
 
-    def __init__(self, body, *args, placeholder: str | None = None, **kwargs):
+    def __init__(self, *body, placeholder: str | None = None, **kwargs):
         if placeholder:
             body = (
                 OptionElement(
@@ -246,7 +260,7 @@ class SelectElement(ContainerElement):
             )
             kwargs.setdefault("value", "--default--")
 
-        super().__init__(body, *args, **kwargs)
+        super().__init__(*body, **kwargs)
 
     def render(self) -> Markup:
         return Markup(
