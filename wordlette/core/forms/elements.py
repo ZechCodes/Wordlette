@@ -9,6 +9,17 @@ class Renderable(Protocol):
         ...
 
 
+class Text(Renderable):
+    def __init__(self, text: str):
+        self.text = text
+
+    def render(self) -> Markup:
+        return Markup.escape(self.text)
+
+    def __repr__(self):
+        return f"<{type(self).__name__} {self.text!r}>"
+
+
 class Element(Renderable):
     tag: str
     flag_attrs = frozenset(("required", "checked", "disabled", "selected"))
