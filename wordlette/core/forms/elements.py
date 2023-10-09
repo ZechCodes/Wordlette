@@ -1,9 +1,15 @@
-from typing import Sequence, Any, Iterable
+from typing import Sequence, Any, Iterable, Protocol, runtime_checkable
 
 from markupsafe import Markup
 
 
-class Element:
+@runtime_checkable
+class Renderable(Protocol):
+    def render(self) -> Markup:
+        ...
+
+
+class Element(Renderable):
     tag: str
     flag_attrs = frozenset(("required", "checked", "disabled", "selected"))
 
@@ -87,8 +93,8 @@ class Element:
 
 
 class ContainerElement(Element):
-    def __init__(self, body: str | Element | Sequence[str | Element], **attrs):
         self.body = body
+    def __init__(self, body: str | Renderable | Sequence[str | Renderable], **attrs):
         super().__init__(**attrs)
 
     def __eq__(self, other):
