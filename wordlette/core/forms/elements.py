@@ -198,6 +198,43 @@ class ContainerElement(Element):
         self.body = tuple(self._process_nodes(body))
         super().__init__(**attrs)
 
+    def append(self, *elements: str | Renderable) -> Self:
+        self.body = (*self.body, *self._process_nodes(elements))
+        return self
+
+    def prepend(self, *elements: str | Renderable) -> Self:
+        self.body = (*self._process_nodes(elements), *self.body)
+        return self
+
+    def insert_after(
+        self, selector: str | Selector, *elements: str | Renderable
+    ) -> Self:
+        return self._insert_near(selector, 1, *elements)
+
+    def insert_before(
+        self, selector: str | Selector, *elements: str | Renderable
+    ) -> Self:
+        return self._insert_near(selector, 0, *elements)
+
+    def _insert_near(
+        self, selector: str | Selector, offset: int, *elements: str | Renderable
+    ) -> Self:
+        selector = Selector.factory(selector)
+        for i, element in enumerate(self.body):
+            if selector == element:
+                self._insert_at(i + offset, *elements)
+                break
+
+        return self
+
+    def _insert_at(self, index: int, *elements: str | Renderable) -> Self:
+        self.body = (
+            *self.body[:index],
+            *self._process_nodes(elements),
+            *self.body[index:],
+        )
+        return self
+
     def __eq__(self, other):
         if not super().__eq__(other):
             return False
