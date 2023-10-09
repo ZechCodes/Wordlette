@@ -64,7 +64,7 @@ class ConfigManager:
 
         handler = self._handler_extensions[path.suffix[1:].casefold()]
         with path.open("rb") as open_file:
-            self._config = handler.load(open_file)
+            self._config = {} if (config := handler.load(open_file)) is None else config
 
         logger.debug(f"Loaded config file '{path}'.")
 
