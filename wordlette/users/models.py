@@ -1,7 +1,7 @@
 import wordlette.users.accessors as accessors
+from wordlette.dbom.models import DatabaseModel
+from wordlette.dbom.properties import Property
 from wordlette.models import Auto
-from wordlette.orm.models import DatabaseModel
-from wordlette.orm.properties import Property
 
 
 class User(DatabaseModel):

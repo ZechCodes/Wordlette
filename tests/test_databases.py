@@ -19,8 +19,8 @@ from wordlette.core.databases.query_ast import (
 from wordlette.core.databases.statuses import DatabaseSuccessStatus, DatabaseStatus
 
 from wordlette.core.configs import ConfigManager
+from wordlette.dbom.drivers import DatabaseDriver
 from wordlette.models import Auto
-from wordlette.orm.drivers import DatabaseDriver
 from wordlette.utils.at_annotateds import AtProvider
 
 

@@ -1,9 +1,9 @@
 from typing import overload
 
-from wordlette.models import Auto
-from wordlette.orm.statuses import (
+from wordlette.dbom.statuses import (
     DatabaseStatus,
 )
+from wordlette.models import Auto
 from wordlette.users.accessors import UserAccessor
 from wordlette.users.models import User
 

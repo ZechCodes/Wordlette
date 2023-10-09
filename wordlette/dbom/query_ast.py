@@ -2,7 +2,7 @@ from enum import auto, Enum
 from itertools import zip_longest
 from typing import Any, Self
 
-import wordlette.orm.models as models
+import wordlette.dbom.models as models
 from wordlette.utils.apply import apply
 
 

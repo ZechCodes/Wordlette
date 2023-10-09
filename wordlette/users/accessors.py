@@ -1,7 +1,7 @@
 from typing import Any, Generator
 
 import wordlette.users.models as models
-from wordlette.orm.statuses import (
+from wordlette.dbom.statuses import (
     DatabaseExceptionStatus,
     DatabaseSuccessStatus,
 )

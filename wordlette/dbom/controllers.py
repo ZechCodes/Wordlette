@@ -1,8 +1,8 @@
 from bevy import get_repository
 
-from wordlette.orm.drivers import AbstractDatabaseDriver, DatabaseDriver
-from wordlette.orm.settings_models import DatabaseSettings
-from wordlette.orm.statuses import DatabaseStatus, DatabaseSuccessStatus
+from wordlette.dbom.drivers import AbstractDatabaseDriver, DatabaseDriver
+from wordlette.dbom.settings_models import DatabaseSettings
+from wordlette.dbom.statuses import DatabaseStatus, DatabaseSuccessStatus
 from wordlette.utils.dependency_injection import inject, AutoInject
 
 

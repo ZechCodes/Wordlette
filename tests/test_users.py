@@ -1,9 +1,9 @@
 import pytest
 from bevy import Repository
 
-from wordlette.orm import DatabaseDriver, SQLiteDriver
-from wordlette.orm.driver_sqlite import SQLiteConfig
-from wordlette.orm.models import DatabaseModel
+from wordlette.dbom import DatabaseDriver, SQLiteDriver
+from wordlette.dbom.driver_sqlite import SQLiteConfig
+from wordlette.dbom.models import DatabaseModel
 from wordlette.users.models import User
 from wordlette.users.registries import UserRegistry
 
