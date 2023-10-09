@@ -1,5 +1,5 @@
-from typing import Sequence, Any, Iterable, Protocol, runtime_checkable
 import re
+from typing import Sequence, Any, Iterable, Protocol, Generator, Self, runtime_checkable
 
 from markupsafe import Markup
 
@@ -282,6 +282,49 @@ class DivElement(ContainerElement):
 
 class InputElement(Element):
     tag = "input"
+
+
+class Checkbox(InputElement):
+    def __init__(
+        self,
+        *,
+        checked: bool = False,
+        label: str | None = None,
+        name: str | None = None,
+        value: str | None,
+        **attrs,
+    ):
+        self.label = label
+
+        attrs["checked"] = checked
+
+        if name:
+            attrs["name"] = name
+
+        if value:
+            attrs["value"] = value
+
+        attrs.setdefault("type", "checkbox")
+
+        super().__init__(**attrs)
+
+    def render(self) -> Markup:
+        return Markup(f"<input {self._build_attrs()} />")
+
+
+class RadioButton(Checkbox):
+    def __init__(
+        self,
+        *,
+        checked: bool = False,
+        name: str | None = None,
+        value: str | None,
+        label: str | None = None,
+        **attrs,
+    ):
+        super().__init__(
+            type="radio", checked=checked, label=label, name=name, value=value, **attrs
+        )
 
 
 class ButtonElement(ContainerElement):
