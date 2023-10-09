@@ -59,7 +59,7 @@ class Element(Renderable):
             **{k: v for k, v in self.attrs.items() if k not in remove_attrs}
         )
 
-    def render(self):
+    def render(self) -> Markup:
         return Markup(f"<{self.tag} {self._build_attrs()} />")
 
     def _build_attrs(self) -> str:
@@ -114,7 +114,7 @@ class ContainerElement(Element):
 
         return self.body == other.body
 
-    def render(self):
+    def render(self) -> Markup:
         return Markup(
             f"<{self.tag} {self._build_attrs()}>{Markup.escape(self.body)}</{self.tag}>"
         )
@@ -158,7 +158,7 @@ class SelectElement(ContainerElement):
 
         super().__init__(body, *args, **kwargs)
 
-    def render(self):
+    def render(self) -> Markup:
         return Markup(
             f"<{self.tag} {self._build_attrs()}>"
             f"{''.join(map(OptionElement.render, self.body))}"
