@@ -39,10 +39,10 @@ class ConfigManager:
         try:
             value = self._config[key] if key else self._config
         except KeyError:
-            if default is not _not_set_:
-                return default
+            if default is _not_set_:
+                raise
 
-            raise
+            return default
 
         if constructor:
             value = constructor(**value)
