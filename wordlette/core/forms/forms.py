@@ -286,11 +286,15 @@ class Form:
         return issubclass(method, cls.__request_method__)
 
     @classmethod
-    def create_from_form_data(cls: Type[F], data: FormData) -> F:
+    def create_from_form_data(cls: Type[F], form_data: FormData) -> F:
+        multi_items = {}
+        for field, value in form_data.multi_items():
+            multi_items.setdefault(field, []).append(value)
+
         return cls(
             **{
-                cls.__form_field_names__[name]: value
-                for name, value in data.items()
+                cls.__form_field_names__[name]: value if len(value) > 1 else value[0]
+                for name, value in multi_items.items()
                 if name in cls.__form_field_names__
             }
         )
