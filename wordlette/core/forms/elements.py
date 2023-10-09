@@ -195,8 +195,8 @@ class Selector:
 
 class ContainerElement(Element):
     def __init__(self, *body: str | Renderable | Sequence[str | Renderable], **attrs):
-        self.body = tuple(self._process_nodes(body))
         super().__init__(**attrs)
+        self.body = tuple(self._process_nodes(body))
 
     def append(self, *elements: str | Renderable) -> Self:
         self.body = (*self.body, *self._process_nodes(elements))
