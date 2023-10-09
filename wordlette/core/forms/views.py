@@ -1,8 +1,8 @@
 from typing import Iterable, Any, Type
 
 from wordlette.core.forms import Field
-from wordlette.core.forms.elements import Element, LabelElement
 from wordlette.core.forms.field_types import Button, not_set
+from wordlette.core.html.elements import Element, LabelElement
 from wordlette.core.requests import Request
 
 

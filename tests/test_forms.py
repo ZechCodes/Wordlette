@@ -1,7 +1,6 @@
 import pytest
 
 from wordlette.core.forms import Form, Field
-from wordlette.core.forms.elements import ButtonElement, InputElement
 from wordlette.core.forms import FormValidationError
 from wordlette.core.forms.field_types import (
     TextField,
@@ -10,6 +9,7 @@ from wordlette.core.forms.field_types import (
     HiddenField,
     CheckBoxField,
 )
+from wordlette.core.html.elements import ButtonElement, InputElement
 
 
 def test_field_type_validation():

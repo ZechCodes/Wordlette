@@ -11,7 +11,7 @@ from typing import (
     Self,
 )
 
-from wordlette.core.forms.elements import Element
+from wordlette.core.html.elements import Element
 from wordlette.utils.annotated_aggregator import AnnotatedAggregator
 from wordlette.utils.sentinel import sentinel
 
@@ -92,7 +92,7 @@ class Field(metaclass=FieldMCS):
         return not self.optional and self.default is not_set
 
     def compose(self, value: Any | NotSet = not_set) -> Element:
-        from wordlette.core.forms.elements import InputElement
+        from wordlette.core.html.elements import InputElement
 
         params = self.attrs.copy()
         if value is not not_set:
@@ -104,7 +104,7 @@ class Field(metaclass=FieldMCS):
         return InputElement(**params)
 
     def compose_label(self) -> Element | None:
-        from wordlette.core.forms.elements import LabelElement
+        from wordlette.core.html.elements import LabelElement
 
         match self.label:
             case LabelElement():
