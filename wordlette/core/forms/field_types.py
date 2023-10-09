@@ -61,6 +61,54 @@ class SelectField(Field):
         return elements.SelectElement(*options, placeholder=self.placeholder, **params)
 
 
+class CheckboxGroupField(Field):
+    def __init__(
+        self,
+        options: dict[str, Any],
+        legend: str | None = None,
+        value: set[Any] | None = None,
+        **kwargs,
+    ):
+        super().__init__(value=value, **kwargs)
+        self.options = options
+        self.value = value or set()
+        self.legend = legend
+
+    def compose(self, value: Any | NotSet = not_set) -> "elements.FieldsetElement":
+        params = self.attrs.copy()
+        checkboxes = [
+            elements.DivElement(
+                elements.Checkbox(
+                    value=value,
+                    checked=value in self.value,
+                    label=text,
+                    id=(id_ := self.slugify(text)),
+                    name=self.name,
+                ),
+                elements.LabelElement(text, for_=id_, class_="label-inline"),
+            )
+            for text, value in self.options.items()
+        ]
+        return elements.FieldsetElement(*checkboxes, legend=self.legend, **params)
+
+    def convert_list(self, value: str | list[str]) -> list[str]:
+        match value:
+            case list():
+                return value
+
+            case str():
+                return [value]
+
+            case _ if all(isinstance(item, str) for item in value):
+                return list(value)
+
+            case _:
+                raise ValueError("Invalid value for authentication_types: {value!r}")
+
+    def slugify(self, value: Any) -> str:
+        return re.sub(r"[^a-z0-9]+", "-", str(value).casefold()).strip("-")
+
+
 class InputField(Field):
     type: str
 
