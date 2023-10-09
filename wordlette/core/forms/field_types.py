@@ -7,7 +7,7 @@ from typing import Any, Annotated
 import wordlette.core.html.elements as elements
 from wordlette.core.forms import Field
 from wordlette.core.forms.fields import NotSet, not_set
-from wordlette.core.html.elements import ButtonElement, AElement
+from wordlette.core.html.elements import Button, Link
 
 
 class Week:
@@ -49,16 +49,16 @@ class SelectField(Field):
         self.value = value
         self.placeholder = placeholder
 
-    def compose(self, value: Any | NotSet = not_set) -> "elements.SelectElement":
+    def compose(self, value: Any | NotSet = not_set) -> "elements.Select":
         params = self.attrs.copy()
         if self.required:
             params["required"] = True
 
         options = [
-            elements.OptionElement(text, value=value, selected=value == self.value)
+            elements.Option(text, value=value, selected=value == self.value)
             for text, value in self.options.items()
         ]
-        return elements.SelectElement(*options, placeholder=self.placeholder, **params)
+        return elements.Select(*options, placeholder=self.placeholder, **params)
 
 
 class CheckboxGroupField(Field):
@@ -74,10 +74,10 @@ class CheckboxGroupField(Field):
         self.value = value or set()
         self.legend = legend
 
-    def compose(self, value: Any | NotSet = not_set) -> "elements.FieldsetElement":
+    def compose(self, value: Any | NotSet = not_set) -> "elements.Fieldset":
         params = self.attrs.copy()
         checkboxes = [
-            elements.DivElement(
+            elements.Div(
                 elements.Checkbox(
                     value=value,
                     checked=value in self.value,
@@ -85,11 +85,11 @@ class CheckboxGroupField(Field):
                     id=(id_ := self.slugify(text)),
                     name=self.name,
                 ),
-                elements.LabelElement(text, for_=id_, class_="label-inline"),
+                elements.Label(text, for_=id_, class_="label-inline"),
             )
             for text, value in self.options.items()
         ]
-        return elements.FieldsetElement(*checkboxes, legend=self.legend, **params)
+        return elements.Fieldset(*checkboxes, legend=self.legend, **params)
 
     def convert_list(self, value: str | list[str]) -> list[str]:
         match value:
@@ -454,7 +454,7 @@ class Button:
         self.attrs = attrs | {"type": self.button_type}
 
     def compose(self):
-        return ButtonElement(self.text, **self.attrs)
+        return Button(self.text, **self.attrs)
 
 
 class SubmitButton(Button):
@@ -474,4 +474,4 @@ class Link:
             self.attrs["href"] = href
 
     def compose(self):
-        return AElement(self.text, **self.attrs)
+        return Link(self.text, **self.attrs)

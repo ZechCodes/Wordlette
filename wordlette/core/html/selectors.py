@@ -1,6 +1,6 @@
 import re
 
-import wordlette.core.html.elements as elements
+import wordlette.core.html.base_elements as elements
 
 
 class Selector:

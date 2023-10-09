@@ -2,7 +2,7 @@ from typing import Iterable, Any, Type
 
 from wordlette.core.forms import Field
 from wordlette.core.forms.field_types import Button, not_set
-from wordlette.core.html.elements import Element, LabelElement
+from wordlette.core.html.elements import Element, Label
 from wordlette.core.requests import Request
 
 
@@ -43,7 +43,7 @@ class FormView:
         return self._fields
 
     @property
-    def labels(self) -> dict[str, LabelElement]:
+    def labels(self) -> dict[str, Label]:
         if self._labels is None:
             self._labels = self._compose_labels(self.raw_fields)
 
@@ -64,5 +64,5 @@ class FormView:
             for field in fields.values()
         }
 
-    def _compose_labels(self, fields: dict[str, Field]) -> dict[str, LabelElement]:
+    def _compose_labels(self, fields: dict[str, Field]) -> dict[str, Label]:
         return {field.attrs["name"]: field.compose_label() for field in fields.values()}

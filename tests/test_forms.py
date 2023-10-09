@@ -9,7 +9,7 @@ from wordlette.core.forms.field_types import (
     HiddenField,
     CheckBoxField,
 )
-from wordlette.core.html.elements import ButtonElement, InputElement
+from wordlette.core.html.elements import Button, Input
 
 
 def test_field_type_validation():
@@ -92,10 +92,10 @@ def test_form_view_compose():
     elements = [*view.fields.values(), *view.buttons]
 
     assert elements == [
-        InputElement(type="text", name="text-field"),
-        InputElement(type="number", name="number-field", required=True),
-        InputElement(type="hidden", name="field", value=321),
-        ButtonElement("Test", type="submit"),
+        Input(type="text", name="text-field"),
+        Input(type="number", name="number-field", required=True),
+        Input(type="hidden", name="field", value=321),
+        Button("Test", type="submit"),
     ]
 
 
@@ -116,10 +116,10 @@ def test_form_view_compose_with_values():
     elements = [*view.fields.values(), *view.buttons]
 
     assert elements == [
-        InputElement(type="text", name="text-field", value="Test"),
-        InputElement(type="number", name="number-field", value=123, required=True),
-        InputElement(type="hidden", name="field", value=321),
-        ButtonElement("Test", type="submit"),
+        Input(type="text", name="text-field", value="Test"),
+        Input(type="number", name="number-field", value=123, required=True),
+        Input(type="hidden", name="field", value=321),
+        Button("Test", type="submit"),
     ]
 
 
