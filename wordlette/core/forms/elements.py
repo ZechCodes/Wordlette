@@ -276,6 +276,10 @@ class AElement(ContainerElement):
     tag = "a"
 
 
+class DivElement(ContainerElement):
+    tag = "div"
+
+
 class InputElement(Element):
     tag = "input"
 
@@ -311,5 +315,25 @@ class SelectElement(ContainerElement):
         return Markup(
             f"<{self.tag} {self._build_attrs()}>"
             f"{''.join(map(OptionElement.render, self.body))}"
+            f"</{self.tag}>"
+        )
+
+
+class LegendElement(ContainerElement):
+    tag = "legend"
+
+
+class FieldsetElement(ContainerElement):
+    tag = "fieldset"
+
+    def __init__(self, *body, legend: str | None = None, **kwargs):
+        super().__init__(*body, **kwargs)
+        if legend:
+            self.prepend(LegendElement(legend))
+
+    def render(self):
+        return Markup(
+            f"<{self.tag} {self._build_attrs()}>"
+            f"{''.join(elem.render() for elem in self.body)}"
             f"</{self.tag}>"
         )
