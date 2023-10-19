@@ -91,7 +91,7 @@ class Element(Renderable):
 
 
 class ContainerElement(Element):
-    def __init__(self, *body: str | Renderable | Sequence[str | Renderable], **attrs):
+    def __init__(self, *body: str | Renderable, **attrs):
         super().__init__(**attrs)
         self.body = tuple(self._process_nodes(body))
 
