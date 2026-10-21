@@ -18,6 +18,7 @@ uvicorn = { version = "^0.22.0", optional = true }
 python-multipart = "^0.0.6"
 
 [tool.poetry.group.dev.dependencies]
+certifi = ">=2026.10.19"
 pytest = "^7.4.0"
 pytest-asyncio = "^0.21.0"
 httpx = "^0.24.1"
